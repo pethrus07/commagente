@@ -3,6 +3,7 @@ import { ZodError } from 'zod'
 import { config } from './core/config'
 import { db } from './core/db'
 import { numerosRotas } from './features/numeros/numeros.rotas'
+import { webhookRotas } from './features/webhook/webhook.rotas'
 
 const app = Fastify({ logger: true })
 
@@ -33,6 +34,7 @@ app.get('/ready', async (_req, reply) => {
 
 // features
 app.register(numerosRotas)
+app.register(webhookRotas)
 
 app
   .listen({ port: config.porta, host: '0.0.0.0' })
