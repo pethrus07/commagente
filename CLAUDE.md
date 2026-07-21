@@ -33,4 +33,11 @@ Fase **F0 (MVP)**. **Fatia 1 — Fundação: FEITA**.
 - **Executor** grava a saída em `mensagens` (direção out, status `enviando → ok` via webhook).
 - Rotas novas: `POST /missoes`, `GET /missoes`, `GET /missoes/:id` (com histórico), `POST /missoes/:id/estado`.
 
-**Próximo → Fatia 4 (Cérebro IA):** chamada provider-agnostic + structured output (`resposta, novo_estado, categoria, fatos_novos, precisa_humano`) — a IA passa a conduzir a conversa. Depois: Fatia 5 (memória/ficha) e Fatia 6 (fila anti-bloqueio).
+**Fatia 4 — Cérebro IA: FEITA** (branch `feat/fatia4-cerebro`) — validada AO VIVO com auto-resposta:
+- `core/ia/` — porta `ProvedorIA` (provider-agnostic) + contrato `SaidaIASchema` (structured output) + **provedor DUBLÊ** (offline, determinístico). Seleção por `IA_PROVIDER` (default `duble`).
+- `features/conversa/` — o **harness** `processarTurno`: monta contexto (ficha mínima) → IA → **valida o contrato (zod)** → mescla fatos → guardrail `precisa_humano` (escala) → aplica `novo_estado` (se transição válida) → responde pelo executor.
+- **Ingestor aciona o cérebro**: inbound em missão ativa dispara `processarTurno` (fire-and-forget — não segura o 200 do webhook; a fila/worker da Fatia 6 formaliza).
+
+⚠️ **Fatia 4b (pendente):** adapter **OpenAI real** em `core/ia/` (precisa `OPENAI_API_KEY`) — hoje roda no dublê.
+
+**Próximo → Fatia 5 (Memória):** ficha do lead rica (persona + resumo rolante + fatos + últimas N msgs). Depois: Fatia 6 (fila anti-bloqueio: budget/janela/jitter/cap), Fatia 7 (painel).
