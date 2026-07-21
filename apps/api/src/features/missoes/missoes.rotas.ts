@@ -1,7 +1,13 @@
 // 🖥️ Apresentação — rotas HTTP de missão.
+import { EstadoMissao } from '@prisma/client'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { criarMissao, listarMissoes, obterMissao } from './missoes.caso-uso'
+import {
+  criarMissao,
+  listarMissoes,
+  mudarEstado,
+  obterMissao,
+} from './missoes.caso-uso'
 
 const corpoCriar = z.object({
   telefone: z.string().min(8),
@@ -10,6 +16,8 @@ const corpoCriar = z.object({
   contexto: z.string().optional(),
   nomeContato: z.string().optional(),
 })
+
+const corpoEstado = z.object({ estado: z.nativeEnum(EstadoMissao) })
 
 const paramsId = z.object({ id: z.string().uuid() })
 
@@ -26,5 +34,12 @@ export async function missoesRotas(app: FastifyInstance) {
   app.get('/missoes/:id', async (req) => {
     const { id } = paramsId.parse(req.params)
     return obterMissao(id)
+  })
+
+  // muda o estado (validado pela máquina de estados; 409 se inválido)
+  app.post('/missoes/:id/estado', async (req) => {
+    const { id } = paramsId.parse(req.params)
+    const { estado } = corpoEstado.parse(req.body)
+    return mudarEstado(id, estado)
   })
 }

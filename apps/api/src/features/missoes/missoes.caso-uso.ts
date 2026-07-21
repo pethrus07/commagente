@@ -1,7 +1,9 @@
 // ⚙️ Aplicação — casos de uso de missão.
+import type { EstadoMissao, Prisma } from '@prisma/client'
 import { db } from '../../core/db'
 import { ErroHttp } from '../../core/erros'
 import { garantirTenantPadrao } from '../../core/tenant'
+import { validarTransicao } from './missao.dominio'
 import { missoesRepo } from './missoes.repo'
 
 export async function criarMissao(input: {
@@ -59,4 +61,29 @@ export async function obterMissao(id: string) {
   const missao = await missoesRepo.buscar(id)
   if (!missao) throw new ErroHttp(404, 'Missão não encontrada')
   return missao
+}
+
+export async function mudarEstado(id: string, novoEstado: EstadoMissao) {
+  const missao = await missoesRepo.buscar(id)
+  if (!missao) throw new ErroHttp(404, 'Missão não encontrada')
+
+  validarTransicao(missao.estado, novoEstado) // lança 409 se inválida
+
+  // carimba timestamps ao entrar em conversa / concluir
+  const extra: Prisma.MissaoUpdateInput = {}
+  if (novoEstado === 'em_conversa' && !missao.iniciadaEm) {
+    extra.iniciadaEm = new Date()
+  }
+  if (novoEstado === 'concluida') extra.concluidaEm = new Date()
+
+  const atualizada = await missoesRepo.atualizarEstado(id, novoEstado, extra)
+  await db.evento.create({
+    data: {
+      tenantId: missao.tenantId,
+      missaoId: id,
+      tipo: 'estado_alterado',
+      dados: { de: missao.estado, para: novoEstado },
+    },
+  })
+  return atualizada
 }
