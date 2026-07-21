@@ -40,4 +40,8 @@ Fase **F0 (MVP)**. **Fatia 1 — Fundação: FEITA**.
 
 ⚠️ **Fatia 4b (pendente):** adapter **OpenAI real** em `core/ia/` (precisa `OPENAI_API_KEY`) — hoje roda no dublê.
 
-**Próximo → Fatia 5 (Memória):** ficha do lead rica (persona + resumo rolante + fatos + últimas N msgs). Depois: Fatia 6 (fila anti-bloqueio: budget/janela/jitter/cap), Fatia 7 (painel).
+**Fatia 5 — Memória: FEITA** (branch `feat/fatia5-memoria`) — validada com dublê:
+- `features/memoria/montador` — monta a **ficha** rica: persona (papel+objetivo+contexto) + resumo rolante + fatos + últimas N (8) mensagens. O harness usa `montarFicha`.
+- **Resumo rolante:** `ProvedorIA.resumir` (+ dublê) → o harness atualiza `missao.resumo` a cada turno (memória de longo prazo; com IA real dá pra throttlar por N turnos).
+
+**Próximo → Fatia 6 (Fila anti-bloqueio):** tabela `fila_envio` + worker/cron — budget por número, janela de horário, cap de conversas ativas, atraso com jitter. Substitui o envio direto/fire-and-forget de hoje. Depois: Fatia 7 (painel React) e Fatia 4b (OpenAI real).
