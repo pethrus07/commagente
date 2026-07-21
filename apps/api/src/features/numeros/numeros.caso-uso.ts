@@ -16,6 +16,11 @@ export async function cadastrarNumero(telefone: string, instancia?: string) {
   return numerosRepo.criar(tenantId, telefone, nomeInstancia)
 }
 
+export async function listarNumeros() {
+  const tenantId = await garantirTenantPadrao()
+  return numerosRepo.listar(tenantId)
+}
+
 export async function conectarNumero(id: string): Promise<QrCode> {
   const numero = await numerosRepo.buscar(id)
   if (!numero) throw new ErroHttp(404, 'Número não encontrado')

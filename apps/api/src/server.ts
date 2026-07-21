@@ -6,6 +6,7 @@ import { envioRotas } from './features/envio/envio.rotas'
 import { iniciarWorker } from './features/fila/fila.worker'
 import { missoesRotas } from './features/missoes/missoes.rotas'
 import { numerosRotas } from './features/numeros/numeros.rotas'
+import { statsRotas } from './features/stats/stats.rotas'
 import { webhookRotas } from './features/webhook/webhook.rotas'
 
 const app = Fastify({ logger: true })
@@ -40,6 +41,7 @@ app.register(numerosRotas)
 app.register(webhookRotas)
 app.register(envioRotas)
 app.register(missoesRotas)
+app.register(statsRotas)
 
 app
   .listen({ port: config.porta, host: '0.0.0.0' })

@@ -13,6 +13,13 @@ export const numerosRepo = {
     return db.numeroWhatsapp.findUnique({ where: { id } })
   },
 
+  listar(tenantId: string) {
+    return db.numeroWhatsapp.findMany({
+      where: { tenantId },
+      orderBy: { criadoEm: 'desc' },
+    })
+  },
+
   atualizarStatus(id: string, statusConexao: StatusConexao) {
     return db.numeroWhatsapp.update({
       where: { id },
