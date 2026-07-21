@@ -1,8 +1,10 @@
 # zapagente — infra de desenvolvimento
-# Fatia 1 (Fundação): só o Postgres — suficiente pra rodar as migrations e o Prisma Studio.
-# A Evolution API entra na Fatia 2 (Conexão). api/painel são dockerizados no deploy de produção (VPS).
+# Fatia 1 (Fundação): Postgres da aplicação (db).
+# Fatia 2 (Conexão): Evolution API (WhatsApp) + Postgres/Redis próprios dela.
+# api/painel são dockerizados no deploy de produção (VPS).
 
 services:
+  # ─── Aplicação: Postgres (schema do zapagente via Prisma) ───
   db:
     image: postgres:16-alpine
     container_name: zapagente-db
@@ -21,5 +23,69 @@ services:
       timeout: 3s
       retries: 10
 
+  # ─── Evolution API — ponte WhatsApp (Baileys / não-oficial) ───
+  # Guarda o estado dela em Postgres + Redis PRÓPRIOS (não mistura com o schema do app).
+  evolution:
+    image: atendai/evolution-api:v2.1.1 # pinada; confirmar/bumpar no 1º `compose up`
+    container_name: zapagente-evolution
+    restart: unless-stopped
+    depends_on:
+      evolution_db:
+        condition: service_healthy
+      evolution_redis:
+        condition: service_started
+    ports:
+      - "8080:8080"
+    # host.docker.internal → alcança a API rodando no host (npm run dev na :3000)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      # Auth: precisa bater com EVOLUTION_API_KEY do apps/api/.env
+      AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY:-zapagente-dev-key}
+      SERVER_URL: http://localhost:8080
+      # Banco próprio da Evolution
+      DATABASE_ENABLED: "true"
+      DATABASE_PROVIDER: postgresql
+      DATABASE_CONNECTION_URI: postgresql://evolution:evolution@evolution_db:5432/evolution?schema=public
+      DATABASE_CONNECTION_CLIENT_NAME: zapagente
+      DATABASE_SAVE_DATA_INSTANCE: "true"
+      DATABASE_SAVE_DATA_NEW_MESSAGE: "true"
+      DATABASE_SAVE_MESSAGE_UPDATE: "true"
+      DATABASE_SAVE_DATA_CONTACTS: "true"
+      DATABASE_SAVE_DATA_CHATS: "true"
+      # Cache Redis próprio
+      CACHE_REDIS_ENABLED: "true"
+      CACHE_REDIS_URI: redis://evolution_redis:6379/0
+      CACHE_REDIS_PREFIX_KEY: evolution
+      CACHE_LOCAL_ENABLED: "false"
+    volumes:
+      - evolution_instances:/evolution/instances
+
+  evolution_db:
+    image: postgres:16-alpine
+    container_name: zapagente-evolution-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: evolution
+      POSTGRES_PASSWORD: evolution
+      POSTGRES_DB: evolution
+    volumes:
+      - evolution_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U evolution"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  evolution_redis:
+    image: redis:7-alpine
+    container_name: zapagente-evolution-redis
+    restart: unless-stopped
+    volumes:
+      - evolution_redis:/data
+
 volumes:
   zapagente_pgdata:
+  evolution_pgdata:
+  evolution_redis:
+  evolution_instances:
