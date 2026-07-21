@@ -4,6 +4,7 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import {
   criarMissao,
+  iniciarMissao,
   listarMissoes,
   mudarEstado,
   obterMissao,
@@ -41,5 +42,11 @@ export async function missoesRotas(app: FastifyInstance) {
     const { id } = paramsId.parse(req.params)
     const { estado } = corpoEstado.parse(req.body)
     return mudarEstado(id, estado)
+  })
+
+  // Modo A — inicia a missão: a IA manda a 1ª mensagem
+  app.post('/missoes/:id/iniciar', async (req) => {
+    const { id } = paramsId.parse(req.params)
+    return iniciarMissao(id)
   })
 }

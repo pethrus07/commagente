@@ -50,6 +50,8 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ estado }),
       }),
+    iniciar: (id: string) =>
+      req(`/missoes/${id}/iniciar`, { method: 'POST', body: '{}' }),
   },
 
   envio: (data: {

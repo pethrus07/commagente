@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowLeft, Brain, Info, Send, Sparkles } from 'lucide-react'
+import { ArrowLeft, Brain, Info, Rocket, Send, Sparkles } from 'lucide-react'
 import { api } from '../lib/api'
 import { toast } from '../lib/toast'
 import type { EstadoMissao, Missao } from '../lib/types'
@@ -30,6 +30,7 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
   const [m, setM] = useState<Missao | null>(null)
   const [texto, setTexto] = useState('')
   const [enviando, setEnviando] = useState(false)
+  const [iniciando, setIniciando] = useState(false)
   const fimRef = useRef<HTMLDivElement>(null)
 
   const carregar = async () => {
@@ -64,6 +65,19 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
       carregar()
     } catch (e) {
       toast((e as Error).message, 'erro')
+    }
+  }
+
+  const iniciar = async () => {
+    setIniciando(true)
+    try {
+      await api.missoes.iniciar(id)
+      toast('Missão iniciada — a IA vai abrir a conversa! 🚀', 'ok')
+      setTimeout(carregar, 1500)
+    } catch (e) {
+      toast((e as Error).message, 'erro')
+    } finally {
+      setIniciando(false)
     }
   }
 
@@ -129,6 +143,19 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
 
         {/* painel lateral */}
         <div className="space-y-4 overflow-y-auto">
+          {(m.estado === 'configurada' ||
+            (m.estado === 'na_fila' && (m.mensagens ?? []).length === 0)) && (
+            <Card className="border-indigo-500/30 bg-indigo-500/10 p-4">
+              <p className="text-sm font-medium text-white">Pronta para começar</p>
+              <p className="mb-3 mt-0.5 text-xs text-slate-400">
+                A IA vai abrir a conversa com o lead e conduzir rumo ao objetivo.
+              </p>
+              <Button className="w-full" onClick={iniciar} loading={iniciando}>
+                <Rocket className="h-4 w-4" /> Iniciar missão
+              </Button>
+            </Card>
+          )}
+
           <Card className="p-4">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Ações de estado</p>
             <div className="flex flex-wrap gap-2">

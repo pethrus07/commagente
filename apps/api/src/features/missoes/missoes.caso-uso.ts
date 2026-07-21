@@ -3,6 +3,7 @@ import type { EstadoMissao, Prisma } from '@prisma/client'
 import { db } from '../../core/db'
 import { ErroHttp } from '../../core/erros'
 import { garantirTenantPadrao } from '../../core/tenant'
+import { processarTurno } from '../conversa/conversa.caso-uso'
 import { validarTransicao } from './missao.dominio'
 import { missoesRepo } from './missoes.repo'
 
@@ -61,6 +62,17 @@ export async function obterMissao(id: string) {
   const missao = await missoesRepo.buscar(id)
   if (!missao) throw new ErroHttp(404, 'Missão não encontrada')
   return missao
+}
+
+// Modo A — inicia a missão: a IA gera a 1ª mensagem (opener) e enfileira.
+export async function iniciarMissao(id: string) {
+  const missao = await missoesRepo.buscar(id)
+  if (!missao) throw new ErroHttp(404, 'Missão não encontrada')
+  if (missao.estado === 'configurada') {
+    await missoesRepo.atualizarEstado(id, 'na_fila')
+  }
+  await processarTurno(id) // gera opener via IA + enfileira; worker envia
+  return { ok: true, iniciada: true }
 }
 
 export async function mudarEstado(id: string, novoEstado: EstadoMissao) {
