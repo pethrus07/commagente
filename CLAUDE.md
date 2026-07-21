@@ -49,4 +49,9 @@ Fase **F0 (MVP)**. **Fatia 1 — Fundação: FEITA**.
 - O **harness enfileira** a resposta (com jitter) em vez de enviar direto; o **worker** consome respeitando janela+budget e envia pelo executor no ritmo humano (validado: inbound→reply ~21s depois). Worker inicia no boot do server.
 - ⚠️ Dev: a janela do número de teste foi ampliada p/ `00:00–23:59` (o padrão de números novos é `08:00–20:00`). "Cap de conversas ativas" fica pro fluxo de iniciar missão (Modo A) — ainda não wired.
 
-**Próximo → Fatia 7 (Painel React):** cadastrar número, criar missão, lista de leads + histórico + fila de escalados. Depois: Fatia 4b (adapter OpenAI real, precisa `OPENAI_API_KEY`).
+**Fatia 7 — Painel React: FEITA** (branch `feat/fatia7-painel`) — `apps/painel` (Vite+React+TS+Tailwind v4):
+- Dashboard (KPIs + pipeline), Números (cadastrar + conectar via QR c/ poll), Missões (lista filtrável + criar), Detalhe (conversa em bolhas + ações de estado + resumo/fatos). Proxy `/api`→:3000 (sem CORS).
+- API ganhou `GET /numeros` e `GET /stats` (leitura p/ o painel).
+- Rodar: `cd apps/painel && npm install && npm run dev` → http://localhost:5173.
+
+**Próximo → Fatia 4b (adapter OpenAI real):** implementar `core/ia/provedor-openai.ts` (precisa `OPENAI_API_KEY` no `.env` + `IA_PROVIDER=openai`). Também falta wire do **Modo A** (iniciar missão / 1ª mensagem outbound).
