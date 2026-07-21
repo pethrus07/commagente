@@ -3,7 +3,8 @@
 import { db } from '../../core/db'
 import { ia } from '../../core/ia'
 import { SaidaIASchema } from '../../core/ia/porta-ia'
-import { enviarTexto } from '../envio/envio.caso-uso'
+import { jitterMs } from '../fila/fila.dominio'
+import { filaRepo } from '../fila/fila.repo'
 import { montarFicha } from '../memoria/memoria.montador'
 import { podeTransicionar } from '../missoes/missao.dominio'
 import { missoesRepo } from '../missoes/missoes.repo'
@@ -55,13 +56,19 @@ export async function processarTurno(missaoId: string) {
     )
   }
 
-  // 7) responde (o executor grava a Mensagem[out] ligada à missão)
-  const envio = await enviarTexto(
-    missao.numeroId,
-    missao.contato.telefone,
-    saida.resposta,
+  // 7) enfileira a resposta — o worker anti-bloqueio envia no ritmo humano
+  // (janela de horário + budget + jitter). Substitui o envio direto.
+  await filaRepo.enfileirar({
+    tenantId: missao.tenantId,
     missaoId,
-  )
+    contatoId: missao.contatoId,
+    payload: {
+      numeroId: missao.numeroId,
+      telefone: missao.contato.telefone,
+      texto: saida.resposta,
+    },
+    agendadoPara: new Date(Date.now() + jitterMs('conversa')),
+  })
   await db.evento.create({
     data: {
       tenantId: missao.tenantId,
@@ -90,6 +97,6 @@ export async function processarTurno(missaoId: string) {
     ok: true as const,
     resposta: saida.resposta,
     novo_estado: saida.novo_estado,
-    providerMsgId: envio.providerMsgId,
+    enfileirado: true,
   }
 }

@@ -3,6 +3,7 @@ import { ZodError } from 'zod'
 import { config } from './core/config'
 import { db } from './core/db'
 import { envioRotas } from './features/envio/envio.rotas'
+import { iniciarWorker } from './features/fila/fila.worker'
 import { missoesRotas } from './features/missoes/missoes.rotas'
 import { numerosRotas } from './features/numeros/numeros.rotas'
 import { webhookRotas } from './features/webhook/webhook.rotas'
@@ -42,7 +43,10 @@ app.register(missoesRotas)
 
 app
   .listen({ port: config.porta, host: '0.0.0.0' })
-  .then((addr) => app.log.info(`zapagente-api em ${addr}`))
+  .then((addr) => {
+    app.log.info(`zapagente-api em ${addr}`)
+    iniciarWorker() // motor anti-bloqueio: consome a fila_envio no ritmo humano
+  })
   .catch((err) => {
     app.log.error(err)
     process.exit(1)
