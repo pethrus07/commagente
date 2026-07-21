@@ -152,7 +152,7 @@ model Missao {
 model Mensagem {
   id            String       @id @default(uuid()) @db.Uuid
   tenantId      String       @map("tenant_id") @db.Uuid
-  missaoId      String       @map("missao_id") @db.Uuid
+  missaoId      String?      @map("missao_id") @db.Uuid
   contatoId     String       @map("contato_id") @db.Uuid
   direcao       Direcao
   conteudo      String
@@ -162,7 +162,7 @@ model Mensagem {
   enviadaEm     DateTime?    @map("enviada_em")
 
   tenant  Tenant  @relation(fields: [tenantId], references: [id])
-  missao  Missao  @relation(fields: [missaoId], references: [id])
+  missao  Missao? @relation(fields: [missaoId], references: [id])
   contato Contato @relation(fields: [contatoId], references: [id])
 
   @@index([missaoId, criadaEm])
