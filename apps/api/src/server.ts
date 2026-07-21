@@ -3,6 +3,7 @@ import { ZodError } from 'zod'
 import { config } from './core/config'
 import { db } from './core/db'
 import { envioRotas } from './features/envio/envio.rotas'
+import { missoesRotas } from './features/missoes/missoes.rotas'
 import { numerosRotas } from './features/numeros/numeros.rotas'
 import { webhookRotas } from './features/webhook/webhook.rotas'
 
@@ -37,6 +38,7 @@ app.get('/ready', async (_req, reply) => {
 app.register(numerosRotas)
 app.register(webhookRotas)
 app.register(envioRotas)
+app.register(missoesRotas)
 
 app
   .listen({ port: config.porta, host: '0.0.0.0' })
