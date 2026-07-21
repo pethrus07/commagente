@@ -1,5 +1,5 @@
 // 🔌 Infraestrutura — persistência do ingestor (Prisma).
-import { Prisma } from '@prisma/client'
+import type { StatusEnvio } from '@prisma/client'
 import { db } from '../../core/db'
 
 export const webhookRepo = {
@@ -17,12 +17,30 @@ export const webhookRepo = {
     })
   },
 
-  registrarEvento(
-    tenantId: string,
-    tipo: string,
-    dados: Prisma.InputJsonObject,
-    missaoId?: string,
-  ) {
-    return db.evento.create({ data: { tenantId, missaoId, tipo, dados } })
+  gravarMensagemEntrada(p: {
+    tenantId: string
+    missaoId: string | null
+    contatoId: string
+    conteudo: string
+    providerMsgId: string
+  }) {
+    return db.mensagem.create({
+      data: {
+        tenantId: p.tenantId,
+        missaoId: p.missaoId ?? undefined, // opcional: inbound pode não ter missão
+        contatoId: p.contatoId,
+        direcao: 'in',
+        conteudo: p.conteudo,
+        providerMsgId: p.providerMsgId,
+      },
+    })
+  },
+
+  // status de entrega/leitura → atualiza a mensagem de SAÍDA correspondente
+  atualizarStatusSaida(providerMsgId: string, statusEnvio: StatusEnvio) {
+    return db.mensagem.updateMany({
+      where: { providerMsgId, direcao: 'out' },
+      data: { statusEnvio },
+    })
   },
 }

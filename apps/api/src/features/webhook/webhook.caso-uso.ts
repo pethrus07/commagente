@@ -1,7 +1,8 @@
 // ⚙️ Aplicação — processa o evento normalizado do webhook.
-// Fatia 2 (Conexão): registra recebimento/status no audit (eventos) e captura o contato.
-// O vínculo com missão + gravação em `mensagens` (memória) chega na Fatia 3/5.
-import { normalizarEvento } from './webhook.dominio'
+// Fatia 3: inbound vira Mensagem (ligada à missão ativa, se houver) e destrava
+// a conversa (na_fila → em_conversa). Status de entrega atualiza a msg de saída.
+import { missoesRepo } from '../missoes/missoes.repo'
+import { mapearStatusEnvio, normalizarEvento } from './webhook.dominio'
 import { webhookRepo } from './webhook.repo'
 
 export async function processarWebhook(payload: unknown) {
@@ -10,28 +11,36 @@ export async function processarWebhook(payload: unknown) {
   if (evento.tipo === 'mensagem') {
     if (evento.fromMe) return // nossa própria saída → tratada pelo executor
     const numero = await webhookRepo.acharNumeroPorInstancia(evento.instancia)
-    if (!numero) return // instância desconhecida → ignora
+    if (!numero) return // instância desconhecida
 
     const contato = await webhookRepo.upsertContato(
       numero.tenantId,
       evento.telefone,
       evento.nome,
     )
-    await webhookRepo.registrarEvento(numero.tenantId, 'mensagem_recebida', {
+    const missao = await missoesRepo.acharAtivaPorContatoNumero(
+      numero.id,
+      contato.id,
+    )
+    await webhookRepo.gravarMensagemEntrada({
+      tenantId: numero.tenantId,
+      missaoId: missao?.id ?? null,
       contatoId: contato.id,
-      telefone: evento.telefone,
       conteudo: evento.conteudo,
       providerMsgId: evento.providerMsgId,
     })
+
+    // lead respondeu numa missão que estava só na fila → a conversa começou
+    if (missao?.estado === 'na_fila') {
+      await missoesRepo.atualizarEstado(missao.id, 'em_conversa', {
+        iniciadaEm: new Date(),
+      })
+    }
     return
   }
 
   if (evento.tipo === 'status') {
-    const numero = await webhookRepo.acharNumeroPorInstancia(evento.instancia)
-    if (!numero) return
-    await webhookRepo.registrarEvento(numero.tenantId, 'status_mensagem', {
-      providerMsgId: evento.providerMsgId,
-      status: evento.status,
-    })
+    const status = mapearStatusEnvio(evento.status)
+    if (status) await webhookRepo.atualizarStatusSaida(evento.providerMsgId, status)
   }
 }

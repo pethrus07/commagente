@@ -1,4 +1,5 @@
 // 💛 Domínio — normaliza o evento cru da Evolution num modelo interno (regra pura, sem I/O).
+import type { StatusEnvio } from '@prisma/client'
 
 export type EventoWa =
   | {
@@ -75,4 +76,12 @@ export function normalizarEvento(payload: Payload): EventoWa {
   }
 
   return { tipo: 'ignorado' }
+}
+
+// mapeia o status cru da Evolution para o nosso StatusEnvio (ou null se irrelevante)
+export function mapearStatusEnvio(evoStatus: string): StatusEnvio | null {
+  const s = evoStatus.toUpperCase()
+  if (['SERVER_ACK', 'DELIVERY_ACK', 'READ', 'PLAYED'].includes(s)) return 'ok'
+  if (['ERROR', 'FAILED'].includes(s)) return 'erro'
+  return null
 }
