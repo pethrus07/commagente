@@ -18,6 +18,7 @@ Assistente autônomo de IA que opera **várias conversas de WhatsApp em paralelo
 
 ## Documentação
 
+- **[docs/SETUP.md](docs/SETUP.md)** — ambiente de desenvolvimento do zero (o que instalar + rodar). **Máquina nova começa aqui.**
 - **[docs/ROADMAP.md](docs/ROADMAP.md)** — divisão de funcionalidades e ordem de construção (comece por aqui).
 - **[docs/ARQUITETURA.md](docs/ARQUITETURA.md)** — o que usamos, por quê e as alternativas descartadas (decisões) + modelo em camadas + o harness do agente.
 - **[docs/MODELO-DADOS.md](docs/MODELO-DADOS.md)** — as 8 tabelas, ERD visual e o schema Prisma.
