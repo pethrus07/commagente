@@ -44,4 +44,9 @@ Fase **F0 (MVP)**. **Fatia 1 — Fundação: FEITA**.
 - `features/memoria/montador` — monta a **ficha** rica: persona (papel+objetivo+contexto) + resumo rolante + fatos + últimas N (8) mensagens. O harness usa `montarFicha`.
 - **Resumo rolante:** `ProvedorIA.resumir` (+ dublê) → o harness atualiza `missao.resumo` a cada turno (memória de longo prazo; com IA real dá pra throttlar por N turnos).
 
-**Próximo → Fatia 6 (Fila anti-bloqueio):** tabela `fila_envio` + worker/cron — budget por número, janela de horário, cap de conversas ativas, atraso com jitter. Substitui o envio direto/fire-and-forget de hoje. Depois: Fatia 7 (painel React) e Fatia 4b (OpenAI real).
+**Fatia 6 — Fila anti-bloqueio: FEITA** (branch `feat/fatia6-fila`) — validada com dublê:
+- `features/fila/` — domínio (janela de horário, budget diário, jitter), repo (`fila_envio` + contador `enviados_hoje`) e **worker** (loop 3s, sem sobreposição).
+- O **harness enfileira** a resposta (com jitter) em vez de enviar direto; o **worker** consome respeitando janela+budget e envia pelo executor no ritmo humano (validado: inbound→reply ~21s depois). Worker inicia no boot do server.
+- ⚠️ Dev: a janela do número de teste foi ampliada p/ `00:00–23:59` (o padrão de números novos é `08:00–20:00`). "Cap de conversas ativas" fica pro fluxo de iniciar missão (Modo A) — ainda não wired.
+
+**Próximo → Fatia 7 (Painel React):** cadastrar número, criar missão, lista de leads + histórico + fila de escalados. Depois: Fatia 4b (adapter OpenAI real, precisa `OPENAI_API_KEY`).
