@@ -3,11 +3,15 @@
 import { EstadoMissao } from '@prisma/client'
 import { z } from 'zod'
 
-// Ficha (contexto) que entra no "prompt". Versão mínima — a Fatia 5 enriquece com memória.
+// Ficha (contexto) que entra no "prompt" — montada por features/memoria/montador.
 export interface ContextoIA {
+  /** instrução de sistema composta (papel + objetivo + contexto + tom) */
+  persona: string
   objetivo: string
   contexto?: string | null
   estadoAtual: EstadoMissao
+  /** resumo rolante da conversa (memória de longo prazo) */
+  resumo?: string | null
   fatos?: Record<string, unknown> | null
   ultimasMensagens: { direcao: 'in' | 'out'; conteudo: string }[]
 }
