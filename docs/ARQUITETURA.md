@@ -66,6 +66,82 @@ Um único serviço Node, dividido internamente em *features* (vertical slices), 
 
 ---
 
+## 1.1 · Modelo em camadas (multicamada) — por dentro do monólito
+
+Se o **monólito modular** é a forma de fora, a arquitetura **em camadas** é como ele se organiza por dentro. A multicamada clássica separa **apresentação → negócio → dados** (3 camadas). A versão moderna (Clean / Hexagonal / Onion) refina em **4 camadas** com uma regra de ouro — a **Regra de Dependência**: tudo aponta **pra dentro**, em direção ao **Domínio**. É esse o nosso modelo.
+
+```mermaid
+flowchart TB
+    subgraph L1["🖥️ Apresentação — como o mundo entra e sai"]
+      UI["Painel React"]
+      REST["API REST (Fastify)"]
+      WH["Webhook (Evolution)"]
+    end
+    subgraph L2["⚙️ Aplicação — orquestra os casos de uso"]
+      UC1["Processar mensagem recebida"]
+      UC2["Criar / iniciar missão"]
+      UC3["Processar fila de envio"]
+    end
+    subgraph L3["💛 Domínio — as regras que SÃO o produto"]
+      ENT["Entidades: Missão · Contato · Mensagem · Número"]
+      FSM["Máquina de estados da missão"]
+      ANTI["Política anti-bloqueio"]
+      FICHA["Montagem da ficha do lead"]
+      PORTS["Portas (interfaces): Repo · IA · WhatsApp"]
+    end
+    subgraph L4["🔌 Infraestrutura — detalhes plugáveis"]
+      REPO["Repositórios Postgres"]
+      LLM["Provider de IA (OpenAI)"]
+      EVO["Cliente Evolution"]
+      QUEUE["Fila (tabela) + cron"]
+    end
+
+    L1 -->|depende de| L2
+    L2 -->|depende de| L3
+    L4 -.->|implementa as portas do| L3
+```
+
+**As 4 camadas do zapagente:**
+
+- **🖥️ Apresentação** — entrada/saída do mundo: o painel React, as rotas HTTP da API e o webhook da Evolution. Valida payload e serializa. **Zero regra de negócio.**
+- **⚙️ Aplicação** — os *casos de uso*: coordena o passo a passo (ex.: "mensagem recebida" = grava → monta ficha → chama IA → aplica estado → enfileira resposta). Orquestra, mas a regra em si mora abaixo.
+- **💛 Domínio** — o **coração**, independente de tecnologia: entidades, a máquina de estados da missão, a política anti-bloqueio, a montagem da ficha e o contrato do structured output. **Não sabe que existe Postgres, OpenAI ou Evolution.**
+- **🔌 Infraestrutura** — os detalhes plugáveis: repositórios Postgres, cliente Evolution, provider de IA, a fila (tabela) e o cron. **Implementa as portas** definidas pelo domínio.
+
+**A Regra de Dependência (o pulo do gato):** o Domínio define **portas** (interfaces) — ex.: "existe um `RepositorioDeMissao`", "existe um `ProvedorDeIA`". A Infraestrutura **implementa** essas portas. Assim a dependência se **inverte**: em vez do domínio depender do Postgres, o Postgres é que se pluga no domínio. É *exatamente* por isso que "trocar de provider de IA = 1 arquivo": o domínio conversa com a **porta `IA`**, e a OpenAI é só uma implementação trocável. Bônus: dá pra testar o domínio inteiro sem banco nem WhatsApp (usa implementações falsas das portas).
+
+**Os 7 blocos do backend mapeados nas camadas:**
+
+| Bloco | Camada(s) |
+|---|---|
+| 1. Ingestor de webhook | Apresentação → Aplicação |
+| 2. Montador de contexto | Domínio (regra) + Infra (lê repo) |
+| 3. Cérebro IA | Aplicação (orquestra) + Infra (provider) + contrato no Domínio |
+| 4. Máquina de estados | **Domínio (puro)** |
+| 5. Fila + rate-limit + cron | Domínio (política) + Infra (tabela/worker) |
+| 6. Executor de envio | Aplicação + Infra (cliente Evolution) |
+| 7. API do painel | Apresentação |
+
+**Camadas dentro de fatias:** no repo, a organização de topo é por **feature** (fatia vertical) e, dentro de cada uma, aparecem as **camadas** (horizontais). O que é compartilhado (portas + implementações de infra) vive em `/core`.
+
+```
+/apps/api/src
+  /features
+    /conversa
+      conversa.rotas.ts       # 🖥️ Apresentação
+      conversa.caso-uso.ts    # ⚙️ Aplicação
+      conversa.dominio.ts     # 💛 Domínio (regras puras)
+      conversa.repo.ts        # 🔌 Infraestrutura (Postgres)
+    /missoes   ...
+    /fila      ...
+  /core                       # portas + infra compartilhada
+    /db  /ia  /evolution  /fila
+```
+
+**Por que adotamos isso:** (1) trocar tecnologia (IA, WhatsApp, até o banco) sem tocar na regra; (2) testar o domínio isolado; (3) o código fica legível — cada arquivo tem *uma* responsabilidade de camada. O custo é um pouco mais de cerimônia (definir portas), que se paga rápido.
+
+---
+
 ## 2. Camada de WhatsApp — **Evolution API (não-oficial)** ✅ · a decisão-mãe
 
 Define risco de ban, custo e o que é permitido fazer.
