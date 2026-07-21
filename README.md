@@ -19,6 +19,7 @@ Assistente autônomo de IA que opera **várias conversas de WhatsApp em paralelo
 ## Documentação
 
 - **[docs/ROADMAP.md](docs/ROADMAP.md)** — divisão de funcionalidades e ordem de construção (comece por aqui).
+- **[docs/ARQUITETURA.md](docs/ARQUITETURA.md)** — o que usamos, por quê e as alternativas descartadas (decisões).
 - **[docs/estudos/](docs/estudos/)** — pesquisa e decisões que fundamentam o projeto (arquitetura, memória/custo, anti-bloqueio, proposta).
 
 ## Status
