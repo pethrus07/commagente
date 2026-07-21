@@ -26,7 +26,7 @@ services:
   # ─── Evolution API — ponte WhatsApp (Baileys / não-oficial) ───
   # Guarda o estado dela em Postgres + Redis PRÓPRIOS (não mistura com o schema do app).
   evolution:
-    image: atendai/evolution-api:v2.1.1 # pinada; confirmar/bumpar no 1º `compose up`
+    image: evoapicloud/evolution-api:v2.3.1 # namespace oficial atual (ex-atendai)
     container_name: zapagente-evolution
     restart: unless-stopped
     depends_on:
