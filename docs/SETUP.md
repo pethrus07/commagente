@@ -88,7 +88,7 @@ npx prisma studio        # abre em http://localhost:5555
 | API (Fastify) | 3000 | `apps/api` (`npm run dev`) |
 | PostgreSQL | 5432 | container `zapagente-db` |
 | Prisma Studio | 5555 | `npx prisma studio` |
-| Evolution API | 8080 | *(chega na Fatia 2 — Conexão)* |
+| Evolution API | 8080 | container `zapagente-evolution` (Fatia 2) |
 
 ## Variáveis de ambiente (`apps/api/.env`)
 
@@ -122,6 +122,33 @@ npx prisma generate         # regenera o client
 - **`prisma generate` → `EPERM ... query_engine-windows.dll.node` (Windows):** algum processo node segura a DLL. Feche o `npm run dev`, rode `npx prisma generate` de novo. Se persistir: apague `apps/api/node_modules/.prisma` e regenere.
 - **Porta 5432/3000 ocupada:** feche o serviço que está usando ou ajuste a porta no `.env` / `docker-compose.yml`.
 - **Warning `package.json#prisma` deprecado:** conhecido (migrar pra `prisma.config.ts` antes do Prisma 7). Não bloqueia.
+
+---
+
+## Fatia 2 — Conexão (Evolution API)
+
+Sobe a ponte de WhatsApp (Evolution + Postgres/Redis próprios dela):
+
+```bash
+docker compose -f infra/docker-compose.yml up -d evolution
+```
+- Evolution em `http://localhost:8080` (API key = `EVOLUTION_API_KEY` do `.env`, padrão `zapagente-dev-key`).
+- A Evolution chama nosso webhook em `http://host.docker.internal:3000/webhook` (a API roda no host via `npm run dev`).
+
+Conectar um número (⚠️ use um **chip dedicado/aquecido**, não o principal — risco de ban):
+```bash
+# 1) cadastra o número
+curl -X POST localhost:3000/numeros -H "content-type: application/json" \
+  -d '{"telefone":"5583999999999"}'
+# 2) inicia a conexão → devolve o QR (base64); escaneie no WhatsApp do celular
+curl -X POST localhost:3000/numeros/<ID>/conectar
+# 3) confere o status (desconectado|conectando|conectado)
+curl localhost:3000/numeros/<ID>/status
+# 4) teste de envio (após conectado)
+curl -X POST localhost:3000/envio -H "content-type: application/json" \
+  -d '{"numeroId":"<ID>","telefone":"5583988888888","texto":"oi, teste"}'
+```
+Mensagens recebidas caem no `POST /webhook` → viram `Contato` + `Evento` (auditoria).
 
 ---
 

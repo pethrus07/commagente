@@ -23,4 +23,15 @@ Node + **Fastify** + TS · **PostgreSQL** (via **Prisma**) · fila no Postgres +
 
 ## Estado atual (jul/2026)
 Fase **F0 (MVP)**. **Fatia 1 — Fundação: FEITA** (scaffold Fastify/TS, docker-compose do Postgres, schema Prisma, 1ª migration → 8 tabelas, `/ready` OK).
-**Próximo → Fatia 2 (Conexão):** Evolution API + webhook/ingestor + executor de envio.
+
+**Fatia 2 — Conexão: CÓDIGO FEITO** (branch `feat/fatia2-conexao`; falta só o teste ao vivo = escanear o QR com um chip dedicado):
+- Evolution API + Redis no `docker-compose` (Postgres/Redis próprios da Evolution).
+- `core/evolution/` — porta WhatsApp (interface) + cliente Evolution (adapter HTTP).
+- `features/numeros/` — cadastrar número, conectar (devolve QR), status.
+- `features/webhook/` — ingestor: recebe evento, captura contato, audita em `eventos`.
+- `features/envio/` — executor: digitação simulada + envio + status.
+- Rotas: `POST /numeros`, `POST /numeros/:id/conectar`, `GET /numeros/:id/status`, `POST /webhook`, `POST /envio`.
+
+⚠️ **Decisão pendente:** `mensagens.missaoId` é obrigatório → na Fatia 2 inbound/outbound são auditados em `eventos`. Ao entrar a **Fatia 3 (Missões)** eles passam a gravar em `mensagens` (ou torna-se `missaoId` opcional — decidir).
+
+**Próximo → teste ao vivo da Fatia 2** (conectar número real + E2E), depois **Fatia 3 (Missão + estados)**.
