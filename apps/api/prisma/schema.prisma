@@ -1,0 +1,206 @@
+// zapagente — schema de dados (Prisma + PostgreSQL)
+// Camada Infraestrutura: expressa o modelo do Domínio em tabelas.
+// Convenção: models PascalCase, campos camelCase, colunas/tabelas snake_case via @map/@@map.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums (o que é fechado, o banco valida) ─────────────────
+enum EstadoMissao {
+  configurada
+  na_fila
+  em_conversa
+  concluida
+  descartada
+  escalada
+  sem_resposta
+  arquivada
+}
+
+enum Direcao {
+  in
+  out
+}
+
+enum StatusEnvio {
+  pendente
+  enviando
+  ok
+  erro
+}
+
+enum StatusConexao {
+  desconectado
+  conectando
+  conectado
+}
+
+// ─── Tenancy ─────────────────────────────────────────────────
+model Tenant {
+  id       String   @id @default(uuid()) @db.Uuid
+  nome     String
+  criadoEm DateTime @default(now()) @map("criado_em")
+
+  numeros   NumeroWhatsapp[]
+  contatos  Contato[]
+  templates MissaoTemplate[]
+  missoes   Missao[]
+  mensagens Mensagem[]
+  fila      FilaEnvio[]
+  eventos   Evento[]
+
+  @@map("tenants")
+}
+
+// ─── Números / chips (estado de aquecimento e budget) ────────
+model NumeroWhatsapp {
+  id                 String        @id @default(uuid()) @db.Uuid
+  tenantId           String        @map("tenant_id") @db.Uuid
+  telefone           String
+  instanciaEvolution String        @map("instancia_evolution")
+  statusConexao      StatusConexao @default(desconectado) @map("status_conexao")
+  aquecimentoEstagio Int           @default(1) @map("aquecimento_estagio")
+  budgetDiario       Int           @default(10) @map("budget_diario")
+  enviadosHoje       Int           @default(0) @map("enviados_hoje")
+  janelaInicio       String        @default("08:00") @map("janela_inicio") // HH:mm
+  janelaFim          String        @default("20:00") @map("janela_fim")
+  criadoEm           DateTime      @default(now()) @map("criado_em")
+
+  tenant  Tenant   @relation(fields: [tenantId], references: [id])
+  missoes Missao[]
+
+  @@index([tenantId])
+  @@map("numeros_whatsapp")
+}
+
+// ─── Contatos / leads ────────────────────────────────────────
+model Contato {
+  id       String   @id @default(uuid()) @db.Uuid
+  tenantId String   @map("tenant_id") @db.Uuid
+  telefone String
+  nome     String?
+  dados    Json? // dados livres do lead
+  origem   String? // manual | indicacao | lista
+  criadoEm DateTime @default(now()) @map("criado_em")
+
+  tenant    Tenant      @relation(fields: [tenantId], references: [id])
+  missoes   Missao[]
+  mensagens Mensagem[]
+  fila      FilaEnvio[]
+
+  @@unique([tenantId, telefone])
+  @@index([tenantId])
+  @@map("contatos")
+}
+
+// ─── Templates de missão (reutilizáveis = "botão") ───────────
+model MissaoTemplate {
+  id                String   @id @default(uuid()) @db.Uuid
+  tenantId          String   @map("tenant_id") @db.Uuid
+  nome              String
+  objetivo          String
+  personaPrompt     String   @map("persona_prompt")
+  tom               String?
+  criterioConclusao String?  @map("criterio_conclusao")
+  categorias        Json? // categorias de saída
+  guardrails        String?
+  criadoEm          DateTime @default(now()) @map("criado_em")
+
+  tenant  Tenant   @relation(fields: [tenantId], references: [id])
+  missoes Missao[]
+
+  @@index([tenantId])
+  @@map("missao_templates")
+}
+
+// ─── Missões (instância viva; carrega a memória) ─────────────
+model Missao {
+  id                 String       @id @default(uuid()) @db.Uuid
+  tenantId           String       @map("tenant_id") @db.Uuid
+  contatoId          String       @map("contato_id") @db.Uuid
+  templateId         String?      @map("template_id") @db.Uuid
+  numeroId           String       @map("numero_id") @db.Uuid
+  objetivo           String
+  contexto           String?
+  estado             EstadoMissao @default(configurada)
+  categoriaResultado String?      @map("categoria_resultado")
+  resumo             String? // resumo rolante (memória)
+  fatos              Json? // fatos extraídos (memória)
+  iniciadaEm         DateTime?    @map("iniciada_em")
+  concluidaEm        DateTime?    @map("concluida_em")
+  criadoEm           DateTime     @default(now()) @map("criado_em")
+
+  tenant    Tenant          @relation(fields: [tenantId], references: [id])
+  contato   Contato         @relation(fields: [contatoId], references: [id])
+  template  MissaoTemplate? @relation(fields: [templateId], references: [id])
+  numero    NumeroWhatsapp  @relation(fields: [numeroId], references: [id])
+  mensagens Mensagem[]
+  fila      FilaEnvio[]
+  eventos   Evento[]
+
+  @@index([tenantId, estado])
+  @@map("missoes")
+}
+
+// ─── Mensagens (histórico da conversa) ───────────────────────
+model Mensagem {
+  id            String       @id @default(uuid()) @db.Uuid
+  tenantId      String       @map("tenant_id") @db.Uuid
+  missaoId      String       @map("missao_id") @db.Uuid
+  contatoId     String       @map("contato_id") @db.Uuid
+  direcao       Direcao
+  conteudo      String
+  statusEnvio   StatusEnvio? @map("status_envio")
+  providerMsgId String?      @map("provider_msg_id")
+  criadaEm      DateTime     @default(now()) @map("criada_em")
+  enviadaEm     DateTime?    @map("enviada_em")
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id])
+  missao  Missao  @relation(fields: [missaoId], references: [id])
+  contato Contato @relation(fields: [contatoId], references: [id])
+
+  @@index([missaoId, criadaEm])
+  @@map("mensagens")
+}
+
+// ─── Fila de envio (o coração anti-bloqueio) ─────────────────
+model FilaEnvio {
+  id           String      @id @default(uuid()) @db.Uuid
+  tenantId     String      @map("tenant_id") @db.Uuid
+  missaoId     String      @map("missao_id") @db.Uuid
+  contatoId    String      @map("contato_id") @db.Uuid
+  payload      Json
+  agendadoPara DateTime    @map("agendado_para")
+  tentativas   Int         @default(0)
+  status       StatusEnvio @default(pendente)
+  criadoEm     DateTime    @default(now()) @map("criado_em")
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id])
+  missao  Missao  @relation(fields: [missaoId], references: [id])
+  contato Contato @relation(fields: [contatoId], references: [id])
+
+  @@index([status, agendadoPara])
+  @@map("fila_envio")
+}
+
+// ─── Eventos (auditoria / timeline) ──────────────────────────
+model Evento {
+  id       String   @id @default(uuid()) @db.Uuid
+  tenantId String   @map("tenant_id") @db.Uuid
+  missaoId String?  @map("missao_id") @db.Uuid
+  tipo     String
+  dados    Json?
+  criadoEm DateTime @default(now()) @map("criado_em")
+
+  tenant Tenant  @relation(fields: [tenantId], references: [id])
+  missao Missao? @relation(fields: [missaoId], references: [id])
+
+  @@index([tenantId, criadoEm])
+  @@map("eventos")
+}
