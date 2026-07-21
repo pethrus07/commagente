@@ -74,6 +74,18 @@ export async function processarTurno(missaoId: string) {
       },
     },
   })
+
+  // 8) atualiza o resumo rolante (inclui a resposta recém-enviada).
+  // Com IA real dá pra throttlar (a cada N turnos) pra economizar token.
+  const resumo = await ia.resumir({
+    ...ctx,
+    ultimasMensagens: [
+      ...ctx.ultimasMensagens,
+      { direcao: 'out', conteudo: saida.resposta },
+    ],
+  })
+  await conversaRepo.salvarResumo(missaoId, resumo)
+
   return {
     ok: true as const,
     resposta: saida.resposta,

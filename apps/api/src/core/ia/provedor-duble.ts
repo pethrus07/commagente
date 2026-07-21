@@ -39,4 +39,17 @@ export const provedorDuble: ProvedorIA = {
       precisa_humano: false,
     }
   },
+
+  async resumir(ctx): Promise<string> {
+    const ins = ctx.ultimasMensagens.filter((m) => m.direcao === 'in').length
+    const outs = ctx.ultimasMensagens.filter((m) => m.direcao === 'out').length
+    const ultimaIn =
+      [...ctx.ultimasMensagens].reverse().find((m) => m.direcao === 'in')
+        ?.conteudo ?? '—'
+    const fatos =
+      ctx.fatos && Object.keys(ctx.fatos).length > 0
+        ? JSON.stringify(ctx.fatos)
+        : 'nenhum'
+    return `Objetivo: ${ctx.objetivo}. Trocas recentes: ${ins} do lead / ${outs} nossas. Última do lead: "${ultimaIn}". Fatos: ${fatos}.`
+  },
 }

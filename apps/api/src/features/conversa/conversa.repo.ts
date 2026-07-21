@@ -10,4 +10,9 @@ export const conversaRepo = {
       data: { fatos: fatos as Prisma.InputJsonValue },
     })
   },
+
+  // atualiza o resumo rolante da missão
+  salvarResumo(id: string, resumo: string) {
+    return db.missao.update({ where: { id }, data: { resumo } })
+  },
 }

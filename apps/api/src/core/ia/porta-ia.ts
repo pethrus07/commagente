@@ -30,4 +30,6 @@ export type SaidaIA = z.infer<typeof SaidaIASchema>
 export interface ProvedorIA {
   readonly nome: string
   gerar(ctx: ContextoIA): Promise<SaidaIA>
+  /** condensa a conversa num resumo rolante (memória de longo prazo) */
+  resumir(ctx: ContextoIA): Promise<string>
 }
