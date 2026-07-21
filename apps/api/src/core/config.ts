@@ -17,6 +17,10 @@ export const config = {
     apiKey: obrigatorio('EVOLUTION_API_KEY'),
   },
 
+  // IA (Fatia 4b) — provider-agnostic; só necessária se IA_PROVIDER=openai
+  openaiKey: process.env.OPENAI_API_KEY ?? '',
+  openaiModelo: process.env.OPENAI_MODEL ?? 'gpt-4o-mini',
+
   // URL que a Evolution (no Docker) usa pra chamar nosso webhook.
   // Em dev a API roda no host → host.docker.internal alcança a :3000.
   webhookUrl:
