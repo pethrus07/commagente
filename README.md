@@ -23,6 +23,29 @@ Assistente autônomo de IA que opera **várias conversas de WhatsApp em paralelo
 - **[docs/MODELO-DADOS.md](docs/MODELO-DADOS.md)** — as 8 tabelas, ERD visual e o schema Prisma.
 - **[docs/estudos/](docs/estudos/)** — pesquisa e decisões que fundamentam o projeto (arquitetura, memória/custo, anti-bloqueio, proposta).
 
+## Rodar em desenvolvimento
+
+```bash
+# 1. subir o Postgres (precisa de Docker)
+docker compose -f infra/docker-compose.yml up -d db
+
+# 2. dependências + cliente Prisma
+cd apps/api
+npm install
+
+# 3. criar as tabelas (1ª migration)
+npx prisma migrate dev --name init
+
+# 4. subir a API
+npm run dev        # http://localhost:3000/health  e  /ready
+```
+
+- `GET /health` — a API está de pé (não depende do banco).
+- `GET /ready` — confirma que o Postgres responde.
+- `npx prisma studio` — inspeciona os dados no navegador.
+
+> Sem Docker? A migration precisa de um Postgres acessível — use o Docker Desktop **ou** um Postgres gerenciado (ex.: Neon/Supabase) e aponte o `DATABASE_URL` do `apps/api/.env` pra ele.
+
 ## Status
 
 Em estruturação (jul/2026). Construção parte a parte, mirando o MVP (Fase 0).
