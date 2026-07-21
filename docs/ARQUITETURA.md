@@ -142,6 +142,51 @@ flowchart TB
 
 ---
 
+## 1.2 · O harness do agente (a moldura em volta do LLM)
+
+Um LLM sozinho é **stateless e só prevê texto** — não guarda estado, não age no mundo e não garante formato de saída. Pra virar uma assistente confiável, ele precisa de um **harness**: a moldura **determinística** em volta do modelo que monta o contexto, força um contrato de saída, valida, aplica no estado e controla o ritmo. *(O próprio Claude Code é um harness em volta de um LLM — mesma ideia.)*
+
+No zapagente o harness = os blocos **2 (Montador de contexto) + 3 (Cérebro IA) + 4 (Máquina de estados)** + a fila, operando em loop a cada turno:
+
+```mermaid
+flowchart LR
+    IN["msg recebida"] --> CTX["1 · montar contexto<br/>(ficha do lead)"]
+    CTX --> LLM["2 · chamar LLM<br/>com contrato (structured output)"]
+    LLM --> VAL{"3 · saída<br/>válida?"}
+    VAL -- não --> RETRY["retry / escalar"]
+    VAL -- sim --> APPLY["4 · aplicar estado<br/>+ salvar fatos"]
+    APPLY --> GUARD{"precisa<br/>humano?"}
+    GUARD -- sim --> ESC["escalar p/ humano"]
+    GUARD -- não --> Q["5 · enfileirar resposta<br/>(ritmo humano)"]
+```
+
+**O que o harness faz que o modelo cru não faz:**
+1. **Contexto** — decide o que entra no prompt (persona + objetivo + fatos + resumo + últimas msgs), não o histórico cru.
+2. **Contrato** — exige *structured output* (`resposta, novo_estado, categoria, fatos_novos, precisa_humano`).
+3. **Validação** — se a saída não bate o contrato, **repete ou escala** (nunca confia cego no modelo).
+4. **Estado** — aplica a transição na máquina de estados e persiste fatos/resumo (a memória).
+5. **Guardrails** — `precisa_humano`, limites, tom → segurança antes de agir.
+6. **Ritmo** — a resposta não sai na hora: entra na fila com atraso humano (anti-bloqueio).
+
+Em pseudocódigo, um turno inbound:
+```ts
+async function processarTurno(missao, msgRecebida) {
+  const ficha  = montarContexto(missao)              // Montador (memória)
+  const saida  = await ia.gerar(ficha, CONTRATO)     // Cérebro (structured output)
+  if (!valido(saida, CONTRATO)) return reprocessar(missao)  // guardrail: valida
+  aplicarEstado(missao, saida.novo_estado)           // Máquina de estados
+  salvarFatos(missao, saida.fatos_novos)             // memória
+  if (saida.precisa_humano) return escalar(missao)   // guardrail
+  enfileirarResposta(missao, saida.resposta)         // Fila (ritmo humano)
+}
+```
+
+**Harness × camadas:** o loop vive na **⚙️ Aplicação** (orquestra), as regras (contrato, estados, guardrails) no **💛 Domínio**, e ele chama a IA/o banco pela **🔌 Infra** — sempre via **portas**. Trocar de modelo/provider não mexe no harness.
+
+**E o "test harness"?** O termo também significa *scaffold de teste* — e aqui ganhamos um **de graça**: como o provider de IA e o WhatsApp são portas plugáveis (§1.1), dá pra trocá-los por **dublês** e rodar conversas roteirizadas **offline**, sem gastar token nem arriscar o chip. Os dois sentidos de "harness" se apoiam no mesmo desenho.
+
+---
+
 ## 2. Camada de WhatsApp — **Evolution API (não-oficial)** ✅ · a decisão-mãe
 
 Define risco de ban, custo e o que é permitido fazer.
