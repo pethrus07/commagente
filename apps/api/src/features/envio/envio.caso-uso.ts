@@ -1,6 +1,5 @@
-// ⚙️ Aplicação — executor de envio (Fatia 2, envio DIRETO).
-// A fila anti-bloqueio (budget, janela, jitter, cap) vem inteira na Fatia 6;
-// aqui já entra a "digitação simulada" (presença) por ser barata e importante.
+// ⚙️ Aplicação — executor de envio (envio DIRETO; fila anti-bloqueio vem na Fatia 6).
+// Já entra a "digitação simulada" (presença) e a gravação em `mensagens`.
 import { ErroHttp } from '../../core/erros'
 import { evolutionClient } from '../../core/evolution/evolution.client'
 import type { PortaWhatsApp } from '../../core/evolution/porta-whatsapp'
@@ -18,10 +17,13 @@ export async function enviarTexto(
   numeroId: string,
   telefone: string,
   texto: string,
+  missaoId?: string,
 ) {
   const numero = await envioRepo.buscarNumero(numeroId)
   if (!numero) throw new ErroHttp(404, 'Número não encontrado')
   const instancia = numero.instanciaEvolution
+
+  const contato = await envioRepo.upsertContato(numero.tenantId, telefone)
 
   // sinaliza "digitando…" e espera esse tempo antes de mandar
   const ms = msDigitando(texto)
@@ -30,10 +32,13 @@ export async function enviarTexto(
 
   const { providerMsgId } = await wa.enviarTexto(instancia, telefone, texto)
 
-  await envioRepo.registrarEvento(numero.tenantId, 'mensagem_enviada', {
-    telefone,
+  await envioRepo.gravarMensagemSaida({
+    tenantId: numero.tenantId,
+    missaoId: missaoId ?? null,
+    contatoId: contato.id,
     conteudo: texto,
     providerMsgId,
+    statusEnvio: 'enviando', // vira 'ok' quando o status de entrega chegar no webhook
   })
-  return { providerMsgId, telefone, digitou_ms: ms }
+  return { providerMsgId, telefone, digitou_ms: ms, missaoId: missaoId ?? null }
 }

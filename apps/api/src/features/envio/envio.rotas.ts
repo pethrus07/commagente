@@ -7,11 +7,12 @@ const corpo = z.object({
   numeroId: z.string().uuid(),
   telefone: z.string().min(8),
   texto: z.string().min(1),
+  missaoId: z.string().uuid().optional(),
 })
 
 export async function envioRotas(app: FastifyInstance) {
   app.post('/envio', async (req) => {
-    const { numeroId, telefone, texto } = corpo.parse(req.body)
-    return enviarTexto(numeroId, telefone, texto)
+    const { numeroId, telefone, texto, missaoId } = corpo.parse(req.body)
+    return enviarTexto(numeroId, telefone, texto, missaoId)
   })
 }

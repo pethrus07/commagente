@@ -1,5 +1,5 @@
 // 🔌 Infraestrutura — persistência do executor (Prisma).
-import { Prisma } from '@prisma/client'
+import type { StatusEnvio } from '@prisma/client'
 import { db } from '../../core/db'
 
 export const envioRepo = {
@@ -7,11 +7,33 @@ export const envioRepo = {
     return db.numeroWhatsapp.findUnique({ where: { id } })
   },
 
-  registrarEvento(
-    tenantId: string,
-    tipo: string,
-    dados: Prisma.InputJsonObject,
-  ) {
-    return db.evento.create({ data: { tenantId, tipo, dados } })
+  upsertContato(tenantId: string, telefone: string) {
+    return db.contato.upsert({
+      where: { tenantId_telefone: { tenantId, telefone } },
+      update: {},
+      create: { tenantId, telefone, origem: 'manual' },
+    })
+  },
+
+  gravarMensagemSaida(p: {
+    tenantId: string
+    missaoId: string | null
+    contatoId: string
+    conteudo: string
+    providerMsgId: string
+    statusEnvio: StatusEnvio
+  }) {
+    return db.mensagem.create({
+      data: {
+        tenantId: p.tenantId,
+        missaoId: p.missaoId ?? undefined,
+        contatoId: p.contatoId,
+        direcao: 'out',
+        conteudo: p.conteudo,
+        providerMsgId: p.providerMsgId,
+        statusEnvio: p.statusEnvio,
+        enviadaEm: new Date(),
+      },
+    })
   },
 }
