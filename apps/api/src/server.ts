@@ -1,8 +1,21 @@
-import Fastify from 'fastify'
+import Fastify, { type FastifyError } from 'fastify'
+import { ZodError } from 'zod'
 import { config } from './core/config'
 import { db } from './core/db'
+import { numerosRotas } from './features/numeros/numeros.rotas'
 
 const app = Fastify({ logger: true })
+
+// erros de validação (zod) viram 400; o resto respeita statusCode ou cai em 500
+app.setErrorHandler((err: FastifyError, _req, reply) => {
+  if (err instanceof ZodError) {
+    reply.code(400)
+    return { ok: false, erro: 'validacao', detalhes: err.issues }
+  }
+  app.log.error(err)
+  reply.code(err.statusCode ?? 500)
+  return { ok: false, erro: err.message }
+})
 
 // liveness — a API está de pé (não depende de nada externo)
 app.get('/health', async () => ({ ok: true, servico: 'zapagente-api' }))
@@ -17,6 +30,9 @@ app.get('/ready', async (_req, reply) => {
     return { ok: false, db: 'down' }
   }
 })
+
+// features
+app.register(numerosRotas)
 
 app
   .listen({ port: config.porta, host: '0.0.0.0' })
