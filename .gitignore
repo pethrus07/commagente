@@ -1,0 +1,35 @@
+# deps
+node_modules/
+.pnp
+.pnp.js
+
+# build
+dist/
+build/
+*.tsbuildinfo
+
+# env / segredos (NUNCA versionar)
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# dados sensíveis (LGPD) — contatos/leads reais nunca vão pro git
+seed_dados_reais.*
+*.dump
+*.sqlite
+
+# sessão do WhatsApp (Evolution) — credenciais de sessão
+instances/
+evolution_data/
+
+# logs
+logs/
+*.log
+npm-debug.log*
+
+# editor / SO
+.DS_Store
+.vscode/
+.idea/

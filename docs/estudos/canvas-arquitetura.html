@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Canvas de Arquitetura — Assistente de IA no WhatsApp</title>
+<style>
+  :root{
+    --bg:#F5F7F6; --surface:#FFFFFF; --surface-2:#F0F3F1;
+    --ink:#131A18; --muted:#57665F; --line:#D9E1DD;
+    --accent:#0E9C64; --accent-soft:#0e9c641a;
+    --amber:#B8791F; --amber-soft:#b8791f1a;
+    --info:#2F6FED; --good:#0E9C64; --warn:#B8791F; --bad:#CE4B43; --idle:#8A9A93;
+    --grid:#00000008;
+    --font-sans:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --font-mono:ui-monospace,"JetBrains Mono","Cascadia Code","SF Mono",Consolas,monospace;
+    --maxw:1080px; --r:14px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#0B110F; --surface:#121A17; --surface-2:#0F1613;
+      --ink:#E8EEEB; --muted:#8FA097; --line:#223029;
+      --accent:#2FD393; --accent-soft:#2fd39320;
+      --amber:#E0A83E; --amber-soft:#e0a83e1f;
+      --info:#6C9BFF; --good:#2FD393; --warn:#E0A83E; --bad:#F0685F; --idle:#7C8C85;
+      --grid:#ffffff08;
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#F5F7F6; --surface:#FFFFFF; --surface-2:#F0F3F1;
+    --ink:#131A18; --muted:#57665F; --line:#D9E1DD;
+    --accent:#0E9C64; --accent-soft:#0e9c641a; --amber:#B8791F; --amber-soft:#b8791f1a;
+    --info:#2F6FED; --good:#0E9C64; --warn:#B8791F; --bad:#CE4B43; --idle:#8A9A93; --grid:#00000008;
+  }
+  :root[data-theme="dark"]{
+    --bg:#0B110F; --surface:#121A17; --surface-2:#0F1613;
+    --ink:#E8EEEB; --muted:#8FA097; --line:#223029;
+    --accent:#2FD393; --accent-soft:#2fd39320; --amber:#E0A83E; --amber-soft:#e0a83e1f;
+    --info:#6C9BFF; --good:#2FD393; --warn:#E0A83E; --bad:#F0685F; --idle:#7C8C85; --grid:#ffffff08;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:var(--font-sans); line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+    background-size:26px 26px;
+  }
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:48px 22px 72px}
+  .eyebrow{font-family:var(--font-mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); margin:0 0 10px}
+  h1{font-size:clamp(28px,5vw,44px); line-height:1.05; margin:0 0 12px; text-wrap:balance; letter-spacing:-.02em}
+  .lede{font-size:17px; color:var(--muted); max-width:64ch; margin:0}
+  h2{font-size:13px; font-family:var(--font-mono); letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:0 0 18px; display:flex; align-items:center; gap:10px}
+  h2::before{content:""; width:22px; height:2px; background:var(--accent); display:inline-block}
+  section{margin-top:52px}
+
+  /* chips */
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:22px}
+  .chip{font-family:var(--font-mono); font-size:12.5px; padding:6px 11px; border:1px solid var(--line); border-radius:999px; background:var(--surface); color:var(--ink); display:inline-flex; gap:7px; align-items:center}
+  .chip b{color:var(--accent); font-weight:600}
+  .chip.locked::before{content:"✓"; color:var(--good); font-weight:700}
+
+  /* architecture flow */
+  .flow{display:flex; flex-direction:column; gap:0; overflow-x:auto}
+  .layer{display:flex; gap:14px; justify-content:center; flex-wrap:wrap}
+  .arrow{align-self:center; color:var(--muted); font-family:var(--font-mono); font-size:18px; padding:9px 0; text-align:center}
+  .node{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:14px 16px; min-width:180px; flex:1 1 180px; max-width:260px}
+  .node .k{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+  .node .t{font-weight:650; font-size:15px; margin-top:3px}
+  .node .d{font-size:13px; color:var(--muted); margin-top:5px; line-height:1.4}
+  .node.accent{border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent-soft)}
+  .band{border:1px dashed var(--accent); background:var(--accent-soft); border-radius:14px; padding:14px; }
+  .band .band-k{font-family:var(--font-mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--accent); margin-bottom:12px; text-align:center}
+  .band .row{display:flex; gap:12px; flex-wrap:wrap; justify-content:center}
+  .band .node{background:var(--surface); flex:1 1 150px; min-width:150px}
+  .sides{display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-top:0}
+  .store{display:flex; gap:14px; justify-content:center; flex-wrap:wrap}
+  .store .node{border-style:solid}
+  .loopnote{font-family:var(--font-mono); font-size:12px; color:var(--muted); text-align:center; margin-top:14px; padding-top:12px; border-top:1px solid var(--line)}
+  .loopnote b{color:var(--ink)}
+
+  /* generic card grid */
+  .grid{display:grid; gap:14px}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:820px){.g3{grid-template-columns:1fr 1fr}}
+  @media(max-width:560px){.g3,.g2{grid-template-columns:1fr}}
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:16px 17px; transition:border-color .15s ease, transform .15s ease}
+  .card:hover{border-color:var(--accent)}
+  .card .num{font-family:var(--font-mono); font-size:12px; color:var(--accent); font-weight:600}
+  .card h3{font-size:15.5px; margin:6px 0 6px}
+  .card p{margin:0; font-size:13.5px; color:var(--muted); line-height:1.5}
+
+  /* data model */
+  .entity{background:var(--surface); border:1px solid var(--line); border-radius:12px; overflow:hidden}
+  .entity .head{background:var(--surface-2); padding:9px 13px; font-family:var(--font-mono); font-weight:600; font-size:13.5px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center}
+  .entity .head span{font-size:10px; color:var(--muted); letter-spacing:.08em}
+  .entity ul{list-style:none; margin:0; padding:10px 13px; display:flex; flex-wrap:wrap; gap:6px}
+  .entity li{font-family:var(--font-mono); font-size:11.5px; color:var(--muted); background:var(--surface-2); border:1px solid var(--line); padding:2px 7px; border-radius:6px}
+  .entity li.pk{color:var(--accent); border-color:var(--accent-soft)}
+
+  /* anti-block callout */
+  .callout{border:1px solid var(--amber); background:var(--amber-soft); border-radius:var(--r); padding:20px}
+  .callout .rule{display:flex; gap:12px; padding:10px 0; border-bottom:1px dashed var(--line)}
+  .callout .rule:last-child{border-bottom:0}
+  .callout .rn{font-family:var(--font-mono); color:var(--amber); font-weight:700; font-size:13px; min-width:56px}
+  .callout .rt b{display:block; font-size:14px}
+  .callout .rt span{font-size:13px; color:var(--muted)}
+
+  /* roadmap */
+  .road{display:grid; grid-template-columns:repeat(4,1fr); gap:14px}
+  @media(max-width:820px){.road{grid-template-columns:1fr 1fr}}
+  @media(max-width:520px){.road{grid-template-columns:1fr}}
+  .phase{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:16px; border-top:3px solid var(--amber); position:relative}
+  .phase .pk{font-family:var(--font-mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--amber)}
+  .phase h3{margin:4px 0 10px; font-size:16px}
+  .phase ul{margin:0 0 12px; padding-left:16px}
+  .phase li{font-size:13px; color:var(--muted); margin-bottom:4px}
+  .phase .gate{font-size:12px; color:var(--ink); background:var(--surface-2); border:1px solid var(--line); border-radius:8px; padding:7px 9px; margin-top:auto}
+  .phase .gate b{font-family:var(--font-mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); display:block; margin-bottom:2px}
+  .dep{display:inline-block; font-family:var(--font-mono); font-size:10.5px; padding:1px 6px; border-radius:5px; margin:2px 3px 0 0; border:1px solid var(--line); color:var(--muted)}
+
+  .foot{margin-top:56px; padding-top:22px; border-top:1px solid var(--line); color:var(--muted); font-size:13px}
+  .foot .chips{margin-top:12px}
+  .legend{display:flex; gap:16px; flex-wrap:wrap; font-family:var(--font-mono); font-size:11.5px; color:var(--muted); margin-top:10px}
+  .legend span::before{content:"●"; margin-right:5px}
+  .l-info::before{color:var(--info)} .l-good::before{color:var(--good)} .l-warn::before{color:var(--warn)} .l-bad::before{color:var(--bad)} .l-idle::before{color:var(--idle)}
+
+  a{color:var(--accent)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Arquitetura · Canvas v0.1 · 19 jul 2026</p>
+    <h1>Assistente de IA no WhatsApp</h1>
+    <p class="lede">Um motor que executa <b>missões</b> — você dá um objetivo a um número, a IA conduz a conversa sozinha no ritmo humano e devolve resultado no painel. Este canvas mostra a stack travada, a arquitetura, os dados, o motor anti-bloqueio e o roadmap.</p>
+    <div class="chips">
+      <span class="chip locked">Risco de ban <b>aceito</b></span>
+      <span class="chip locked">Infra <b>leve</b> (VPS)</span>
+      <span class="chip locked"><b>Sem n8n</b> no core</span>
+      <span class="chip locked">White-label <b>pós-MVP</b></span>
+      <span class="chip locked"><b>No ar</b> primeiro</span>
+    </div>
+  </header>
+
+  <section>
+    <h2>Arquitetura</h2>
+    <div class="flow">
+      <div class="layer">
+        <div class="node"><div class="k">Frontend</div><div class="t">Painel</div><div class="d">React + Vite — cadastrar número, criar missão, acompanhar status</div></div>
+      </div>
+      <div class="arrow">↓&nbsp; HTTP</div>
+      <div class="layer">
+        <div class="node accent"><div class="k">Orquestrador</div><div class="t">API — Fastify + TS</div><div class="d">Node puro; coordena todo o fluxo de missão</div></div>
+      </div>
+      <div class="arrow">↓</div>
+      <div class="band">
+        <div class="band-k">Motor de missão</div>
+        <div class="row">
+          <div class="node"><div class="k">02</div><div class="t">Memória</div><div class="d">monta a ficha do lead</div></div>
+          <div class="node"><div class="k">03</div><div class="t">Cérebro IA</div><div class="d">structured output</div></div>
+          <div class="node"><div class="k">04</div><div class="t">Máq. de estados</div><div class="d">transição da missão</div></div>
+          <div class="node"><div class="k">05</div><div class="t">Fila + ritmo</div><div class="d">anti-bloqueio + cron</div></div>
+        </div>
+      </div>
+      <div class="arrow">↓</div>
+      <div class="layer">
+        <div class="node"><div class="k">Boundary</div><div class="t">Evolution API</div><div class="d">ponte não-oficial (Baileys) ⇄ WhatsApp Web</div></div>
+      </div>
+      <div class="arrow">↕</div>
+      <div class="store">
+        <div class="node"><div class="k">Externo</div><div class="t">📱 WhatsApp</div><div class="d">número dedicado + aquecido</div></div>
+      </div>
+      <div class="sides" style="margin-top:14px">
+        <div class="node"><div class="k">IA</div><div class="t">OpenAI (mini)</div><div class="d">camada provider-agnostic · liga no Cérebro</div></div>
+        <div class="node"><div class="k">Persistência</div><div class="t">PostgreSQL</div><div class="d">fonte da verdade de tudo · Docker</div></div>
+      </div>
+      <p class="loopnote"><b>Inbound:</b> WhatsApp → webhook → memória → IA → fila → envio &nbsp;·&nbsp; <b>Outbound:</b> painel cria missão → fila (respeita budget/janela) → 1ª mensagem</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Componentes do backend</h2>
+    <div class="grid g3">
+      <div class="card"><div class="num">01</div><h3>Ingestor de webhook</h3><p>Recebe eventos da Evolution (mensagem/entrega), normaliza e grava.</p></div>
+      <div class="card"><div class="num">02</div><h3>Montador de contexto</h3><p>Monta a "ficha" do lead: persona + objetivo + fatos + resumo + últimas msgs.</p></div>
+      <div class="card"><div class="num">03</div><h3>Cérebro IA</h3><p>Chama o LLM com structured output: resposta + estado + categoria + fatos.</p></div>
+      <div class="card"><div class="num">04</div><h3>Máquina de estados</h3><p>Aplica a transição da missão e dispara eventos de auditoria.</p></div>
+      <div class="card"><div class="num">05</div><h3>Fila + ritmo</h3><p>O motor anti-bloqueio: budget por número, jitter, cap de conversas, cron.</p></div>
+      <div class="card"><div class="num">06</div><h3>Executor de envio</h3><p>Tira da fila, simula digitação, envia via Evolution e registra.</p></div>
+      <div class="card"><div class="num">07</div><h3>API do painel</h3><p>CRUD de missões/contatos/números + leitura de status e histórico.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Modelo de dados</h2>
+    <p class="lede" style="font-size:14px; margin-bottom:18px">Postgres, tudo com <code>tenant_id</code> — single-tenant hoje, white-label sem refatorar depois.</p>
+    <div class="grid g3">
+      <div class="entity"><div class="head">contatos <span>PESSOA</span></div><ul><li class="pk">id</li><li>tenant_id</li><li>telefone</li><li>nome</li><li>dados</li><li>origem</li></ul></div>
+      <div class="entity"><div class="head">missao_templates <span>RECEITA</span></div><ul><li class="pk">id</li><li>objetivo</li><li>persona_prompt</li><li>tom</li><li>criterio</li><li>categorias</li><li>guardrails</li></ul></div>
+      <div class="entity"><div class="head">missoes <span>INSTÂNCIA</span></div><ul><li class="pk">id</li><li>contato_id</li><li>template_id</li><li>estado</li><li>contexto</li><li>fatos</li><li>resumo</li><li>categoria</li></ul></div>
+      <div class="entity"><div class="head">mensagens <span>HISTÓRICO</span></div><ul><li class="pk">id</li><li>missao_id</li><li>direcao</li><li>conteudo</li><li>status_envio</li><li>criada_em</li></ul></div>
+      <div class="entity"><div class="head">fila_envio <span>RITMO</span></div><ul><li class="pk">id</li><li>missao_id</li><li>payload</li><li>agendado_para</li><li>status</li></ul></div>
+      <div class="entity"><div class="head">numeros_whatsapp <span>CHIP</span></div><ul><li class="pk">id</li><li>telefone</li><li>instancia</li><li>aquecimento</li><li>budget_diario</li><li>enviados_hoje</li></ul></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Motor anti-bloqueio · o coração</h2>
+    <div class="callout">
+      <div class="rule"><div class="rn">budget</div><div class="rt"><b>Aquecimento por número</b><span>Sem 1: uso baixo · Sem 2: 10–20 msgs/dia · Sem 3+: +20% a cada poucos dias</span></div></div>
+      <div class="rule"><div class="rn">janela</div><div class="rt"><b>Horário comercial</b><span>Só envia dentro de uma janela configurável (ex. 8h–20h)</span></div></div>
+      <div class="rule"><div class="rn">cap</div><div class="rt"><b>Conversas ativas simultâneas</b><span>~4 por vez — como uma pessoa faria</span></div></div>
+      <div class="rule"><div class="rn">jitter</div><div class="rt"><b>Atrasos com variação</b><span>~8s ± entre contatos novos · ~4–6s ± dentro de conversa ativa</span></div></div>
+      <div class="rule"><div class="rn">texto</div><div class="rt"><b>Mensagens sempre diferentes</b><span>A IA gera cada mensagem — nada de disparo idêntico em massa</span></div></div>
+      <div class="rule"><div class="rn">digita</div><div class="rt"><b>Simular digitação</b><span>Presença "digitando…" por alguns segundos antes de enviar</span></div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Roadmap · destrava por marco de negócio</h2>
+    <div class="road">
+      <div class="phase"><div class="pk">Fase 0 · MVP</div><h3>Piloto</h3><ul><li>Modo A (missão dirigida)</li><li>1 número aquecido</li><li>Motor + memória + anti-bloqueio</li><li>Painel mínimo</li></ul><div class="gate"><b>Destrava quando</b>rodar na empresa do parceiro sem tomar ban<div><span class="dep">🧑‍💼 VPS</span><span class="dep">⚖️ aquecer</span></div></div></div>
+      <div class="phase"><div class="pk">Fase 1 · Usável</div><h3>Produtiza</h3><ul><li>Templates de missão</li><li>Botões 1-clique</li><li>Escalada p/ humano</li><li>Categorias + relatório</li></ul><div class="gate"><b>Destrava quando</b>piloto validou; parceiro usa no dia a dia<div><span class="dep">🛠️ técnica</span></div></div></div>
+      <div class="phase"><div class="pk">Fase 2 · Escala</div><h3>Amplia</h3><ul><li>Rotinas agendadas</li><li>Funil automático</li><li>Multi-agente</li><li>Híbrido API oficial</li></ul><div class="gate"><b>Destrava quando</b>primeiro cliente pagante<div><span class="dep">⚖️ Meta</span><span class="dep">💰 custo</span></div></div></div>
+      <div class="phase"><div class="pk">Fase 3 · Vendável</div><h3>Escala venda</h3><ul><li>White-label / multi-tenant</li><li>Ecossistema (CRM/indicação)</li><li>Memória em grafo</li></ul><div class="gate"><b>Destrava quando</b>2–3 clientes; hora de escalar<div><span class="dep">🧑‍💼 sociedade</span></div></div></div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p><b>Stack:</b></p>
+    <div class="chips">
+      <span class="chip">Evolution API <b>Baileys</b></span>
+      <span class="chip">Node <b>Fastify</b> + TS</span>
+      <span class="chip"><b>PostgreSQL</b></span>
+      <span class="chip">OpenAI <b>mini</b></span>
+      <span class="chip">React <b>Vite</b></span>
+      <span class="chip">Docker <b>Compose</b> · VPS</span>
+    </div>
+    <div class="legend">
+      <span class="l-good">concluída</span>
+      <span class="l-info">em conversa</span>
+      <span class="l-warn">escalada</span>
+      <span class="l-bad">não interessado</span>
+      <span class="l-idle">sem resposta</span>
+    </div>
+    <p style="margin-top:14px">Legenda de dependência do roadmap — 🧑‍💼 depende do parceiro · ⚖️ risco de plataforma (Meta) · 🛠️ técnica · 💰 custo.</p>
+  </footer>
+</div>
+</body>
+</html>
