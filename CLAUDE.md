@@ -22,16 +22,15 @@ Node + **Fastify** + TS · **PostgreSQL** (via **Prisma**) · fila no Postgres +
 - **Segredos:** nunca versionar `.env` (só `.env.example`); nada de dados reais/CPF no git.
 
 ## Estado atual (jul/2026)
-Fase **F0 (MVP)**. **Fatia 1 — Fundação: FEITA** (scaffold Fastify/TS, docker-compose do Postgres, schema Prisma, 1ª migration → 8 tabelas, `/ready` OK).
+Fase **F0 (MVP)**. **Fatia 1 — Fundação: FEITA**.
 
-**Fatia 2 — Conexão: CÓDIGO FEITO** (branch `feat/fatia2-conexao`; falta só o teste ao vivo = escanear o QR com um chip dedicado):
-- Evolution API + Redis no `docker-compose` (Postgres/Redis próprios da Evolution).
-- `core/evolution/` — porta WhatsApp (interface) + cliente Evolution (adapter HTTP).
-- `features/numeros/` — cadastrar número, conectar (devolve QR), status.
-- `features/webhook/` — ingestor: recebe evento, captura contato, audita em `eventos`.
-- `features/envio/` — executor: digitação simulada + envio + status.
-- Rotas: `POST /numeros`, `POST /numeros/:id/conectar`, `GET /numeros/:id/status`, `POST /webhook`, `POST /envio`.
+**Fatia 2 — Conexão: FEITA e TESTADA AO VIVO** (merge no `main`). Conectar número (QR), ingestor (webhook), executor (envio + digitação simulada), status de entrega — validado ponta a ponta com chip real (evoapicloud/evolution-api v2.3.1).
 
-⚠️ **Decisão pendente:** `mensagens.missaoId` é obrigatório → na Fatia 2 inbound/outbound são auditados em `eventos`. Ao entrar a **Fatia 3 (Missões)** eles passam a gravar em `mensagens` (ou torna-se `missaoId` opcional — decidir).
+**Fatia 3 — Missão + Máquina de Estados: FEITA** (branch `feat/fatia3-missoes`):
+- Migration: `mensagens.missao_id` agora é **opcional** (mensagem pode existir sem missão).
+- `features/missoes/` — máquina de estados (domínio puro, transição inválida → 409), CRUD de missão, transição de estado.
+- **Ingestor** liga a mensagem recebida à **missão ativa** do contato+número → grava em `mensagens` (direção in) e destrava `na_fila → em_conversa`.
+- **Executor** grava a saída em `mensagens` (direção out, status `enviando → ok` via webhook).
+- Rotas novas: `POST /missoes`, `GET /missoes`, `GET /missoes/:id` (com histórico), `POST /missoes/:id/estado`.
 
-**Próximo → teste ao vivo da Fatia 2** (conectar número real + E2E), depois **Fatia 3 (Missão + estados)**.
+**Próximo → Fatia 4 (Cérebro IA):** chamada provider-agnostic + structured output (`resposta, novo_estado, categoria, fatos_novos, precisa_humano`) — a IA passa a conduzir a conversa. Depois: Fatia 5 (memória/ficha) e Fatia 6 (fila anti-bloqueio).
