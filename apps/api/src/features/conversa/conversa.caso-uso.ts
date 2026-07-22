@@ -2,7 +2,7 @@
 // 1 turno: monta contexto → IA (structured) → valida → aplica estado + fatos → responde.
 import { db } from '../../core/db'
 import { ia } from '../../core/ia'
-import { SaidaIASchema } from '../../core/ia/porta-ia'
+import { SaidaIASchema, type SaidaIA } from '../../core/ia/porta-ia'
 import { jitterMs } from '../fila/fila.dominio'
 import { filaRepo } from '../fila/fila.repo'
 import { montarFicha } from '../memoria/memoria.montador'
@@ -10,7 +10,23 @@ import { podeTransicionar } from '../missoes/missao.dominio'
 import { missoesRepo } from '../missoes/missoes.repo'
 import { conversaRepo } from './conversa.repo'
 
+const turnosAtivos = new Set<string>()
+
+// Wrapper com LOCK por missão (processo único): evita dois turnos concorrentes para
+// a mesma missão — ex.: o lead manda 2 mensagens seguidas — que gerariam resposta dupla.
 export async function processarTurno(missaoId: string) {
+  if (turnosAtivos.has(missaoId)) {
+    return { ok: true as const, ignorado: 'turno_em_andamento' as const }
+  }
+  turnosAtivos.add(missaoId)
+  try {
+    return await executarTurno(missaoId)
+  } finally {
+    turnosAtivos.delete(missaoId)
+  }
+}
+
+async function executarTurno(missaoId: string) {
   const missao = await missoesRepo.buscar(missaoId)
   if (!missao) return { ok: false as const, motivo: 'missao_inexistente' }
 
@@ -20,8 +36,29 @@ export async function processarTurno(missaoId: string) {
   // 1) monta a ficha (contexto rico: persona + resumo + fatos + últimas N)
   const ctx = montarFicha(missao)
 
-  // 2) chama a IA e 3) VALIDA o contrato (guardrail — nunca confia cego no modelo)
-  const saida = SaidaIASchema.parse(await ia.gerar(ctx))
+  // 2) chama a IA e 3) VALIDA o contrato (guardrail — nunca confia cego no modelo).
+  // Se a IA falhar (ex.: OpenAI 401/429), NÃO some em silêncio: registra o erro,
+  // escala pra um humano (aparece no inbox de Escalados) e para.
+  let saida: SaidaIA
+  try {
+    saida = SaidaIASchema.parse(await ia.gerar(ctx))
+  } catch (err) {
+    await db.evento.create({
+      data: {
+        tenantId: missao.tenantId,
+        missaoId,
+        tipo: 'erro_ia',
+        dados: { erro: String((err as Error)?.message ?? err).slice(0, 300) },
+      },
+    })
+    const pausa = { iaPausada: true, motivoEscala: 'Falha na IA — precisa de um humano' }
+    if (podeTransicionar(missao.estado, 'escalada')) {
+      await missoesRepo.atualizarEstado(missaoId, 'escalada', pausa)
+    } else {
+      await missoesRepo.atualizar(missaoId, pausa)
+    }
+    return { ok: false as const, erro_ia: true }
+  }
 
   // 4) memória: mescla fatos novos
   if (saida.fatos_novos && Object.keys(saida.fatos_novos).length > 0) {
