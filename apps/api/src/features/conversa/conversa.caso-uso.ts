@@ -88,6 +88,12 @@ async function executarTurno(missaoId: string) {
         dados: { motivo: saida.motivo_escala ?? null },
       },
     })
+    // T1-3: resumo fresco pro humano que vai assumir (inclui a última mensagem do lead)
+    try {
+      await conversaRepo.salvarResumo(missaoId, await ia.resumir(ctx))
+    } catch {
+      /* resumo é best-effort; não trava a escalada */
+    }
     return { ok: true as const, escalada: true }
   }
 
@@ -99,7 +105,9 @@ async function executarTurno(missaoId: string) {
     await missoesRepo.atualizarEstado(
       missaoId,
       saida.novo_estado,
-      saida.novo_estado === 'concluida' ? { concluidaEm: new Date() } : undefined,
+      saida.novo_estado === 'concluida'
+        ? { concluidaEm: new Date(), resultado: saida.resultado ?? undefined }
+        : undefined,
     )
   }
 

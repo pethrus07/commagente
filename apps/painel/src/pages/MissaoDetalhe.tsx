@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import {
   ArrowLeft,
   Brain,
+  CheckCircle2,
   Hand,
   Info,
   LifeBuoy,
@@ -267,6 +268,16 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
               </div>
             </div>
           </Card>
+
+          {m.resultado && (
+            <Card className="border-emerald-500/30 bg-emerald-500/10 p-4">
+              <div className="mb-1 flex items-center gap-2">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                <p className="text-xs font-semibold uppercase tracking-wide text-emerald-300">Resultado</p>
+              </div>
+              <p className="text-sm text-slate-100">{m.resultado}</p>
+            </Card>
+          )}
 
           <Card className="p-4">
             <div className="mb-2 flex items-center gap-2">

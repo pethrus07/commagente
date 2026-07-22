@@ -76,6 +76,7 @@ export interface Missao {
   iaPausada: boolean
   motivoEscala: string | null
   categoriaResultado: string | null
+  resultado: string | null
   resumo: string | null
   fatos: Record<string, unknown> | null
   iniciadaEm: string | null
@@ -88,6 +89,13 @@ export interface Missao {
 
 export interface Stats {
   missoesPorEstado: Partial<Record<EstadoMissao, number>>
+  missoesPorTipo: Partial<Record<TipoMissao, number>>
+  placar: {
+    cumpridas: number
+    perdidas: number
+    ativas: number
+    taxaConclusao: number | null
+  }
   totalMissoes: number
   totalContatos: number
   numeros: { total: number; conectados: number }

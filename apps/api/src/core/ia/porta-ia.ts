@@ -35,6 +35,8 @@ export const SaidaIASchema = z.object({
   motivo_escala: z.string().nullish(),
   /** memória coletiva: lição GERAL e reutilizável p/ a base de conhecimento (ou null) */
   aprendizado_sugerido: z.string().nullish(),
+  /** desfecho da missão — preencher SÓ ao concluir (novo_estado=concluida) */
+  resultado: z.string().nullish(),
 })
 export type SaidaIA = z.infer<typeof SaidaIASchema>
 

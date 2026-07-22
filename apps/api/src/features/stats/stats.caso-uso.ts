@@ -8,10 +8,15 @@ export async function obterStats() {
   const inicioHoje = new Date()
   inicioHoje.setHours(0, 0, 0, 0)
 
-  const [grupos, totalNumeros, conectados, mensagensHoje, totalContatos] =
+  const [grupos, gruposTipo, totalNumeros, conectados, mensagensHoje, totalContatos] =
     await Promise.all([
       db.missao.groupBy({
         by: ['estado'],
+        where: { tenantId },
+        _count: { _all: true },
+      }),
+      db.missao.groupBy({
+        by: ['tipo'],
         where: { tenantId },
         _count: { _all: true },
       }),
@@ -32,8 +37,28 @@ export async function obterStats() {
     totalMissoes += g._count._all
   }
 
+  const missoesPorTipo: Record<string, number> = {}
+  for (const g of gruposTipo) missoesPorTipo[g.tipo] = g._count._all
+
+  // placar por missão (o "resultado" do agente)
+  const cumpridas = missoesPorEstado.concluida ?? 0
+  const perdidas = (missoesPorEstado.descartada ?? 0) + (missoesPorEstado.sem_resposta ?? 0)
+  const ativas =
+    (missoesPorEstado.na_fila ?? 0) +
+    (missoesPorEstado.em_conversa ?? 0) +
+    (missoesPorEstado.escalada ?? 0)
+  const fechadas = cumpridas + perdidas
+  const placar = {
+    cumpridas,
+    perdidas,
+    ativas,
+    taxaConclusao: fechadas > 0 ? cumpridas / fechadas : null,
+  }
+
   return {
     missoesPorEstado,
+    missoesPorTipo,
+    placar,
     totalMissoes,
     totalContatos,
     numeros: { total: totalNumeros, conectados },

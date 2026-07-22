@@ -190,6 +190,7 @@ model Missao {
   iaPausada          Boolean      @default(false) @map("ia_pausada") // humano no controle → a IA não responde
   motivoEscala       String?      @map("motivo_escala") // por que foi escalada (mostrado no inbox)
   categoriaResultado String?      @map("categoria_resultado")
+  resultado          String? // desfecho da missão ao concluir (ex.: "reunião agendada quinta 15h")
   resumo             String? // resumo rolante (memória)
   fatos              Json? // fatos extraídos (memória)
   iniciadaEm         DateTime?    @map("iniciada_em")

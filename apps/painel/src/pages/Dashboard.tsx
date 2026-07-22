@@ -6,11 +6,14 @@ import {
   MessageSquare,
   Smartphone,
   Target,
+  Trophy,
   Users,
+  XCircle,
 } from 'lucide-react'
 import { api } from '../lib/api'
+import { TIPO_INFO } from '../lib/estados'
 import { toast } from '../lib/toast'
-import type { EstadoMissao, Historico, Stats } from '../lib/types'
+import type { EstadoMissao, Historico, Stats, TipoMissao } from '../lib/types'
 import { Card, ESTADO_INFO, Spinner, cn } from '../lib/ui'
 
 const ORDEM: EstadoMissao[] = [
@@ -174,6 +177,35 @@ export function Dashboard() {
         <Kpi icon={MessageSquare} cor="bg-sky-500/15 text-sky-400" label="Mensagens hoje" valor={stats.mensagensHoje} sub="enviadas + recebidas" />
         <Kpi icon={Users} cor="bg-violet-500/15 text-violet-400" label="Contatos" valor={stats.totalContatos} sub="leads na base" />
       </div>
+
+      <Card className="p-6">
+        <div className="mb-4 flex items-center gap-2">
+          <Trophy className="h-4 w-4 text-subtle" />
+          <h2 className="text-sm font-semibold text-content">Placar das missões</h2>
+        </div>
+        <div className="flex flex-wrap items-center gap-8">
+          <div>
+            <p className="text-4xl font-bold tracking-tight text-content tabular-nums">
+              {stats.placar.taxaConclusao != null ? `${Math.round(stats.placar.taxaConclusao * 100)}%` : '—'}
+            </p>
+            <p className="mt-0.5 text-xs text-subtle">taxa de conclusão</p>
+          </div>
+          <div className="grid flex-1 grid-cols-3 gap-3">
+            <MiniTot icon={CheckCircle2} cor="text-emerald-400" n={stats.placar.cumpridas} label="cumpridas" />
+            <MiniTot icon={Activity} cor="text-indigo-400" n={stats.placar.ativas} label="ativas" />
+            <MiniTot icon={XCircle} cor="text-rose-400" n={stats.placar.perdidas} label="perdidas" />
+          </div>
+        </div>
+        {Object.keys(stats.missoesPorTipo).length > 0 && (
+          <div className="mt-5 flex flex-wrap gap-2 border-t border-line pt-4">
+            {(Object.entries(stats.missoesPorTipo) as [TipoMissao, number][]).map(([t, n]) => (
+              <span key={t} className="rounded-full bg-surface2 px-3 py-1 text-xs text-muted">
+                {TIPO_INFO[t]?.emoji} {TIPO_INFO[t]?.label ?? t}: <span className="font-semibold text-content tabular-nums">{n}</span>
+              </span>
+            ))}
+          </div>
+        )}
+      </Card>
 
       {hist && <Atividade hist={hist} />}
 
