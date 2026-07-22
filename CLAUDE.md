@@ -150,4 +150,8 @@ Fase **F0 (MVP)**. **Fatia 1 — Fundação: FEITA**.
 
 **Sistema roda LOCAL (2026-07-22):** Docker Desktop + `docker compose -f infra/docker-compose.yml up -d` (4 containers: `zapagente-db`, `zapagente-evolution` :8080, evolution-db, evolution-redis) → `cd apps/api && npm run dev` (:3000) → `cd apps/painel && npm run dev` (:5173). Logins: super-admin `admin@zapagente.local`/`zapagente123`, tenant demo `demo@zapagente.local`/`demo123`.
 
-**Próximo:** **deploy VPS** (P0: segredo webhook + helmet/rate-limit + segredos de produção) e **polimento visual** (páginas restantes p/ tema claro). Depois, se houver demanda: implementar o degrau 1 da escada oficial (adapter Cloud API). **`git push`**: origin/main sincronizado até o Tier 2; **Tier 3 (T3-A/B/C) ainda local**. **Tiers 0, 1, 2 e 3 do "tem que ter" = COMPLETOS.**
+**Melhorias de contatos/suporte (pedido do Pedro, 2026-07-22):**
+- **IMP-1 (`5cc8261`):** botão **"selecionar todos"** no `SeletorContatos` (respeita a busca) — vale no assistente de missão e em campanhas.
+- **IMP-2 (`8069f81`): suporte reativo por número.** `NumeroWhatsapp.suporteReativo` + persona (`suporte*`). Um **inbound sem missão ativa** num número reativo **abre uma conversa de suporte na hora** (`em_conversa`, evento `suporte_reativo`) e aciona a IA — cobre "todos + quem entrar em contato". Liga-se no **assistente** (tipo Suporte, toggle "atende 24/7", contatos viram opcionais) e gerencia-se na **página de Números** (toggle + selo). Testado ON/OFF.
+
+**Próximo:** **deploy VPS** (P0: segredo webhook + helmet/rate-limit + segredos de produção) e **polimento visual** (páginas restantes p/ tema claro). Depois, se houver demanda: implementar o degrau 1 da escada oficial (adapter Cloud API). **`git push`**: origin/main sincronizado até o Tier 2; **Tier 3 (T3-A/B/C) + IMP-1/2 ainda locais**. **Tiers 0, 1, 2 e 3 do "tem que ter" = COMPLETOS.**
