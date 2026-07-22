@@ -63,4 +63,12 @@ export const filaRepo = {
       data: { proximoEnvioEm: quando },
     })
   },
+
+  // retry: devolve o item pra fila (pendente) com nova data e +1 tentativa
+  reagendar(id: string, quando: Date) {
+    return db.filaEnvio.update({
+      where: { id },
+      data: { status: 'pendente', tentativas: { increment: 1 }, agendadoPara: quando },
+    })
+  },
 }

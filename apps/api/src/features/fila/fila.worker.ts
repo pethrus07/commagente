@@ -31,6 +31,8 @@ function agoraData(): string {
   }).format(new Date())
 }
 
+const MAX_TENTATIVAS = 5 // depois disso o item vira dead-letter (status 'erro')
+
 let rodando = false
 
 async function tick() {
@@ -77,7 +79,13 @@ async function tick() {
         )
       } catch (err) {
         console.error('[fila] falha ao enviar item', item.id, err)
-        await filaRepo.marcar(item.id, 'erro', true)
+        // retry com backoff exponencial (30s,60s,120s,240s… cap 10min); depois dead-letter
+        if (item.tentativas + 1 < MAX_TENTATIVAS) {
+          const backoff = Math.min(600_000, 30_000 * 2 ** item.tentativas)
+          await filaRepo.reagendar(item.id, new Date(Date.now() + backoff))
+        } else {
+          await filaRepo.marcar(item.id, 'erro', true) // esgotou as tentativas
+        }
       }
     }
   } finally {
