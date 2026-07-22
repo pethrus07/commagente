@@ -69,6 +69,7 @@ model Tenant {
   usuarios     Usuario[]
   conhecimento Conhecimento[]
   campanhas    Campanha[]
+  agendamentos Agendamento[]
 
   @@map("tenants")
 }
@@ -130,9 +131,10 @@ model NumeroWhatsapp {
   suporteModo        String        @default("auto") @map("suporte_modo")
   criadoEm           DateTime      @default(now()) @map("criado_em")
 
-  tenant    Tenant     @relation(fields: [tenantId], references: [id])
-  missoes   Missao[]
-  campanhas Campanha[]
+  tenant       Tenant        @relation(fields: [tenantId], references: [id])
+  missoes      Missao[]
+  campanhas    Campanha[]
+  agendamentos Agendamento[]
 
   @@index([tenantId])
   @@map("numeros_whatsapp")
@@ -153,14 +155,55 @@ model Contato {
   optInOrigem String?   @map("opt_in_origem") // manual | lote | inbound
   criadoEm DateTime @default(now()) @map("criado_em")
 
-  tenant    Tenant      @relation(fields: [tenantId], references: [id])
-  missoes   Missao[]
-  mensagens Mensagem[]
-  fila      FilaEnvio[]
+  tenant       Tenant        @relation(fields: [tenantId], references: [id])
+  missoes      Missao[]
+  mensagens    Mensagem[]
+  fila         FilaEnvio[]
+  agendamentos Agendamento[]
 
   @@unique([tenantId, telefone])
   @@index([tenantId])
   @@map("contatos")
+}
+
+// Missão programada: dispara sozinha na data (uma vez ou mensal, por contato).
+// No dia, o agendador cria uma Missão e inicia (IA conduz) ou enfileira um texto fixo.
+model Agendamento {
+  id        String @id @default(uuid()) @db.Uuid
+  tenantId  String @map("tenant_id") @db.Uuid
+  contatoId String @map("contato_id") @db.Uuid
+  numeroId  String @map("numero_id") @db.Uuid
+
+  // definição da missão criada no disparo
+  tipo              String  @default("cobrar")
+  modo              String  @default("auto")
+  objetivo          String
+  contexto          String?
+  criterioConclusao String? @map("criterio_conclusao")
+  tom               String?
+  informacoes       String?
+
+  // agendamento
+  recorrencia  String    @default("mensal") // 'uma_vez' | 'mensal'
+  diaDoMes     Int?      @map("dia_do_mes") // 1-31 (mensal); dia curto → cai no último dia do mês
+  dataUnica    DateTime? @map("data_unica") // 'uma_vez'
+  entrega      String    @default("ia") // 'ia' (conduz) | 'fixa' (só envia o texto)
+  mensagemFixa String?   @map("mensagem_fixa")
+  rotulo       String? // agrupador opcional (ex.: "Mensalidade")
+
+  ativo           Boolean   @default(true)
+  pularCicloRef   String?   @map("pular_ciclo_ref") // ex.: "2026-07" → pula esse ciclo (pago)
+  ultimoCicloRef  String?   @map("ultimo_ciclo_ref") // idempotência: último ciclo disparado
+  ultimoDisparoEm DateTime? @map("ultimo_disparo_em")
+  criadoEm        DateTime  @default(now()) @map("criado_em")
+
+  tenant  Tenant         @relation(fields: [tenantId], references: [id])
+  contato Contato        @relation(fields: [contatoId], references: [id])
+  numero  NumeroWhatsapp @relation(fields: [numeroId], references: [id])
+
+  @@index([tenantId])
+  @@index([ativo])
+  @@map("agendamentos")
 }
 
 // ─── Templates de missão (reutilizáveis = "botão") ───────────

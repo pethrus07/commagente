@@ -6,6 +6,8 @@ import { config } from './core/config'
 import { db } from './core/db'
 import { seedInicial } from './core/seed'
 import { adminRotas } from './features/admin/admin.rotas'
+import { agendamentosRotas } from './features/agendamentos/agendamentos.rotas'
+import { iniciarAgendador } from './features/agendamentos/agendamentos.worker'
 import { authRotas } from './features/auth/auth.rotas'
 import { campanhasRotas } from './features/campanhas/campanhas.rotas'
 import { conhecimentoRotas } from './features/conhecimento/conhecimento.rotas'
@@ -64,6 +66,7 @@ app.register(statsRotas)
 app.register(contatosRotas)
 app.register(conhecimentoRotas)
 app.register(campanhasRotas)
+app.register(agendamentosRotas)
 
 app
   .listen({ port: config.porta, host: '0.0.0.0' })
@@ -71,6 +74,7 @@ app
     app.log.info(`zapagente-api em ${addr}`)
     await seedInicial() // garante tenant padrão + super-admin
     iniciarWorker() // motor anti-bloqueio: consome a fila_envio no ritmo humano
+    iniciarAgendador() // missões programadas: dispara o que "vence hoje"
   })
   .catch((err) => {
     app.log.error(err)

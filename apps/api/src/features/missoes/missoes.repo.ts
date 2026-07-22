@@ -18,6 +18,7 @@ export const missoesRepo = {
     campanhaId?: string
     estado?: EstadoMissao
     iniciadaEm?: Date
+    iaPausada?: boolean
   }) {
     return db.missao.create({ data })
   },
