@@ -129,4 +129,11 @@ Fase **F0 (MVP)**. **Fatia 1 — Fundação: FEITA**.
 - **AB-4 teto por estágio (`70b6d3f`):** `tetoDiarioPorEstagio` (20/50/120/250/400); worker usa `min(budgetDiario, tetoEstágio)`.
 - ⚠️ Ainda no radar do Tier 0 (não feito): cap **horário** hard (<30/h — hoje mitigado pelo espaçamento serial), **progressão automática** de estágio, pool de chips rotativos, proxy residencial por chip.
 
-**Próximo (fazer todos os tiers):** **Tier 1** (missão com anatomia completa + objetivo variável cobrar/orçar · fechar o loop · placar por missão · resumo no handoff) · **Tier 2** (auto/co-pilot por missão — já temos MEM-1/MEM-2) · **Tier 3** (áudio/Whisper · builder visual de missões · escada p/ API oficial). Depois: **deploy VPS** (P0: segredo webhook + helmet/rate-limit + segredos de produção) e **polimento visual**. **`git push`** segue pendente (tudo local, aguarda OK do Pedro).
+**Tier 1 — identidade "agente com missão": FEITO.**
+- **T1-1 tipo + anatomia (`3cd9213`):** `Missao.tipo` (vender/qualificar/orcar/**cobrar**/suporte/outro) + `criterioConclusao`. O montador aplica comportamento por tipo (o "objetivo variável" que ninguém no mercado faz) + o critério entra na persona. Seletor de tipo + campo critério no criar/editar; selo de tipo no board e detalhe.
+- **T1-2 fechar o loop + placar (`84f6622`):** `Missao.resultado`; a IA registra o desfecho ao concluir (`SaidaIA.resultado`); stats ganha `missoesPorTipo` + `placar` (cumpridas/perdidas/ativas + taxa de conclusão); Dashboard mostra o placar; detalhe mostra card de Resultado. ✅ validado ao vivo: cobrança com critério cumprido → `concluida` + resultado "pagamento confirmado".
+- **T1-3 resumo no handoff (`84f6622`):** ao escalar, atualiza o resumo (handoff fresco pro humano).
+
+**Tier 2 — memória/aprendizado:** MEM-1 (individual) e MEM-2 (coletiva) já feitos; falta só **auto-pilot vs co-pilot por missão** (evoluir o Modo A: "aprova o 1º disparo, depois solta").
+
+**Próximo:** **Tier 2** (auto/co-pilot por missão) · **Tier 3** (áudio/Whisper · builder visual de missões · escada p/ API oficial). Depois: **deploy VPS** (P0: segredo webhook + helmet/rate-limit + segredos de produção) e **polimento visual** (páginas restantes p/ tema claro). **`git push`** pendente (tudo local, aguarda OK do Pedro).
