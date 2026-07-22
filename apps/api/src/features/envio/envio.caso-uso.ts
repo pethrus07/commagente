@@ -2,11 +2,11 @@
 // Já entra a "digitação simulada" (presença) e a gravação em `mensagens`.
 import { conferirDono } from '../../core/contexto'
 import { ErroHttp } from '../../core/erros'
-import { evolutionClient } from '../../core/evolution/evolution.client'
+import { whatsapp } from '../../core/evolution'
 import type { PortaWhatsApp } from '../../core/evolution/porta-whatsapp'
 import { envioRepo } from './envio.repo'
 
-const wa: PortaWhatsApp = evolutionClient
+const wa: PortaWhatsApp = whatsapp
 
 // Envio MANUAL (rota /envio): valida que o número é do tenant da requisição.
 // O worker usa enviarTexto direto (sem contexto de request → sem esse check).

@@ -2,7 +2,7 @@
 import { conferirDono, tenantAtual } from '../../core/contexto'
 import { db } from '../../core/db'
 import { ErroHttp } from '../../core/erros'
-import { evolutionClient } from '../../core/evolution/evolution.client'
+import { whatsapp } from '../../core/evolution'
 
 function normalizarTelefone(t: string): string {
   return (t ?? '').replace(/\D/g, '')
@@ -88,7 +88,7 @@ export async function importarDoWhatsApp(numeroId: string) {
   await conferirDono(numero.tenantId)
   let contatos: { telefone: string; nome?: string }[]
   try {
-    contatos = await evolutionClient.buscarContatos(numero.instanciaEvolution)
+    contatos = await whatsapp.buscarContatos(numero.instanciaEvolution)
   } catch {
     throw new ErroHttp(502, 'Não consegui ler a agenda do WhatsApp. O número está conectado?')
   }

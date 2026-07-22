@@ -2,7 +2,7 @@
 // Fatia 3: inbound vira Mensagem (ligada à missão ativa, se houver) e destrava
 // a conversa (na_fila → em_conversa). Status de entrega atualiza a msg de saída.
 import { db } from '../../core/db'
-import { evolutionClient } from '../../core/evolution/evolution.client'
+import { whatsapp } from '../../core/evolution'
 import { transcritor } from '../../core/transcricao'
 import { processarTurno } from '../conversa/conversa.caso-uso'
 import { missoesRepo } from '../missoes/missoes.repo'
@@ -20,7 +20,7 @@ async function transcreverAudio(
     let base64 = audio.base64
     let mimetype = audio.mimetype
     if (!base64) {
-      const m = await evolutionClient.baixarMidiaBase64(instancia, audio.chave)
+      const m = await whatsapp.baixarMidiaBase64(instancia, audio.chave)
       base64 = m.base64
       mimetype = mimetype ?? m.mimetype
     }

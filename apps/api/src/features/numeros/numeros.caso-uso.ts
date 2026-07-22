@@ -2,14 +2,14 @@
 // Orquestra a PortaWhatsApp (adapter Evolution) + persistência; sem regra de negócio pesada.
 import { config } from '../../core/config'
 import { ErroHttp } from '../../core/erros'
-import { evolutionClient } from '../../core/evolution/evolution.client'
+import { whatsapp } from '../../core/evolution'
 import type { PortaWhatsApp, QrCode } from '../../core/evolution/porta-whatsapp'
 import { conferirDono, tenantAtual } from '../../core/contexto'
 import { classificarSaude } from './numeros.dominio'
 import { numerosRepo } from './numeros.repo'
 
 // injeta a porta (aqui, o adapter Evolution)
-const wa: PortaWhatsApp = evolutionClient
+const wa: PortaWhatsApp = whatsapp
 
 export async function cadastrarNumero(telefone: string, instancia?: string) {
   const tenantId = await tenantAtual()
