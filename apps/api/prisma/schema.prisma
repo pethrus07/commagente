@@ -128,6 +128,8 @@ model Missao {
   numeroId           String       @map("numero_id") @db.Uuid
   objetivo           String
   contexto           String?
+  tom                String? // humor/estilo da conversa (ex.: "amigável e informal")
+  informacoes        String? // base de fatos autorizados que a IA PODE afirmar (preço, prazo, condições)
   estado             EstadoMissao @default(configurada)
   categoriaResultado String?      @map("categoria_resultado")
   resumo             String? // resumo rolante (memória)

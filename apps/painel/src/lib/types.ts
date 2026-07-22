@@ -45,6 +45,8 @@ export interface Missao {
   id: string
   objetivo: string
   contexto: string | null
+  tom: string | null
+  informacoes: string | null
   estado: EstadoMissao
   categoriaResultado: string | null
   resumo: string | null

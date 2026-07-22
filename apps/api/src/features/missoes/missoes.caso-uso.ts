@@ -12,6 +12,8 @@ export async function criarMissao(input: {
   numeroId: string
   objetivo: string
   contexto?: string
+  tom?: string
+  informacoes?: string
   nomeContato?: string
 }) {
   const tenantId = await garantirTenantPadrao()
@@ -40,6 +42,8 @@ export async function criarMissao(input: {
     numeroId: input.numeroId,
     objetivo: input.objetivo,
     contexto: input.contexto,
+    tom: input.tom,
+    informacoes: input.informacoes,
   })
 
   await db.evento.create({
@@ -62,6 +66,49 @@ export async function obterMissao(id: string) {
   const missao = await missoesRepo.buscar(id)
   if (!missao) throw new ErroHttp(404, 'Missão não encontrada')
   return missao
+}
+
+// Edita a config da missão (objetivo/contexto/tom/informações) — reflete no próximo turno.
+// O nome do contato é atualizado à parte (mora em Contato).
+export async function editarMissao(
+  id: string,
+  patch: {
+    objetivo?: string
+    contexto?: string | null
+    tom?: string | null
+    informacoes?: string | null
+    nomeContato?: string
+  },
+) {
+  const missao = await missoesRepo.buscar(id)
+  if (!missao) throw new ErroHttp(404, 'Missão não encontrada')
+
+  const dados: Prisma.MissaoUpdateInput = {}
+  if (patch.objetivo !== undefined) dados.objetivo = patch.objetivo
+  if (patch.contexto !== undefined) dados.contexto = patch.contexto
+  if (patch.tom !== undefined) dados.tom = patch.tom
+  if (patch.informacoes !== undefined) dados.informacoes = patch.informacoes
+
+  if (patch.nomeContato !== undefined) {
+    await db.contato.update({
+      where: { id: missao.contatoId },
+      data: { nome: patch.nomeContato || null },
+    })
+  }
+
+  const atualizada = Object.keys(dados).length
+    ? await missoesRepo.atualizar(id, dados)
+    : missao
+
+  await db.evento.create({
+    data: {
+      tenantId: missao.tenantId,
+      missaoId: id,
+      tipo: 'missao_editada',
+      dados: { campos: Object.keys({ ...dados, ...(patch.nomeContato !== undefined ? { nomeContato: 1 } : {}) }) },
+    },
+  })
+  return atualizada
 }
 
 // Modo A — inicia a missão: a IA gera a 1ª mensagem (opener) e enfileira.

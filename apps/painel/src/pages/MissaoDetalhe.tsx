@@ -1,5 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowLeft, Brain, Info, Rocket, Send, Sparkles } from 'lucide-react'
+import {
+  ArrowLeft,
+  Brain,
+  Info,
+  Pencil,
+  Rocket,
+  Send,
+  ShieldCheck,
+  Sparkles,
+  X,
+} from 'lucide-react'
 import { api } from '../lib/api'
 import { toast } from '../lib/toast'
 import type { EstadoMissao, Missao } from '../lib/types'
@@ -31,6 +41,7 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
   const [texto, setTexto] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [iniciando, setIniciando] = useState(false)
+  const [editando, setEditando] = useState(false)
   const fimRef = useRef<HTMLDivElement>(null)
 
   const carregar = async () => {
@@ -107,6 +118,13 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
           <p className="text-xs text-slate-500">{m.contato?.nome ? `${m.contato.nome} · ` : ''}+{m.contato?.telefone}</p>
         </div>
         <Badge className={info.badge}><Dot className={info.dot} /> {info.label}</Badge>
+        <button
+          onClick={() => setEditando(true)}
+          className="grid h-9 w-9 place-items-center rounded-xl bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white"
+          title="Editar missão"
+        >
+          <Pencil className="h-4 w-4" />
+        </button>
       </div>
 
       <div className="grid flex-1 grid-cols-1 gap-4 overflow-hidden lg:grid-cols-[1fr_320px]">
@@ -172,6 +190,34 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
           </Card>
 
           <Card className="p-4">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Configuração</p>
+              </div>
+              <button onClick={() => setEditando(true)} className="inline-flex items-center gap-1 text-xs font-medium text-indigo-400 hover:text-indigo-300">
+                <Pencil className="h-3 w-3" /> Editar
+              </button>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <p className="mb-0.5 text-[11px] uppercase tracking-wide text-slate-500">Tom / humor</p>
+                <p className="text-sm text-slate-300">{m.tom || <span className="text-slate-600">Padrão (cordial e objetivo)</span>}</p>
+              </div>
+              <div>
+                <p className="mb-0.5 text-[11px] uppercase tracking-wide text-slate-500">Informações autorizadas</p>
+                {m.informacoes ? (
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-300">{m.informacoes}</p>
+                ) : (
+                  <p className="text-sm text-amber-400/80">
+                    ⚠️ Nenhuma. A IA não vai afirmar preço/prazo — vai confirmar ou escalar.
+                  </p>
+                )}
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-4">
             <div className="mb-2 flex items-center gap-2">
               <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Resumo (memória)</p>
@@ -212,6 +258,89 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
           </Card>
         </div>
       </div>
+
+      {editando && (
+        <EditarMissaoModal
+          missao={m}
+          onFechar={(salvou) => {
+            setEditando(false)
+            if (salvou) carregar()
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+function EditarMissaoModal({ missao, onFechar }: { missao: Missao; onFechar: (salvou: boolean) => void }) {
+  const [form, setForm] = useState({
+    objetivo: missao.objetivo,
+    nomeContato: missao.contato?.nome ?? '',
+    contexto: missao.contexto ?? '',
+    tom: missao.tom ?? '',
+    informacoes: missao.informacoes ?? '',
+  })
+  const [salvando, setSalvando] = useState(false)
+
+  const salvar = async () => {
+    if (!form.objetivo.trim()) return toast('O objetivo não pode ficar vazio.', 'erro')
+    setSalvando(true)
+    try {
+      await api.missoes.editar(missao.id, {
+        objetivo: form.objetivo.trim(),
+        nomeContato: form.nomeContato.trim(),
+        contexto: form.contexto.trim() || null,
+        tom: form.tom.trim() || null,
+        informacoes: form.informacoes.trim() || null,
+      })
+      toast('Missão atualizada — vale a partir do próximo turno. ✅', 'ok')
+      onFechar(true)
+    } catch (e) {
+      toast((e as Error).message, 'erro')
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  const campo = 'w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:border-indigo-500/50 focus:outline-none'
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 backdrop-blur-sm">
+      <Card className="max-h-[90vh] w-full max-w-lg overflow-y-auto p-6">
+        <div className="mb-5 flex items-center justify-between">
+          <h3 className="font-semibold text-white">Editar missão</h3>
+          <button onClick={() => onFechar(false)} className="text-slate-500 hover:text-slate-200"><X className="h-5 w-5" /></button>
+        </div>
+        <div className="space-y-3">
+          <div>
+            <label className="mb-1 block text-xs text-slate-400">Objetivo</label>
+            <input value={form.objetivo} onChange={(e) => setForm({ ...form, objetivo: e.target.value })} className={campo} />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-slate-400">Nome do contato</label>
+            <input value={form.nomeContato} onChange={(e) => setForm({ ...form, nomeContato: e.target.value })} placeholder="Fulano" className={campo} />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-slate-400">Contexto</label>
+            <textarea value={form.contexto} onChange={(e) => setForm({ ...form, contexto: e.target.value })} rows={2} placeholder="Ex.: empresa de automação industrial…" className={cn(campo, 'resize-none')} />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-slate-400">Tom / humor</label>
+            <input value={form.tom} onChange={(e) => setForm({ ...form, tom: e.target.value })} placeholder="Ex.: amigável e descontraído" className={campo} />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-slate-400">Informações autorizadas</label>
+            <textarea value={form.informacoes} onChange={(e) => setForm({ ...form, informacoes: e.target.value })} rows={4} placeholder="Preços, prazos e condições REAIS. Ex.: Plano Pro R$299/mês, entrega em 7 dias úteis." className={cn(campo, 'resize-none')} />
+            <p className="mt-1 text-[11px] leading-snug text-slate-500">
+              🛡️ A IA só afirma o que estiver aqui. Fora disso, não inventa — confirma ou escala.
+            </p>
+          </div>
+        </div>
+        <div className="mt-5 flex justify-end gap-2">
+          <Button variant="ghost" onClick={() => onFechar(false)}>Cancelar</Button>
+          <Button onClick={salvar} loading={salvando}>Salvar</Button>
+        </div>
+      </Card>
     </div>
   )
 }

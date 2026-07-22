@@ -45,11 +45,16 @@ export const provedorOpenai: ProvedorIA = {
       ctx.fatos && Object.keys(ctx.fatos).length > 0
         ? `Fatos já conhecidos do lead: ${JSON.stringify(ctx.fatos)}.`
         : ''
+    // Bloco de informações AUTORIZADAS (guardrail): é o único que pode virar afirmação.
+    const informacoes = ctx.informacoes?.trim()
+      ? `INFORMAÇÕES AUTORIZADAS (a ÚNICA fonte de fatos que você pode afirmar sobre a empresa/oferta — preço, prazo, condições):\n${ctx.informacoes.trim()}`
+      : 'INFORMAÇÕES AUTORIZADAS: nenhuma foi fornecida. Portanto NÃO afirme preços, prazos ou condições — se perguntarem, diga que vai confirmar e retornar, ou escale (precisa_humano=true).'
     const sistema = [
       ctx.persona,
       `Estado atual da missão: ${ctx.estadoAtual}.`,
       ctx.resumo ? `Resumo da conversa até aqui: ${ctx.resumo}.` : '',
       fatos,
+      informacoes,
       'Responda SOMENTE em JSON válido, sem markdown, no formato exato:',
       `{"resposta": "texto curto e humano (1-3 frases, WhatsApp)", "novo_estado": "${ESTADOS_SAIDA}", "categoria": "string ou null", "fatos_novos": {objeto com o que você descobriu, ou {}}, "precisa_humano": true|false, "motivo_escala": "string ou null"}`,
       'Conduza a conversa rumo ao objetivo, com naturalidade. Se o lead pedir algo que você não pode resolver, use precisa_humano=true.',

@@ -9,9 +9,15 @@ export const missoesRepo = {
     numeroId: string
     objetivo: string
     contexto?: string
+    tom?: string
+    informacoes?: string
     templateId?: string
   }) {
     return db.missao.create({ data })
+  },
+
+  atualizar(id: string, data: Prisma.MissaoUpdateInput) {
+    return db.missao.update({ where: { id }, data })
   },
 
   buscar(id: string) {

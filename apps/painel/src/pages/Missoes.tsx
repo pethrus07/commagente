@@ -17,7 +17,7 @@ import {
 
 function NovaMissaoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
   const [numeros, setNumeros] = useState<Numero[]>([])
-  const [form, setForm] = useState({ telefone: '', numeroId: '', objetivo: '', contexto: '', nomeContato: '' })
+  const [form, setForm] = useState({ telefone: '', numeroId: '', objetivo: '', contexto: '', tom: '', informacoes: '', nomeContato: '' })
   const [salvando, setSalvando] = useState(false)
 
   useEffect(() => {
@@ -39,6 +39,8 @@ function NovaMissaoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
         numeroId: form.numeroId,
         objetivo: form.objetivo.trim(),
         contexto: form.contexto.trim() || undefined,
+        tom: form.tom.trim() || undefined,
+        informacoes: form.informacoes.trim() || undefined,
         nomeContato: form.nomeContato.trim() || undefined,
       })
       toast('Missão criada.', 'ok')
@@ -87,7 +89,20 @@ function NovaMissaoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
           </div>
           <div>
             <label className="mb-1 block text-xs text-slate-400">Contexto (opcional)</label>
-            <textarea value={form.contexto} onChange={(e) => setForm({ ...form, contexto: e.target.value })} rows={3} placeholder="Ex.: empresa de automação industrial, ticket médio alto…" className={cn(campo, 'resize-none')} />
+            <textarea value={form.contexto} onChange={(e) => setForm({ ...form, contexto: e.target.value })} rows={2} placeholder="Ex.: empresa de automação industrial, ticket médio alto…" className={cn(campo, 'resize-none')} />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-slate-400">Tom / humor (opcional)</label>
+            <input value={form.tom} onChange={(e) => setForm({ ...form, tom: e.target.value })} placeholder="Ex.: amigável e descontraído, com leveza" className={campo} />
+          </div>
+          <div>
+            <label className="mb-1 flex items-center gap-1.5 text-xs text-slate-400">
+              Informações autorizadas (opcional)
+            </label>
+            <textarea value={form.informacoes} onChange={(e) => setForm({ ...form, informacoes: e.target.value })} rows={3} placeholder="Preços, prazos e condições REAIS que a IA pode afirmar. Ex.: Plano Pro R$299/mês, entrega em 7 dias úteis." className={cn(campo, 'resize-none')} />
+            <p className="mt-1 text-[11px] leading-snug text-slate-500">
+              🛡️ A IA só afirma o que estiver aqui. Fora disso, ela não inventa — confirma ou escala.
+            </p>
           </div>
         </div>
         <div className="mt-5 flex justify-end gap-2">

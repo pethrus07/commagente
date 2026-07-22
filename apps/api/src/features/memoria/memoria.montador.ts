@@ -5,15 +5,28 @@ import type { ContextoIA } from '../../core/ia/porta-ia'
 
 const ULTIMAS = 8 // nº de mensagens recentes no contexto (o resto vira resumo rolante)
 
-// compõe a "persona" (instrução de sistema) a partir da missão
-function montarPersona(objetivo: string, contexto?: string | null): string {
+const TOM_PADRAO = 'cordial, objetivo e natural'
+
+// compõe a "persona" (instrução de sistema) a partir da missão.
+// Aqui mora o GUARDRAIL anti-alucinação (regra provider-agnostic).
+function montarPersona(
+  objetivo: string,
+  contexto?: string | null,
+  tom?: string | null,
+): string {
   const linhas = [
     'Você é um assistente que conduz conversas de WhatsApp em nome de uma empresa, no ritmo humano.',
     `Objetivo desta conversa: ${objetivo}.`,
   ]
   if (contexto) linhas.push(`Contexto: ${contexto}.`)
+  linhas.push(`Tom da conversa: ${tom?.trim() || TOM_PADRAO}. Uma ideia por mensagem.`)
+  // ── Guardrail anti-alucinação (a regra que faltou no demo do "R$99") ──
   linhas.push(
-    'Seja cordial, objetivo e natural — uma ideia por mensagem. Não invente informação.',
+    'REGRAS INVIOLÁVEIS: (1) NUNCA invente preços, valores, prazos, datas, números, ' +
+      'estatísticas, nomes ou promessas — só afirme o que estiver EXPLÍCITO nas "Informações ' +
+      'autorizadas". (2) Se perguntarem algo que não está lá (preço, prazo, condição), NÃO ' +
+      'chute: diga com naturalidade que vai confirmar e retornar; se for decisivo pra fechar, ' +
+      'escale (precisa_humano=true). (3) Nunca prometa o que não pode cumprir.',
   )
   return linhas.join(' ')
 }
@@ -22,6 +35,8 @@ function montarPersona(objetivo: string, contexto?: string | null): string {
 type MissaoComMsgs = {
   objetivo: string
   contexto: string | null
+  tom: string | null
+  informacoes: string | null
   estado: EstadoMissao
   resumo: string | null
   fatos: unknown
@@ -30,9 +45,10 @@ type MissaoComMsgs = {
 
 export function montarFicha(missao: MissaoComMsgs): ContextoIA {
   return {
-    persona: montarPersona(missao.objetivo, missao.contexto),
+    persona: montarPersona(missao.objetivo, missao.contexto, missao.tom),
     objetivo: missao.objetivo,
     contexto: missao.contexto,
+    informacoes: missao.informacoes,
     estadoAtual: missao.estado,
     resumo: missao.resumo,
     fatos: (missao.fatos as Record<string, unknown> | null) ?? {},

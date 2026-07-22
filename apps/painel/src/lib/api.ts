@@ -43,8 +43,24 @@ export const api = {
       numeroId: string
       objetivo: string
       contexto?: string
+      tom?: string
+      informacoes?: string
       nomeContato?: string
     }) => req<Missao>('/missoes', { method: 'POST', body: JSON.stringify(data) }),
+    editar: (
+      id: string,
+      patch: {
+        objetivo?: string
+        contexto?: string | null
+        tom?: string | null
+        informacoes?: string | null
+        nomeContato?: string
+      },
+    ) =>
+      req<Missao>(`/missoes/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(patch),
+      }),
     mudarEstado: (id: string, estado: EstadoMissao) =>
       req<Missao>(`/missoes/${id}/estado`, {
         method: 'POST',

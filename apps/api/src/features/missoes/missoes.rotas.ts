@@ -4,6 +4,7 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import {
   criarMissao,
+  editarMissao,
   iniciarMissao,
   listarMissoes,
   mudarEstado,
@@ -15,6 +16,17 @@ const corpoCriar = z.object({
   numeroId: z.string().uuid(),
   objetivo: z.string().min(1),
   contexto: z.string().optional(),
+  tom: z.string().optional(),
+  informacoes: z.string().optional(),
+  nomeContato: z.string().optional(),
+})
+
+// PATCH: todos opcionais; string vazia é permitida (limpa o campo → null no caso-uso).
+const corpoEditar = z.object({
+  objetivo: z.string().min(1).optional(),
+  contexto: z.string().nullish(),
+  tom: z.string().nullish(),
+  informacoes: z.string().nullish(),
   nomeContato: z.string().optional(),
 })
 
@@ -35,6 +47,13 @@ export async function missoesRotas(app: FastifyInstance) {
   app.get('/missoes/:id', async (req) => {
     const { id } = paramsId.parse(req.params)
     return obterMissao(id)
+  })
+
+  // edita a config da missão (objetivo/contexto/tom/informações/nome)
+  app.patch('/missoes/:id', async (req) => {
+    const { id } = paramsId.parse(req.params)
+    const patch = corpoEditar.parse(req.body)
+    return editarMissao(id, patch)
   })
 
   // muda o estado (validado pela máquina de estados; 409 se inválido)
