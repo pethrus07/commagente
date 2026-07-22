@@ -1,6 +1,7 @@
 import {
   BookOpen,
   Building2,
+  CalendarClock,
   LayoutDashboard,
   LifeBuoy,
   LogOut,
@@ -33,6 +34,7 @@ export type Page =
   | 'numeros'
   | 'missoes'
   | 'campanhas'
+  | 'programadas'
   | 'escalados'
   | 'contatos'
   | 'conhecimento'
@@ -43,6 +45,7 @@ const ITENS: Item[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'missoes', label: 'Missões', icon: Target },
   { id: 'campanhas', label: 'Campanhas', icon: Megaphone },
+  { id: 'programadas', label: 'Programadas', icon: CalendarClock },
   { id: 'escalados', label: 'Escalados', icon: LifeBuoy },
   { id: 'contatos', label: 'Contatos', icon: Users },
   { id: 'conhecimento', label: 'Conhecimento', icon: BookOpen },

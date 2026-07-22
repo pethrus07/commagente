@@ -21,6 +21,29 @@ export interface SaudeNumero {
   status: StatusSaude
 }
 
+export type RecorrenciaAgendamento = 'uma_vez' | 'mensal'
+export type EntregaAgendamento = 'ia' | 'fixa'
+
+export interface Agendamento {
+  id: string
+  tipo: string
+  modo: string
+  objetivo: string
+  recorrencia: RecorrenciaAgendamento
+  diaDoMes: number | null
+  dataUnica: string | null
+  entrega: EntregaAgendamento
+  mensagemFixa: string | null
+  rotulo: string | null
+  ativo: boolean
+  pularCicloRef: string | null
+  ultimoCicloRef: string | null
+  ultimoDisparoEm: string | null
+  criadoEm: string
+  contato: { nome: string | null; telefone: string; optOut: boolean }
+  numero: { telefone: string }
+}
+
 export interface Numero {
   id: string
   telefone: string

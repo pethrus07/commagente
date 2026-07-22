@@ -1,5 +1,6 @@
 import { auth, type UsuarioSessao } from './auth'
 import type {
+  Agendamento,
   CampanhaResumo,
   Conhecimento,
   ContatoResumo,
@@ -115,6 +116,31 @@ export const api = {
     }) => req<{ campanha: { id: string }; criadas: number }>('/campanhas', { method: 'POST', body: JSON.stringify(data) }),
     adicionarContatos: (id: string, contatos: { telefone: string; nome?: string }[]) =>
       req<{ criadas: number }>(`/campanhas/${id}/contatos`, { method: 'POST', body: JSON.stringify({ contatos }) }),
+  },
+
+  agendamentos: {
+    listar: () => req<Agendamento[]>('/agendamentos'),
+    criarLote: (data: {
+      numeroId: string
+      tipo?: string
+      modo?: string
+      objetivo?: string
+      criterioConclusao?: string
+      tom?: string
+      informacoes?: string
+      recorrencia: 'uma_vez' | 'mensal'
+      diaDoMes?: number
+      dataUnica?: string
+      entrega: 'ia' | 'fixa'
+      mensagemFixa?: string
+      rotulo?: string
+      contatos: { telefone: string; nome?: string; dia?: number }[]
+    }) => req<{ criados: number; ignorados: number }>('/agendamentos/lote', { method: 'POST', body: JSON.stringify(data) }),
+    editar: (id: string, patch: { diaDoMes?: number; ativo?: boolean; mensagemFixa?: string; objetivo?: string; tom?: string; informacoes?: string; rotulo?: string }) =>
+      req<Agendamento>(`/agendamentos/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+    pular: (id: string) => req<Agendamento>(`/agendamentos/${id}/pular`, { method: 'POST', body: '{}' }),
+    disparar: (id: string) => req(`/agendamentos/${id}/disparar`, { method: 'POST', body: '{}' }),
+    remover: (id: string) => req(`/agendamentos/${id}`, { method: 'DELETE' }),
   },
 
   contatos: {
