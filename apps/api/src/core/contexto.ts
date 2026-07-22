@@ -2,6 +2,7 @@
 // via AsyncLocalStorage, para os casos-de-uso lerem o tenant sem receber por parâmetro.
 import { AsyncLocalStorage } from 'node:async_hooks'
 import type { Papel } from '@prisma/client'
+import { ErroHttp } from './erros'
 import { garantirTenantPadrao } from './tenant'
 
 export interface CtxRequisicao {
@@ -28,4 +29,12 @@ export async function tenantAtual(): Promise<string> {
   const c = als.getStore()
   if (c?.tenantId) return c.tenantId
   return garantirTenantPadrao()
+}
+
+// Isolamento: garante que o recurso pertence ao tenant da requisição (fecha IDOR).
+// 404 (não 403) para não revelar a existência de recursos de outro tenant.
+export async function conferirDono(tenantIdDoRecurso: string) {
+  if (tenantIdDoRecurso !== (await tenantAtual())) {
+    throw new ErroHttp(404, 'Recurso não encontrado')
+  }
 }

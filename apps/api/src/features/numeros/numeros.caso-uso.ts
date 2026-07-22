@@ -4,7 +4,7 @@ import { config } from '../../core/config'
 import { ErroHttp } from '../../core/erros'
 import { evolutionClient } from '../../core/evolution/evolution.client'
 import type { PortaWhatsApp, QrCode } from '../../core/evolution/porta-whatsapp'
-import { tenantAtual } from '../../core/contexto'
+import { conferirDono, tenantAtual } from '../../core/contexto'
 import { numerosRepo } from './numeros.repo'
 
 // injeta a porta (aqui, o adapter Evolution)
@@ -35,6 +35,7 @@ export async function atualizarConfigNumero(
 ) {
   const numero = await numerosRepo.buscar(id)
   if (!numero) throw new ErroHttp(404, 'Número não encontrado')
+  await conferirDono(numero.tenantId)
 
   if (patch.janelaInicio && !HHMM.test(patch.janelaInicio))
     throw new ErroHttp(400, 'janelaInicio inválida (use HH:mm)')
@@ -51,6 +52,7 @@ export async function atualizarConfigNumero(
 export async function conectarNumero(id: string): Promise<QrCode> {
   const numero = await numerosRepo.buscar(id)
   if (!numero) throw new ErroHttp(404, 'Número não encontrado')
+  await conferirDono(numero.tenantId)
   const { instanciaEvolution: instancia } = numero
 
   // idempotente: cria a instância (ignora se já existe) e aponta o webhook pra nós
@@ -68,6 +70,7 @@ export async function conectarNumero(id: string): Promise<QrCode> {
 export async function statusNumero(id: string) {
   const numero = await numerosRepo.buscar(id)
   if (!numero) throw new ErroHttp(404, 'Número não encontrado')
+  await conferirDono(numero.tenantId)
 
   const status = await wa.statusConexao(numero.instanciaEvolution)
   await numerosRepo.atualizarStatus(id, status)

@@ -2,7 +2,7 @@
 import type { EstadoMissao, Prisma } from '@prisma/client'
 import { db } from '../../core/db'
 import { ErroHttp } from '../../core/erros'
-import { tenantAtual } from '../../core/contexto'
+import { conferirDono, tenantAtual } from '../../core/contexto'
 import { processarTurno } from '../conversa/conversa.caso-uso'
 import { numerosRepo } from '../numeros/numeros.repo'
 import { validarTransicao } from './missao.dominio'
@@ -27,7 +27,9 @@ export async function criarMissaoEmLote(
   const numero = await db.numeroWhatsapp.findUnique({
     where: { id: input.numeroId },
   })
-  if (!numero) throw new ErroHttp(404, 'Número não encontrado')
+  if (!numero || numero.tenantId !== tenantId) {
+    throw new ErroHttp(404, 'Número não encontrado')
+  }
   if (!input.contatos.length)
     throw new ErroHttp(400, 'Informe ao menos um contato')
 
@@ -94,6 +96,7 @@ export async function listarEscalados() {
 export async function assumirConversa(id: string) {
   const missao = await missoesRepo.buscar(id)
   if (!missao) throw new ErroHttp(404, 'Missão não encontrada')
+  await conferirDono(missao.tenantId)
 
   const extra: Prisma.MissaoUpdateInput = { iaPausada: true }
   if (missao.estado === 'escalada') {
@@ -111,6 +114,7 @@ export async function assumirConversa(id: string) {
 export async function devolverParaIa(id: string) {
   const missao = await missoesRepo.buscar(id)
   if (!missao) throw new ErroHttp(404, 'Missão não encontrada')
+  await conferirDono(missao.tenantId)
 
   const atualizada = await missoesRepo.atualizar(id, { iaPausada: false })
   await db.evento.create({
@@ -122,6 +126,7 @@ export async function devolverParaIa(id: string) {
 export async function obterMissao(id: string) {
   const missao = await missoesRepo.buscar(id)
   if (!missao) throw new ErroHttp(404, 'Missão não encontrada')
+  await conferirDono(missao.tenantId)
   return missao
 }
 
@@ -139,6 +144,7 @@ export async function editarMissao(
 ) {
   const missao = await missoesRepo.buscar(id)
   if (!missao) throw new ErroHttp(404, 'Missão não encontrada')
+  await conferirDono(missao.tenantId)
 
   const dados: Prisma.MissaoUpdateInput = {}
   if (patch.objetivo !== undefined) dados.objetivo = patch.objetivo
@@ -172,6 +178,7 @@ export async function editarMissao(
 export async function iniciarMissao(id: string) {
   const missao = await missoesRepo.buscar(id)
   if (!missao) throw new ErroHttp(404, 'Missão não encontrada')
+  await conferirDono(missao.tenantId)
 
   // cap anti-bloqueio: limita conversas simultâneas conduzidas pela IA no número
   if (missao.estado === 'configurada') {
@@ -191,6 +198,7 @@ export async function iniciarMissao(id: string) {
 export async function mudarEstado(id: string, novoEstado: EstadoMissao) {
   const missao = await missoesRepo.buscar(id)
   if (!missao) throw new ErroHttp(404, 'Missão não encontrada')
+  await conferirDono(missao.tenantId)
 
   validarTransicao(missao.estado, novoEstado) // lança 409 se inválida
 
