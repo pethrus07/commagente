@@ -25,4 +25,13 @@ export const config = {
   // Em dev a API roda no host → host.docker.internal alcança a :3000.
   webhookUrl:
     process.env.WEBHOOK_URL ?? 'http://host.docker.internal:3000/webhook',
+
+  // Autenticação (JWT). Em produção defina JWT_SECRET forte no .env.
+  jwtSecret: process.env.JWT_SECRET ?? 'dev-secret-zapagente-troque-em-producao',
+
+  // Super-admin semeado no boot (login inicial do painel).
+  superAdmin: {
+    email: process.env.SUPER_ADMIN_EMAIL ?? 'admin@zapagente.local',
+    senha: process.env.SUPER_ADMIN_SENHA ?? 'zapagente123',
+  },
 }

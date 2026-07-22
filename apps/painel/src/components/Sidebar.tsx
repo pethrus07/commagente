@@ -1,7 +1,14 @@
-import { LayoutDashboard, LifeBuoy, Smartphone, Target, Users, Zap } from 'lucide-react'
+import { LayoutDashboard, LifeBuoy, LogOut, Smartphone, Target, Users, Zap } from 'lucide-react'
 import { type ComponentType, useEffect, useState } from 'react'
 import { api } from '../lib/api'
+import type { UsuarioSessao } from '../lib/auth'
 import { cn } from '../lib/ui'
+
+const PAPEL_LABEL: Record<UsuarioSessao['papel'], string> = {
+  super_admin: 'Super-admin',
+  admin_tenant: 'Administrador',
+  operador: 'Operador',
+}
 
 export type Page = 'dashboard' | 'numeros' | 'missoes' | 'escalados' | 'contatos'
 
@@ -13,7 +20,17 @@ const ITENS: { id: Page; label: string; icon: ComponentType<{ className?: string
   { id: 'numeros', label: 'Números', icon: Smartphone },
 ]
 
-export function Sidebar({ atual, onNavegar }: { atual: Page; onNavegar: (p: Page) => void }) {
+export function Sidebar({
+  atual,
+  onNavegar,
+  usuario,
+  onSair,
+}: {
+  atual: Page
+  onNavegar: (p: Page) => void
+  usuario: UsuarioSessao
+  onSair: () => void
+}) {
   const [escalados, setEscalados] = useState(0)
   useEffect(() => {
     const carregar = () =>
@@ -63,10 +80,22 @@ export function Sidebar({ atual, onNavegar }: { atual: Page; onNavegar: (p: Page
       </nav>
 
       <div className="mt-4 rounded-xl border border-white/8 bg-white/[0.02] p-3">
-        <p className="text-[11px] font-medium text-slate-400">Fase F0 · MVP</p>
-        <p className="mt-0.5 text-[11px] leading-relaxed text-slate-600">
-          Modo A (missão dirigida) + anti-bloqueio + memória.
-        </p>
+        <div className="flex items-center gap-2.5">
+          <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-indigo-500/20 text-xs font-semibold text-indigo-300">
+            {usuario.email.slice(0, 2).toUpperCase()}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-xs font-medium text-slate-200">{usuario.email}</p>
+            <p className="text-[11px] text-slate-500">{PAPEL_LABEL[usuario.papel]}</p>
+          </div>
+          <button
+            onClick={onSair}
+            title="Sair"
+            className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-slate-500 hover:bg-white/5 hover:text-rose-300"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
+        </div>
       </div>
     </aside>
   )

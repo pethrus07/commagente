@@ -28,6 +28,12 @@ enum Direcao {
   out
 }
 
+enum Papel {
+  super_admin // dono da plataforma (Pedro) — vê todos os tenants
+  admin_tenant // administrador de um tenant (cliente)
+  operador // operador do tenant (atende, assume conversas)
+}
+
 enum StatusEnvio {
   pendente
   enviando
@@ -54,8 +60,24 @@ model Tenant {
   mensagens Mensagem[]
   fila      FilaEnvio[]
   eventos   Evento[]
+  usuarios  Usuario[]
 
   @@map("tenants")
+}
+
+// ─── Usuários (login no painel; super-admin ou por tenant) ───
+model Usuario {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String?  @map("tenant_id") @db.Uuid // null = super-admin (sem tenant)
+  email     String   @unique
+  senhaHash String   @map("senha_hash")
+  papel     Papel    @default(operador)
+  criadoEm  DateTime @default(now()) @map("criado_em")
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
+  @@map("usuarios")
 }
 
 // ─── Números / chips (estado de aquecimento e budget) ────────

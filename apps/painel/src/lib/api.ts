@@ -1,3 +1,4 @@
+import { auth, type UsuarioSessao } from './auth'
 import type {
   ContatoResumo,
   EstadoMissao,
@@ -10,10 +11,18 @@ import type {
 const BASE = '/api' // proxy do Vite -> API Fastify (:3000)
 
 async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
+  const token = auth.token()
   const res = await fetch(BASE + path, {
-    headers: { 'content-type': 'application/json' },
+    headers: {
+      'content-type': 'application/json',
+      ...(token ? { authorization: `Bearer ${token}` } : {}),
+    },
     ...opts,
   })
+  if (res.status === 401) {
+    auth.sair() // token expirou/ inválido → derruba pra tela de login
+    throw new Error('Sessão expirada — faça login novamente.')
+  }
   const texto = await res.text()
   const dados = texto ? JSON.parse(texto) : null
   if (!res.ok) {
@@ -24,6 +33,12 @@ async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
+  login: (email: string, senha: string) =>
+    req<{ token: string; usuario: UsuarioSessao }>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, senha }),
+    }),
+
   stats: () => req<Stats>('/stats'),
 
   numeros: {
