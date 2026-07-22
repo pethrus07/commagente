@@ -71,4 +71,12 @@ Fase **F0 (MVP)**. **Fatia 1 — Fundação: FEITA**.
 - **Painel:** página **Escalados** (inbox com motivo + última msg + "Assumir"), **badge** de contagem no menu, **banners** no detalhe (escalada→Assumir; pausada→Devolver pra IA).
 - ✅ Validado ponta a ponta (harness real, lead de teste, sem envio): preço sem info → escala+pausa; assumir sai do inbox; devolver religa.
 
-**Próximo (F1+ antes do deploy):** (3) **cap de conversas ativas** + janela/budget de produção (hoje dev: janela `00:00–23:59`, budget 30); (4) **`git push`** (tudo local, `origin/main` atrás). Depois: throttle do resumo (−custo), custo real no painel, **deploy na VPS**. Melhoria pedida pelo Pedro: painel virar um **mini kanban-CRM** (missões em board por estado + números/contatos organizados) — a página Escalados já é um passo; encaixar o board ao evoluir o painel.
+**Fatia 10 — Cap de conversas ativas + config anti-bloqueio: FEITA** (branch `main`, commit `6ca0f6a`):
+- `NumeroWhatsapp` ganhou **`maxConversasAtivas`** (cap de conversas simultâneas conduzidas pela IA, default 20).
+- **`iniciarMissao`** (Modo A) respeita o cap: conta ativas (`na_fila`+`em_conversa`) do número e retorna **409** ao atingir.
+- **`PATCH /numeros/:id`** (`atualizarConfigNumero`) — edita janela (`HH:mm` validado), budget diário e cap.
+- **Painel:** modal "anti-bloqueio" na página Números (janela/budget/cap) + cap visível no card.
+- ✅ Validado: config inválida → 400; cap atingido → 409.
+- ⚠️ Produção: o número de teste vivo (`5583900000001`) segue com janela dev `00:00–23:59` e budget 30 — **NÃO alterar durante o demo do parceiro**; ao deployar, ajustar via painel (ex.: `08:00–20:00`, budget conservador, cap baixo em chip novo).
+
+**Próximo (F1+):** (4) **`git push`** (tudo local, `origin/main` atrás). Depois: throttle do resumo (−custo), custo real no painel, **deploy na VPS**. Melhoria pedida pelo Pedro: painel virar um **mini kanban-CRM** (missões em board por estado + números/contatos organizados) — Escalados + config de número já são passos; encaixar o board ao evoluir o painel.
