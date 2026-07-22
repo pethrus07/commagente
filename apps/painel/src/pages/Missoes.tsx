@@ -1,13 +1,13 @@
 import { type ReactNode, useEffect, useMemo, useState } from 'react'
-import { Check, ChevronRight, LayoutGrid, List, Plus, Target, X } from 'lucide-react'
+import { ChevronRight, LayoutGrid, List, Plus, Target } from 'lucide-react'
+import { AssistenteMissao } from '../components/AssistenteMissao'
 import { api } from '../lib/api'
-import { COLUNAS, TIPO_INFO, TIPOS_MISSAO, podeTransicionar } from '../lib/estados'
+import { COLUNAS, TIPO_INFO, podeTransicionar } from '../lib/estados'
 import { toast } from '../lib/toast'
-import type { ContatoResumo, EstadoMissao, Missao, Numero } from '../lib/types'
+import type { EstadoMissao, Missao } from '../lib/types'
 import {
   Badge,
   Button,
-  Card,
   Dot,
   ESTADO_INFO,
   EmptyState,
@@ -15,216 +15,6 @@ import {
   cn,
   tempoRelativo,
 } from '../lib/ui'
-
-// "5583999998888, Fulano" (um por linha; vírgula/; separa nome) → contatos válidos
-function parseContatos(txt: string): { telefone: string; nome?: string }[] {
-  return txt
-    .split('\n')
-    .map((l) => l.trim())
-    .filter(Boolean)
-    .map((l) => {
-      const [tel, ...resto] = l.split(/[,;\t]/)
-      return { telefone: (tel ?? '').replace(/\D/g, ''), nome: resto.join(' ').trim() || undefined }
-    })
-    .filter((c) => c.telefone.length >= 8)
-}
-
-function NovaMissaoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
-  const [numeros, setNumeros] = useState<Numero[]>([])
-  const [form, setForm] = useState({ numeroId: '', tipo: 'vender', modo: 'auto', objetivo: '', contexto: '', criterioConclusao: '', tom: '', informacoes: '', contatos: '' })
-  const [salvando, setSalvando] = useState(false)
-  const [base, setBase] = useState<ContatoResumo[]>([])
-  const [sel, setSel] = useState<Set<string>>(new Set())
-  const [buscaBase, setBuscaBase] = useState('')
-
-  useEffect(() => {
-    api.numeros.listar().then((ns) => {
-      setNumeros(ns)
-      const conectado = ns.find((n) => n.statusConexao === 'conectado') ?? ns[0]
-      if (conectado) setForm((f) => ({ ...f, numeroId: conectado.id }))
-    })
-    api.contatos.listar().then((cs) => setBase(cs.filter((c) => !c.optOut))).catch(() => {})
-  }, [])
-
-  const baseFiltrada = useMemo(() => {
-    const q = buscaBase.trim().toLowerCase()
-    if (!q) return base
-    return base.filter((c) => (c.nome ?? '').toLowerCase().includes(q) || c.telefone.includes(q.replace(/\D/g, '')))
-  }, [base, buscaBase])
-
-  // combina os selecionados da base + os colados, sem duplicar telefone
-  const contatos = useMemo(() => {
-    const daBase = base.filter((c) => sel.has(c.id)).map((c) => ({ telefone: c.telefone, nome: c.nome ?? undefined }))
-    const colados = parseContatos(form.contatos)
-    const vistos = new Set<string>()
-    return [...daBase, ...colados].filter((c) => (vistos.has(c.telefone) ? false : vistos.add(c.telefone)))
-  }, [base, sel, form.contatos])
-
-  const alternar = (id: string) =>
-    setSel((s) => {
-      const n = new Set(s)
-      if (n.has(id)) n.delete(id)
-      else n.add(id)
-      return n
-    })
-
-  const criar = async () => {
-    if (!form.numeroId) return toast('Cadastre/conecte um número primeiro.', 'erro')
-    if (!form.objetivo.trim()) return toast('Descreva o objetivo da missão.', 'erro')
-    if (contatos.length === 0) return toast('Informe ao menos um contato válido.', 'erro')
-    setSalvando(true)
-    try {
-      const { criadas } = await api.missoes.criarLote({
-        numeroId: form.numeroId,
-        tipo: form.tipo,
-        modo: form.modo,
-        objetivo: form.objetivo.trim(),
-        contexto: form.contexto.trim() || undefined,
-        criterioConclusao: form.criterioConclusao.trim() || undefined,
-        tom: form.tom.trim() || undefined,
-        informacoes: form.informacoes.trim() || undefined,
-        contatos,
-      })
-      toast(criadas === 1 ? 'Missão criada.' : `${criadas} missões criadas (uma por contato).`, 'ok')
-      onFechar(true)
-    } catch (e) {
-      toast((e as Error).message, 'erro')
-    } finally {
-      setSalvando(false)
-    }
-  }
-
-  const campo = 'w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:border-indigo-500/50 focus:outline-none'
-
-  return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 backdrop-blur-sm">
-      <Card className="w-full max-w-lg p-6">
-        <div className="mb-5 flex items-center justify-between">
-          <h3 className="font-semibold text-white">Nova missão</h3>
-          <button onClick={() => onFechar(false)} className="text-slate-500 hover:text-slate-200"><X className="h-5 w-5" /></button>
-        </div>
-        <div className="space-y-3">
-          <div>
-            <label className="mb-1 block text-xs text-slate-400">Tipo de missão</label>
-            <div className="flex flex-wrap gap-1.5">
-              {TIPOS_MISSAO.map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setForm({ ...form, tipo: t })}
-                  className={cn(
-                    'rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 ring-inset transition',
-                    form.tipo === t ? 'bg-indigo-500/20 text-indigo-200 ring-indigo-500/40' : 'text-slate-400 ring-white/10 hover:text-slate-200',
-                  )}
-                >
-                  {TIPO_INFO[t].emoji} {TIPO_INFO[t].label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <label className="mb-1 block text-xs text-slate-400">Modo</label>
-            <div className="flex gap-1.5">
-              {(['auto', 'copilot'] as const).map((md) => (
-                <button key={md} onClick={() => setForm({ ...form, modo: md })} className={cn('flex-1 rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 ring-inset transition', form.modo === md ? 'bg-indigo-500/20 text-indigo-200 ring-indigo-500/40' : 'text-slate-400 ring-white/10 hover:text-slate-200')}>
-                  {md === 'auto' ? '⚡ Auto (envia sozinha)' : '👁️ Co-pilot (você aprova)'}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <label className="mb-1 block text-xs text-slate-400">Número (chip)</label>
-            <select value={form.numeroId} onChange={(e) => setForm({ ...form, numeroId: e.target.value })} className={campo}>
-              {numeros.length === 0 && <option value="">— nenhum número —</option>}
-              {numeros.map((n) => (
-                <option key={n.id} value={n.id} className="bg-slate-900">
-                  +{n.telefone} ({n.statusConexao})
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="mb-1 flex items-center justify-between text-xs text-slate-400">
-              <span>Escolher da base</span>
-              {contatos.length > 0 && (
-                <span className="rounded-full bg-indigo-500/20 px-2 py-0.5 text-[11px] font-medium text-indigo-300">
-                  {contatos.length} no total
-                </span>
-              )}
-            </label>
-            <input
-              value={buscaBase}
-              onChange={(e) => setBuscaBase(e.target.value)}
-              placeholder="Buscar contato pra adicionar…"
-              className={campo}
-            />
-            <div className="mt-1.5 max-h-40 divide-y divide-white/5 overflow-y-auto rounded-xl border border-white/10">
-              {base.length === 0 ? (
-                <p className="px-3 py-3 text-xs text-slate-600">Base vazia — importe contatos na aba Contatos, ou cole números abaixo.</p>
-              ) : baseFiltrada.length === 0 ? (
-                <p className="px-3 py-3 text-xs text-slate-600">Nenhum contato encontrado.</p>
-              ) : (
-                baseFiltrada.slice(0, 60).map((c) => (
-                  <button key={c.id} type="button" onClick={() => alternar(c.id)} className="flex w-full items-center gap-2.5 px-3 py-2 text-left hover:bg-white/5">
-                    <span className={cn('grid h-4 w-4 shrink-0 place-items-center rounded border', sel.has(c.id) ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-white/25')}>
-                      {sel.has(c.id) && <Check className="h-3 w-3" />}
-                    </span>
-                    <span className="truncate text-sm text-slate-200">{c.nome ?? `+${c.telefone}`}</span>
-                    {c.nome && <span className="ml-auto shrink-0 text-[11px] tabular-nums text-slate-500">+{c.telefone}</span>}
-                  </button>
-                ))
-              )}
-            </div>
-          </div>
-          <div>
-            <label className="mb-1 block text-xs text-slate-400">Ou cole novos números <span className="text-slate-600">— um por linha: telefone[, nome]</span></label>
-            <textarea
-              value={form.contatos}
-              onChange={(e) => setForm({ ...form, contatos: e.target.value })}
-              rows={2}
-              placeholder={'5583999998888, Fornecedor A\n5511988887777, Fornecedor B'}
-              className={cn(campo, 'resize-none font-mono text-[13px]')}
-            />
-            <p className="mt-1 text-[11px] leading-snug text-slate-500">
-              🚀 Cada contato vira uma conversa própria (memória e estado independentes).
-            </p>
-          </div>
-          <div>
-            <label className="mb-1 block text-xs text-slate-400">Objetivo</label>
-            <input value={form.objetivo} onChange={(e) => setForm({ ...form, objetivo: e.target.value })} placeholder="Qualificar o lead e agendar uma conversa" className={campo} />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs text-slate-400">Critério de conclusão (opcional)</label>
-            <input value={form.criterioConclusao} onChange={(e) => setForm({ ...form, criterioConclusao: e.target.value })} placeholder="Ex.: reunião agendada · orçamento aceito · pagamento confirmado" className={campo} />
-            <p className="mt-1 text-[11px] leading-snug text-slate-500">🎯 Quando isto acontece, a IA marca a missão como <b>concluída</b>.</p>
-          </div>
-          <div>
-            <label className="mb-1 block text-xs text-slate-400">Contexto (opcional)</label>
-            <textarea value={form.contexto} onChange={(e) => setForm({ ...form, contexto: e.target.value })} rows={2} placeholder="Ex.: empresa de automação industrial, ticket médio alto…" className={cn(campo, 'resize-none')} />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs text-slate-400">Tom / humor (opcional)</label>
-            <input value={form.tom} onChange={(e) => setForm({ ...form, tom: e.target.value })} placeholder="Ex.: amigável e descontraído, com leveza" className={campo} />
-          </div>
-          <div>
-            <label className="mb-1 flex items-center gap-1.5 text-xs text-slate-400">
-              Informações autorizadas (opcional)
-            </label>
-            <textarea value={form.informacoes} onChange={(e) => setForm({ ...form, informacoes: e.target.value })} rows={3} placeholder="Preços, prazos e condições REAIS que a IA pode afirmar. Ex.: Plano Pro R$299/mês, entrega em 7 dias úteis." className={cn(campo, 'resize-none')} />
-            <p className="mt-1 text-[11px] leading-snug text-slate-500">
-              🛡️ A IA só afirma o que estiver aqui. Fora disso, ela não inventa — confirma ou escala.
-            </p>
-          </div>
-        </div>
-        <div className="mt-5 flex justify-end gap-2">
-          <Button variant="ghost" onClick={() => onFechar(false)}>Cancelar</Button>
-          <Button onClick={criar} loading={salvando}>
-            {contatos.length > 1 ? `Criar ${contatos.length} missões` : 'Criar missão'}
-          </Button>
-        </div>
-      </Card>
-    </div>
-  )
-}
 
 export function Missoes({ onAbrir }: { onAbrir: (id: string) => void }) {
   const [missoes, setMissoes] = useState<Missao[] | null>(null)
@@ -378,7 +168,7 @@ export function Missoes({ onAbrir }: { onAbrir: (id: string) => void }) {
       )}
 
       {modal && (
-        <NovaMissaoModal
+        <AssistenteMissao
           onFechar={(criou) => {
             setModal(false)
             if (criou) carregar()
