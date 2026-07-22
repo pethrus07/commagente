@@ -16,6 +16,8 @@ export const missoesRepo = {
     informacoes?: string
     templateId?: string
     campanhaId?: string
+    estado?: EstadoMissao
+    iniciadaEm?: Date
   }) {
     return db.missao.create({ data })
   },

@@ -32,6 +32,12 @@ export interface Numero {
   maxConversasAtivas: number
   janelaInicio: string
   janelaFim: string
+  suporteReativo: boolean
+  suporteObjetivo: string | null
+  suporteTom: string | null
+  suporteInformacoes: string | null
+  suporteCriterio: string | null
+  suporteModo: string
   criadoEm: string
   saude?: SaudeNumero
 }

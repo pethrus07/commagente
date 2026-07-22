@@ -11,6 +11,7 @@ import {
   Dot,
   EmptyState,
   Spinner,
+  cn,
 } from '../lib/ui'
 
 function ConfigModal({ numero, onFechar }: { numero: Numero; onFechar: (salvou: boolean) => void }) {
@@ -19,6 +20,7 @@ function ConfigModal({ numero, onFechar }: { numero: Numero; onFechar: (salvou: 
     janelaFim: numero.janelaFim,
     budgetDiario: String(numero.budgetDiario),
     maxConversasAtivas: String(numero.maxConversasAtivas),
+    suporteReativo: numero.suporteReativo,
   })
   const [salvando, setSalvando] = useState(false)
 
@@ -34,6 +36,7 @@ function ConfigModal({ numero, onFechar }: { numero: Numero; onFechar: (salvou: 
         janelaFim: form.janelaFim,
         budgetDiario: budget,
         maxConversasAtivas: cap,
+        suporteReativo: form.suporteReativo,
       })
       toast('Configuração salva.', 'ok')
       onFechar(true)
@@ -78,6 +81,21 @@ function ConfigModal({ numero, onFechar }: { numero: Numero; onFechar: (salvou: 
           <p className="text-[11px] leading-snug text-slate-500">
             🛡️ Janela = horário permitido de envio · Budget = teto de mensagens/dia · Cap = máximo de conversas simultâneas que a IA inicia.
           </p>
+          <div className="border-t border-white/8 pt-3">
+            <button
+              type="button"
+              onClick={() => setForm({ ...form, suporteReativo: !form.suporteReativo })}
+              className="flex w-full items-start gap-3 text-left"
+            >
+              <span className={cn('mt-0.5 grid h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition', form.suporteReativo ? 'bg-emerald-500' : 'bg-white/15')}>
+                <span className={cn('h-4 w-4 rounded-full bg-white transition', form.suporteReativo && 'translate-x-4')} />
+              </span>
+              <span>
+                <span className="block text-sm font-medium text-slate-200">🛟 Suporte reativo</span>
+                <span className="mt-0.5 block text-[11px] leading-snug text-slate-500">A IA atende automaticamente qualquer um que mandar mensagem neste número. Defina a persona pelo assistente (missão tipo Suporte).</span>
+              </span>
+            </button>
+          </div>
         </div>
         <div className="mt-5 flex justify-end gap-2">
           <Button variant="ghost" onClick={() => onFechar(false)}>Cancelar</Button>
@@ -268,6 +286,9 @@ export function Numeros() {
                 <p className="mt-3 text-center text-[11px] text-slate-500">
                   cap de <span className="font-medium text-slate-300">{n.maxConversasAtivas}</span> conversas ativas
                 </p>
+                {n.suporteReativo && (
+                  <p className="mt-2 text-center text-[11px] font-medium text-emerald-300">🛟 suporte reativo ativo</p>
+                )}
 
                 <div className="mt-3 flex gap-2">
                   <Button variant="ghost" className="flex-1" onClick={() => setConectar(n)}>

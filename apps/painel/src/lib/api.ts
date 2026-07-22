@@ -83,6 +83,12 @@ export const api = {
         janelaFim?: string
         budgetDiario?: number
         maxConversasAtivas?: number
+        suporteReativo?: boolean
+        suporteObjetivo?: string | null
+        suporteTom?: string | null
+        suporteInformacoes?: string | null
+        suporteCriterio?: string | null
+        suporteModo?: string
       },
     ) =>
       req<Numero>(`/numeros/${id}`, {

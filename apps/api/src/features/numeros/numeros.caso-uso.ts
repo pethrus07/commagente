@@ -38,6 +38,12 @@ export async function atualizarConfigNumero(
     janelaFim?: string
     budgetDiario?: number
     maxConversasAtivas?: number
+    suporteReativo?: boolean
+    suporteObjetivo?: string | null
+    suporteTom?: string | null
+    suporteInformacoes?: string | null
+    suporteCriterio?: string | null
+    suporteModo?: string
   },
 ) {
   const numero = await numerosRepo.buscar(id)
@@ -52,6 +58,8 @@ export async function atualizarConfigNumero(
     throw new ErroHttp(400, 'budgetDiario deve ser ≥ 1')
   if (patch.maxConversasAtivas !== undefined && patch.maxConversasAtivas < 1)
     throw new ErroHttp(400, 'maxConversasAtivas deve ser ≥ 1')
+  if (patch.suporteModo !== undefined && !['auto', 'copilot'].includes(patch.suporteModo))
+    throw new ErroHttp(400, 'suporteModo inválido (auto | copilot)')
 
   return numerosRepo.atualizarConfig(id, patch)
 }

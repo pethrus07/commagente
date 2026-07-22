@@ -53,10 +53,33 @@ export async function processarWebhook(payload: unknown) {
       evento.telefone,
       evento.nome,
     )
-    const missao = await missoesRepo.acharAtivaPorContatoNumero(
+    let missao = await missoesRepo.acharAtivaPorContatoNumero(
       numero.id,
       contato.id,
     )
+
+    // Suporte reativo: inbound sem missão ativa + número marcado como reativo →
+    // abre na hora uma conversa de suporte (cobre "todos + quem entrar em contato").
+    if (!missao && numero.suporteReativo) {
+      missao = await missoesRepo.criar({
+        tenantId: numero.tenantId,
+        contatoId: contato.id,
+        numeroId: numero.id,
+        tipo: 'suporte',
+        modo: numero.suporteModo,
+        objetivo:
+          numero.suporteObjetivo ??
+          'Atender o contato, tirar dúvidas e resolver o que for possível — escalar para um humano quando necessário.',
+        criterioConclusao: numero.suporteCriterio ?? undefined,
+        tom: numero.suporteTom ?? undefined,
+        informacoes: numero.suporteInformacoes ?? undefined,
+        estado: 'em_conversa',
+        iniciadaEm: new Date(),
+      })
+      await db.evento.create({
+        data: { tenantId: numero.tenantId, missaoId: missao.id, tipo: 'suporte_reativo', dados: {} },
+      })
+    }
 
     // Tier 3: nota de voz → transcreve pra texto e segue o fluxo normal.
     let conteudo = evento.conteudo

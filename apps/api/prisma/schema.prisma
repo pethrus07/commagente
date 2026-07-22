@@ -120,6 +120,14 @@ model NumeroWhatsapp {
   proximoEnvioEm     DateTime?     @map("proximo_envio_em") // anti-rajada: só envia de novo a partir daqui
   janelaInicio       String        @default("08:00") @map("janela_inicio") // HH:mm
   janelaFim          String        @default("20:00") @map("janela_fim")
+  // Suporte reativo: se ligado, um inbound sem missão ativa abre uma conversa de
+  // suporte na hora (cobre "todos os contatos + quem entrar em contato").
+  suporteReativo     Boolean       @default(false) @map("suporte_reativo")
+  suporteObjetivo    String?       @map("suporte_objetivo")
+  suporteTom         String?       @map("suporte_tom")
+  suporteInformacoes String?       @map("suporte_informacoes")
+  suporteCriterio    String?       @map("suporte_criterio")
+  suporteModo        String        @default("auto") @map("suporte_modo")
   criadoEm           DateTime      @default(now()) @map("criado_em")
 
   tenant    Tenant     @relation(fields: [tenantId], references: [id])

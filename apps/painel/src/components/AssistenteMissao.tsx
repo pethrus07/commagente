@@ -31,6 +31,7 @@ export function AssistenteMissao({ onFechar }: { onFechar: (criou: boolean) => v
     informacoesDica: 'Preços, prazos e condições REAIS que a IA pode afirmar.',
   })
   const [contatos, setContatos] = useState<Contato[]>([])
+  const [reativo, setReativo] = useState(false)
   const [salvando, setSalvando] = useState(false)
 
   useEffect(() => {
@@ -43,6 +44,7 @@ export function AssistenteMissao({ onFechar }: { onFechar: (criou: boolean) => v
 
   const escolherModelo = (m: ModeloMissao) => {
     setModeloId(m.id)
+    setReativo(m.tipo === 'suporte') // suporte já entra como reativo por padrão
     setForm((f) => ({
       ...f,
       tipo: m.tipo,
@@ -55,23 +57,50 @@ export function AssistenteMissao({ onFechar }: { onFechar: (criou: boolean) => v
     setPasso(1)
   }
 
+  const ehSuporte = form.tipo === 'suporte'
+
   const criar = async () => {
     if (!form.numeroId) return toast('Cadastre/conecte um número primeiro.', 'erro')
     if (!form.objetivo.trim()) return toast('Descreva o objetivo da missão.', 'erro')
-    if (contatos.length === 0) return toast('Escolha ao menos um contato.', 'erro')
+    // no reativo, contatos são opcionais (a IA atende quem entrar em contato)
+    if (!(ehSuporte && reativo) && contatos.length === 0)
+      return toast('Escolha ao menos um contato.', 'erro')
     setSalvando(true)
     try {
-      const { criadas } = await api.missoes.criarLote({
-        numeroId: form.numeroId,
-        tipo: form.tipo,
-        modo: form.modo,
-        objetivo: form.objetivo.trim(),
-        criterioConclusao: form.criterioConclusao.trim() || undefined,
-        tom: form.tom.trim() || undefined,
-        informacoes: form.informacoes.trim() || undefined,
-        contatos,
-      })
-      toast(criadas === 1 ? 'Missão criada.' : `${criadas} missões criadas (uma por contato).`, 'ok')
+      // liga o suporte reativo no número (a IA atende inbound sem missão prévia)
+      if (ehSuporte && reativo) {
+        await api.numeros.editar(form.numeroId, {
+          suporteReativo: true,
+          suporteObjetivo: form.objetivo.trim(),
+          suporteTom: form.tom.trim() || null,
+          suporteInformacoes: form.informacoes.trim() || null,
+          suporteCriterio: form.criterioConclusao.trim() || null,
+          suporteModo: form.modo,
+        })
+      }
+      // cria conversas proativas pros contatos escolhidos (se houver)
+      let criadas = 0
+      if (contatos.length > 0) {
+        const r = await api.missoes.criarLote({
+          numeroId: form.numeroId,
+          tipo: form.tipo,
+          modo: form.modo,
+          objetivo: form.objetivo.trim(),
+          criterioConclusao: form.criterioConclusao.trim() || undefined,
+          tom: form.tom.trim() || undefined,
+          informacoes: form.informacoes.trim() || undefined,
+          contatos,
+        })
+        criadas = r.criadas
+      }
+      if (ehSuporte && reativo)
+        toast(
+          criadas === 0
+            ? 'Suporte reativo ativado — a IA vai atender quem entrar em contato. 🛟'
+            : `Suporte reativo ativado + ${criadas} conversa${criadas === 1 ? '' : 's'} iniciada${criadas === 1 ? '' : 's'}. 🛟`,
+          'ok',
+        )
+      else toast(criadas === 1 ? 'Missão criada.' : `${criadas} missões criadas (uma por contato).`, 'ok')
       onFechar(true)
     } catch (e) {
       toast((e as Error).message, 'erro')
@@ -177,12 +206,32 @@ export function AssistenteMissao({ onFechar }: { onFechar: (criou: boolean) => v
                   </select>
                 </div>
               </div>
+              {ehSuporte && (
+                <button
+                  type="button"
+                  onClick={() => setReativo(!reativo)}
+                  className={cn('flex w-full items-start gap-3 rounded-xl border p-3 text-left transition', reativo ? 'border-indigo-500/50 bg-indigo-500/[0.08]' : 'border-white/10 bg-white/[0.03] hover:border-white/20')}
+                >
+                  <span className={cn('mt-0.5 grid h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition', reativo ? 'bg-indigo-500' : 'bg-white/15')}>
+                    <span className={cn('h-4 w-4 rounded-full bg-white transition', reativo && 'translate-x-4')} />
+                  </span>
+                  <span>
+                    <span className="block text-sm font-medium text-slate-100">🛟 Atender quem entrar em contato (24/7)</span>
+                    <span className="mt-0.5 block text-[11px] leading-snug text-slate-500">Qualquer pessoa que mandar mensagem pra esse número é atendida na hora por essa missão — mesmo sem estar na sua lista. Escolher contatos no próximo passo fica opcional.</span>
+                  </span>
+                </button>
+              )}
             </div>
           )}
 
           {/* PASSO 3 — contatos + revisão */}
           {passo === 2 && (
             <div className="space-y-4 pt-1">
+              {ehSuporte && reativo && (
+                <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] p-3 text-xs leading-snug text-emerald-200/90">
+                  🛟 <b>Suporte reativo ligado:</b> a IA já vai atender automaticamente quem mandar mensagem nesse número. Escolher contatos abaixo é <b>opcional</b> — serve só pra iniciar conversas proativamente também.
+                </div>
+              )}
               <SeletorContatos onChange={setContatos} />
               <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/[0.06] p-4">
                 <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-indigo-300/80">
@@ -194,7 +243,7 @@ export function AssistenteMissao({ onFechar }: { onFechar: (criou: boolean) => v
                   {form.criterioConclusao && <li><span className="text-slate-500">Conclui quando:</span> {form.criterioConclusao}</li>}
                   <li><span className="text-slate-500">Modo:</span> {form.modo === 'auto' ? '⚡ Auto (envia sozinha)' : '👁️ Co-pilot (você aprova)'}</li>
                   <li><span className="text-slate-500">Envio por:</span> {numeroSel ? `+${numeroSel.telefone}` : '—'}</li>
-                  <li><span className="text-slate-500">Contatos:</span> {contatos.length > 0 ? `${contatos.length} — uma conversa por contato` : <span className="text-slate-600">nenhum ainda</span>}</li>
+                  <li><span className="text-slate-500">Contatos:</span> {contatos.length > 0 ? `${contatos.length} — uma conversa por contato` : ehSuporte && reativo ? '🛟 reativo — atende quem entrar em contato' : <span className="text-slate-600">nenhum ainda</span>}</li>
                 </ul>
               </div>
             </div>
@@ -214,7 +263,7 @@ export function AssistenteMissao({ onFechar }: { onFechar: (criou: boolean) => v
             </Button>
           ) : (
             <Button onClick={criar} loading={salvando}>
-              <Rocket className="h-4 w-4" /> {contatos.length > 1 ? `Criar ${contatos.length} missões` : 'Criar missão'}
+              <Rocket className="h-4 w-4" /> {ehSuporte && reativo && contatos.length === 0 ? 'Ativar suporte reativo' : contatos.length > 1 ? `Criar ${contatos.length} missões` : 'Criar missão'}
             </Button>
           )}
         </div>

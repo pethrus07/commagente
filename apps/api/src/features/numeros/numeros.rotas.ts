@@ -19,6 +19,12 @@ const corpoConfig = z.object({
   janelaFim: z.string().optional(),
   budgetDiario: z.number().int().optional(),
   maxConversasAtivas: z.number().int().optional(),
+  suporteReativo: z.boolean().optional(),
+  suporteObjetivo: z.string().nullish(),
+  suporteTom: z.string().nullish(),
+  suporteInformacoes: z.string().nullish(),
+  suporteCriterio: z.string().nullish(),
+  suporteModo: z.enum(['auto', 'copilot']).optional(),
 })
 
 const paramsId = z.object({ id: z.string().uuid() })
