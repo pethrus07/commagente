@@ -12,6 +12,15 @@ export type StatusConexao = 'desconectado' | 'conectando' | 'conectado'
 export type Direcao = 'in' | 'out'
 export type StatusEnvio = 'pendente' | 'enviando' | 'ok' | 'erro'
 
+export type StatusSaude = 'saudavel' | 'atencao' | 'risco' | 'amostra_baixa'
+export interface SaudeNumero {
+  base: number
+  respondidas: number
+  naoRespondidas: number
+  replyRate: number | null
+  status: StatusSaude
+}
+
 export interface Numero {
   id: string
   telefone: string
@@ -24,6 +33,7 @@ export interface Numero {
   janelaInicio: string
   janelaFim: string
   criadoEm: string
+  saude?: SaudeNumero
 }
 
 export interface Contato {

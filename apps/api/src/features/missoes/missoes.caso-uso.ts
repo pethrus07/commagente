@@ -4,6 +4,7 @@ import { db } from '../../core/db'
 import { ErroHttp } from '../../core/erros'
 import { conferirDono, tenantAtual } from '../../core/contexto'
 import { processarTurno } from '../conversa/conversa.caso-uso'
+import { classificarSaude } from '../numeros/numeros.dominio'
 import { numerosRepo } from '../numeros/numeros.repo'
 import { validarTransicao } from './missao.dominio'
 import { missoesRepo } from './missoes.repo'
@@ -189,6 +190,18 @@ export async function iniciarMissao(id: string) {
         `Cap de conversas ativas atingido (${missao.numero.maxConversasAtivas}) neste número. Conclua ou arquive alguma antes de iniciar outra.`,
       )
     }
+
+    // saúde anti-ban (gatilho 2026): taxa de resposta em risco → pausa novas iniciações
+    const { base, naoRespondidas } = await numerosRepo.saude(missao.numeroId)
+    const saude = classificarSaude(base, naoRespondidas)
+    if (saude.status === 'risco') {
+      throw new ErroHttp(
+        409,
+        `Número com taxa de resposta baixa (${Math.round((saude.replyRate ?? 0) * 100)}%). ` +
+          'Novas iniciações pausadas pra proteger de bloqueio — conclua ou arquive os leads sem retorno antes.',
+      )
+    }
+
     await missoesRepo.atualizarEstado(id, 'na_fila')
   }
   await processarTurno(id) // gera opener via IA + enfileira; worker envia

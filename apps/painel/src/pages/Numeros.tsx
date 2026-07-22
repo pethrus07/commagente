@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Plus, QrCode, SlidersHorizontal, Smartphone, X } from 'lucide-react'
 import { api } from '../lib/api'
 import { toast } from '../lib/toast'
-import type { Numero } from '../lib/types'
+import type { Numero, SaudeNumero } from '../lib/types'
 import {
   Badge,
   Button,
@@ -152,6 +152,25 @@ function ConectarModal({ numero, onFechar }: { numero: Numero; onFechar: (conect
   )
 }
 
+const SAUDE_INFO: Record<SaudeNumero['status'], { label: string; cls: string; dot: string }> = {
+  saudavel: { label: 'Saudável', cls: 'bg-emerald-500/12 text-emerald-300', dot: 'bg-emerald-400' },
+  atencao: { label: 'Atenção', cls: 'bg-amber-500/12 text-amber-300', dot: 'bg-amber-400' },
+  risco: { label: 'Risco de bloqueio', cls: 'bg-rose-500/12 text-rose-300', dot: 'bg-rose-400' },
+  amostra_baixa: { label: 'Coletando dados', cls: 'bg-white/5 text-slate-400', dot: 'bg-slate-500' },
+}
+
+function SaudeBadge({ saude }: { saude: SaudeNumero }) {
+  const info = SAUDE_INFO[saude.status]
+  const rate = saude.replyRate != null ? `${Math.round(saude.replyRate * 100)}% resposta` : `${saude.base} iniciadas`
+  return (
+    <div className={`mt-4 flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-medium ${info.cls}`} title="Saúde anti-bloqueio: taxa de resposta dos últimos 30 dias. Abaixo de 15% pausa novas iniciações.">
+      <span className={`h-1.5 w-1.5 rounded-full ${info.dot}`} />
+      {info.label}
+      <span className="opacity-70">· {rate}</span>
+    </div>
+  )
+}
+
 export function Numeros() {
   const [numeros, setNumeros] = useState<Numero[] | null>(null)
   const [novo, setNovo] = useState('')
@@ -243,6 +262,8 @@ export function Numeros() {
                     <p className="text-[11px] text-slate-500">janela</p>
                   </div>
                 </div>
+
+                {n.saude && <SaudeBadge saude={n.saude} />}
 
                 <p className="mt-3 text-center text-[11px] text-slate-500">
                   cap de <span className="font-medium text-slate-300">{n.maxConversasAtivas}</span> conversas ativas

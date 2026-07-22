@@ -5,6 +5,7 @@ import { ErroHttp } from '../../core/erros'
 import { evolutionClient } from '../../core/evolution/evolution.client'
 import type { PortaWhatsApp, QrCode } from '../../core/evolution/porta-whatsapp'
 import { conferirDono, tenantAtual } from '../../core/contexto'
+import { classificarSaude } from './numeros.dominio'
 import { numerosRepo } from './numeros.repo'
 
 // injeta a porta (aqui, o adapter Evolution)
@@ -18,7 +19,13 @@ export async function cadastrarNumero(telefone: string, instancia?: string) {
 
 export async function listarNumeros() {
   const tenantId = await tenantAtual()
-  return numerosRepo.listar(tenantId)
+  const numeros = await numerosRepo.listar(tenantId)
+  return Promise.all(
+    numeros.map(async (n) => {
+      const { base, naoRespondidas } = await numerosRepo.saude(n.id)
+      return { ...n, saude: classificarSaude(base, naoRespondidas) }
+    }),
+  )
 }
 
 const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/

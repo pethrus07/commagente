@@ -77,7 +77,7 @@ export const provedorOpenai: ProvedorIA = {
 
     const usuario =
       historico(ctx) ||
-      '(a conversa ainda não começou — escreva a PRIMEIRA mensagem para iniciar o contato de forma calorosa, curta e natural)'
+      '(a conversa ainda não começou — escreva a PRIMEIRA mensagem para iniciar o contato de forma calorosa, curta e natural, e TERMINE com uma pergunta ou convite claro pra pessoa responder — isso aumenta a taxa de resposta e evita bloqueio)'
 
     const raw = await chat(
       [

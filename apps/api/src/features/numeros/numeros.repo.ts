@@ -45,4 +45,24 @@ export const numerosRepo = {
       where: { numeroId, estado: { in: ['na_fila', 'em_conversa'] } },
     })
   },
+
+  // saúde anti-ban: base = missões iniciadas há +48h nos últimos 30d (tiveram
+  // tempo de responder); naoRespondidas = ainda em na_fila/sem_resposta.
+  async saude(numeroId: string): Promise<{ base: number; naoRespondidas: number }> {
+    const desde = new Date(Date.now() - 30 * 86_400_000)
+    const ate = new Date(Date.now() - 48 * 3_600_000)
+    const [base, naoRespondidas] = await Promise.all([
+      db.missao.count({
+        where: { numeroId, criadoEm: { gte: desde, lt: ate }, estado: { not: 'configurada' } },
+      }),
+      db.missao.count({
+        where: {
+          numeroId,
+          criadoEm: { gte: desde, lt: ate },
+          estado: { in: ['na_fila', 'sem_resposta'] },
+        },
+      }),
+    ])
+    return { base, naoRespondidas }
+  },
 }
