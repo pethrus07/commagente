@@ -35,4 +35,6 @@ export interface PortaWhatsApp {
     presenca: Presenca,
     ms?: number,
   ): Promise<void>
+  /** lê a agenda de contatos do número conectado (pra importar) */
+  buscarContatos(instancia: string): Promise<{ telefone: string; nome?: string }[]>
 }

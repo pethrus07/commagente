@@ -49,8 +49,16 @@ export interface ContatoResumo {
   nome: string | null
   telefone: string
   origem: string | null
+  optOut: boolean
   criadoEm: string
   totalMissoes: number
+}
+
+export interface ImportResultado {
+  criados: number
+  atualizados: number
+  ignorados: number
+  total: number
 }
 
 export interface Mensagem {

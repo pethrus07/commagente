@@ -4,6 +4,7 @@ import type {
   ContatoResumo,
   EstadoMissao,
   Historico,
+  ImportResultado,
   Missao,
   Numero,
   QrResposta,
@@ -91,7 +92,33 @@ export const api = {
 
   escalados: () => req<Missao[]>('/escalados'),
 
-  contatos: () => req<ContatoResumo[]>('/contatos'),
+  contatos: {
+    listar: () => req<ContatoResumo[]>('/contatos'),
+    criar: (data: { nome?: string; telefone: string }) =>
+      req<ContatoResumo>('/contatos', { method: 'POST', body: JSON.stringify(data) }),
+    importar: (contatos: { nome?: string; telefone: string }[]) =>
+      req<ImportResultado>('/contatos/importar', {
+        method: 'POST',
+        body: JSON.stringify({ contatos }),
+      }),
+    importarWhatsApp: (numeroId: string) =>
+      req<ImportResultado>('/contatos/importar-whatsapp', {
+        method: 'POST',
+        body: JSON.stringify({ numeroId }),
+      }),
+    exportarCSV: async (): Promise<string> => {
+      const token = auth.token()
+      const tenant = auth.tenantSel()
+      const res = await fetch(BASE + '/contatos/exportar', {
+        headers: {
+          ...(token ? { authorization: `Bearer ${token}` } : {}),
+          ...(tenant ? { 'x-tenant-id': tenant.id } : {}),
+        },
+      })
+      if (!res.ok) throw new Error('Falha ao exportar contatos.')
+      return res.text()
+    },
+  },
 
   conhecimento: {
     listar: () => req<Conhecimento[]>('/conhecimento'),

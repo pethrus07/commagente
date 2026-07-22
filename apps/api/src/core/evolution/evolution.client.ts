@@ -103,4 +103,20 @@ export const evolutionClient: PortaWhatsApp = {
       delay: ms,
     })
   },
+
+  async buscarContatos(instancia) {
+    // v2: POST /chat/findContacts/{instance}. Retorna a agenda sincronizada do número.
+    const r = await req<
+      Array<{ id?: string; remoteJid?: string; pushName?: string; name?: string }>
+    >('POST', `/chat/findContacts/${instancia}`, {})
+    const lista = Array.isArray(r) ? r : []
+    return lista.flatMap((c) => {
+      const jid = c.id ?? c.remoteJid ?? ''
+      // só contatos individuais (ignora grupos @g.us, broadcast, etc.)
+      if (!jid.endsWith('@s.whatsapp.net')) return []
+      const telefone = jid.split('@')[0]?.split(':')[0] ?? ''
+      if (!telefone) return []
+      return [{ telefone, nome: c.pushName ?? c.name ?? undefined }]
+    })
+  },
 }
