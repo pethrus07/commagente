@@ -85,6 +85,18 @@ export interface QrResposta {
   codigo?: string
 }
 
+export interface HistoricoDia {
+  data: string // YYYY-MM-DD
+  missoes: number
+  mensagens: number
+  turnos: number
+  escaladas: number
+  concluidas: number
+}
+export interface Historico {
+  dias: HistoricoDia[]
+}
+
 export type StatusConhecimento = 'sugerido' | 'aprovado' | 'rejeitado'
 
 export interface Conhecimento {

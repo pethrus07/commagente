@@ -1,4 +1,5 @@
 // ⚙️ Aplicação — métricas agregadas para o dashboard do painel.
+import { config } from '../../core/config'
 import { tenantAtual } from '../../core/contexto'
 import { db } from '../../core/db'
 
@@ -38,4 +39,60 @@ export async function obterStats() {
     numeros: { total: totalNumeros, conectados },
     mensagensHoje,
   }
+}
+
+// dia "YYYY-MM-DD" no fuso configurado
+function diaKey(d: Date): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: config.tz,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(d)
+}
+
+// Histórico: séries por dia (últimos N dias) para os gráficos do dashboard.
+export async function obterHistorico(dias = 14) {
+  const tenantId = await tenantAtual()
+  const inicio = new Date(Date.now() - dias * 86_400_000)
+
+  const [missoes, mensagens, eventos, concluidas] = await Promise.all([
+    db.missao.findMany({
+      where: { tenantId, criadoEm: { gte: inicio } },
+      select: { criadoEm: true },
+    }),
+    db.mensagem.findMany({
+      where: { tenantId, criadaEm: { gte: inicio } },
+      select: { criadaEm: true },
+    }),
+    db.evento.findMany({
+      where: { tenantId, criadoEm: { gte: inicio }, tipo: { in: ['escalada', 'turno_ia'] } },
+      select: { criadoEm: true, tipo: true },
+    }),
+    db.missao.findMany({
+      where: { tenantId, concluidaEm: { gte: inicio } },
+      select: { concluidaEm: true },
+    }),
+  ])
+
+  // esqueleto dos últimos N dias (em ordem)
+  const base = new Map<
+    string,
+    { data: string; missoes: number; mensagens: number; turnos: number; escaladas: number; concluidas: number }
+  >()
+  for (let i = dias - 1; i >= 0; i--) {
+    const k = diaKey(new Date(Date.now() - i * 86_400_000))
+    base.set(k, { data: k, missoes: 0, mensagens: 0, turnos: 0, escaladas: 0, concluidas: 0 })
+  }
+  const bump = (k: string, campo: 'missoes' | 'mensagens' | 'turnos' | 'escaladas' | 'concluidas') => {
+    const dia = base.get(k)
+    if (dia) dia[campo]++
+  }
+
+  for (const m of missoes) bump(diaKey(m.criadoEm), 'missoes')
+  for (const m of mensagens) bump(diaKey(m.criadaEm), 'mensagens')
+  for (const e of eventos) bump(diaKey(e.criadoEm), e.tipo === 'escalada' ? 'escaladas' : 'turnos')
+  for (const c of concluidas) if (c.concluidaEm) bump(diaKey(c.concluidaEm), 'concluidas')
+
+  return { dias: [...base.values()] }
 }

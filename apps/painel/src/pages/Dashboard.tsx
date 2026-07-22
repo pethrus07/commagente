@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import {
   Activity,
+  CheckCircle2,
+  LifeBuoy,
   MessageSquare,
   Smartphone,
   Target,
@@ -8,7 +10,7 @@ import {
 } from 'lucide-react'
 import { api } from '../lib/api'
 import { toast } from '../lib/toast'
-import type { EstadoMissao, Stats } from '../lib/types'
+import type { EstadoMissao, Historico, Stats } from '../lib/types'
 import { Card, ESTADO_INFO, Spinner, cn } from '../lib/ui'
 
 const ORDEM: EstadoMissao[] = [
@@ -39,9 +41,9 @@ function Kpi({
     <Card className="p-5">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm text-slate-400">{label}</p>
-          <p className="mt-2 text-3xl font-semibold tracking-tight text-white">{valor}</p>
-          {sub && <p className="mt-1 text-xs text-slate-500">{sub}</p>}
+          <p className="text-sm text-muted">{label}</p>
+          <p className="mt-2 text-3xl font-semibold tracking-tight text-content">{valor}</p>
+          {sub && <p className="mt-1 text-xs text-subtle">{sub}</p>}
         </div>
         <div className={cn('grid h-11 w-11 place-items-center rounded-xl', cor)}>
           <Icon className="h-5 w-5" />
@@ -51,16 +53,90 @@ function Kpi({
   )
 }
 
+const rotulo = (d: string) => {
+  const [, m, dd] = d.split('-')
+  return `${dd}/${m}`
+}
+
+function Atividade({ hist }: { hist: Historico }) {
+  const dias = hist.dias
+  const max = Math.max(1, ...dias.map((d) => d.mensagens))
+  const tot = dias.reduce(
+    (a, d) => ({
+      mensagens: a.mensagens + d.mensagens,
+      missoes: a.missoes + d.missoes,
+      concluidas: a.concluidas + d.concluidas,
+      escaladas: a.escaladas + d.escaladas,
+    }),
+    { mensagens: 0, missoes: 0, concluidas: 0, escaladas: 0 },
+  )
+
+  return (
+    <Card className="p-6">
+      <div className="mb-1 flex items-center gap-2">
+        <Activity className="h-4 w-4 text-subtle" />
+        <h2 className="text-sm font-semibold text-content">Atividade — últimos {dias.length} dias</h2>
+      </div>
+      <p className="mb-5 text-xs text-subtle">Mensagens por dia (enviadas + recebidas).</p>
+
+      <div className="flex h-32 items-end gap-1">
+        {dias.map((d) => {
+          const h = Math.round((d.mensagens / max) * 100)
+          return (
+            <div
+              key={d.data}
+              className="group relative flex flex-1 flex-col justify-end"
+              title={`${rotulo(d.data)} · ${d.mensagens} msgs · ${d.missoes} missões · ${d.concluidas} concluídas`}
+            >
+              <div
+                className="rounded-t bg-indigo-500/70 transition-all group-hover:bg-indigo-400"
+                style={{ height: `${Math.max(h, 3)}%` }}
+              />
+            </div>
+          )
+        })}
+      </div>
+      <div className="mt-2 flex justify-between text-[10px] text-subtle">
+        <span>{rotulo(dias[0]?.data ?? '')}</span>
+        <span>{rotulo(dias[dias.length - 1]?.data ?? '')}</span>
+      </div>
+
+      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <MiniTot icon={MessageSquare} cor="text-sky-400" n={tot.mensagens} label="mensagens" />
+        <MiniTot icon={Target} cor="text-indigo-400" n={tot.missoes} label="missões novas" />
+        <MiniTot icon={CheckCircle2} cor="text-emerald-400" n={tot.concluidas} label="concluídas" />
+        <MiniTot icon={LifeBuoy} cor="text-orange-400" n={tot.escaladas} label="escaladas" />
+      </div>
+    </Card>
+  )
+}
+
+function MiniTot({ icon: Icon, cor, n, label }: { icon: typeof Activity; cor: string; n: number; label: string }) {
+  return (
+    <div className="rounded-xl bg-surface2 p-3">
+      <div className="flex items-center gap-1.5">
+        <Icon className={cn('h-3.5 w-3.5', cor)} />
+        <span className="text-lg font-semibold tabular-nums text-content">{n}</span>
+      </div>
+      <p className="mt-0.5 text-[11px] text-subtle">{label}</p>
+    </div>
+  )
+}
+
 export function Dashboard() {
   const [stats, setStats] = useState<Stats | null>(null)
+  const [hist, setHist] = useState<Historico | null>(null)
   const [carregando, setCarregando] = useState(true)
 
   useEffect(() => {
     let vivo = true
     const carregar = async () => {
       try {
-        const s = await api.stats()
-        if (vivo) setStats(s)
+        const [s, h] = await Promise.all([api.stats(), api.historico(14)])
+        if (vivo) {
+          setStats(s)
+          setHist(h)
+        }
       } catch (e) {
         toast((e as Error).message, 'erro')
       } finally {
@@ -99,13 +175,15 @@ export function Dashboard() {
         <Kpi icon={Users} cor="bg-violet-500/15 text-violet-400" label="Contatos" valor={stats.totalContatos} sub="leads na base" />
       </div>
 
+      {hist && <Atividade hist={hist} />}
+
       <Card className="p-6">
         <div className="mb-5 flex items-center gap-2">
-          <Target className="h-4 w-4 text-slate-500" />
-          <h2 className="text-sm font-semibold text-slate-200">Pipeline de missões</h2>
+          <Target className="h-4 w-4 text-subtle" />
+          <h2 className="text-sm font-semibold text-content">Pipeline de missões</h2>
         </div>
         {stats.totalMissoes === 0 ? (
-          <p className="py-6 text-center text-sm text-slate-500">Nenhuma missão ainda.</p>
+          <p className="py-6 text-center text-sm text-subtle">Nenhuma missão ainda.</p>
         ) : (
           <div className="space-y-3">
             {ORDEM.filter((e) => (stats.missoesPorEstado[e] ?? 0) > 0).map((e) => {
@@ -113,11 +191,11 @@ export function Dashboard() {
               const info = ESTADO_INFO[e]
               return (
                 <div key={e} className="flex items-center gap-3">
-                  <span className="w-28 shrink-0 text-xs text-slate-400">{info.label}</span>
-                  <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-white/5">
+                  <span className="w-28 shrink-0 text-xs text-muted">{info.label}</span>
+                  <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-surface2">
                     <div className={cn('h-full rounded-full', info.dot)} style={{ width: `${(n / maxEstado) * 100}%` }} />
                   </div>
-                  <span className="w-8 shrink-0 text-right text-sm font-medium tabular-nums text-slate-200">{n}</span>
+                  <span className="w-8 shrink-0 text-right text-sm font-medium tabular-nums text-content">{n}</span>
                 </div>
               )
             })}

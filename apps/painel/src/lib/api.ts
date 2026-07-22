@@ -3,6 +3,7 @@ import type {
   Conhecimento,
   ContatoResumo,
   EstadoMissao,
+  Historico,
   Missao,
   Numero,
   QrResposta,
@@ -56,6 +57,8 @@ export const api = {
   },
 
   stats: () => req<Stats>('/stats'),
+  historico: (dias?: number) =>
+    req<Historico>(`/stats/historico${dias ? `?dias=${dias}` : ''}`),
 
   numeros: {
     listar: () => req<Numero[]>('/numeros'),
