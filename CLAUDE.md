@@ -79,4 +79,16 @@ Fase **F0 (MVP)**. **Fatia 1 — Fundação: FEITA**.
 - ✅ Validado: config inválida → 400; cap atingido → 409.
 - ⚠️ Produção: o número de teste vivo (`5583900000001`) segue com janela dev `00:00–23:59` e budget 30 — **NÃO alterar durante o demo do parceiro**; ao deployar, ajustar via painel (ex.: `08:00–20:00`, budget conservador, cap baixo em chip novo).
 
-**Próximo (F1+):** (4) **`git push`** (tudo local, `origin/main` atrás). Depois: throttle do resumo (−custo), custo real no painel, **deploy na VPS**. Melhoria pedida pelo Pedro: painel virar um **mini kanban-CRM** (missões em board por estado + números/contatos organizados) — Escalados + config de número já são passos; encaixar o board ao evoluir o painel.
+**Fatia 11 — Disparo em lote: FEITA** (branch `main`, commit `b9dcd8f`):
+- `criarMissaoEmLote`: **a mesma definição → N contatos**; cada contato vira uma missão própria (conversa/memória/estado independentes). `criarMissao` virou atalho (1 contato).
+- **`POST /missoes/lote`** (valida número + lista de contatos).
+- **Painel:** modal de criar aceita **lista de contatos** (um por linha: `telefone[, nome]`), com contagem ao vivo e botão dinâmico ("Criar N missões"). Ideal p/ disparar pra vários fornecedores/leads.
+
+**Fatia 12 — Kanban-CRM: FEITA** (branch `main`, commit `96d9477`):
+- **Missões vira board** por estado (colunas), com toggle **Board/Lista**. **Arrastar** um card muda o estado (validado pela máquina de estados; drop inválido é rejeitado e as colunas destino acendem). Board atualiza a cada 6s e marca "humano" quando `iaPausada`.
+- **Página Contatos** (o "C" do CRM): tabela nome/telefone/origem/nº missões/criado + busca. **`GET /contatos`** (com contagem de missões).
+- `lib/estados.ts` centraliza `TRANSICOES`/`COLUNAS`/`podeTransicionar` (removida a duplicata no MissaoDetalhe).
+
+**Perguntas do Pedro (2026-07-22):** (a) **Áudio?** NÃO — o normalizador (`webhook.dominio.textoDaMensagem`) só lê texto + legendas; áudio/PTT cai em `ignorado`. Fatia futura: detectar `audioMessage` → baixar → transcrever (Whisper; local via faster-whisper OU API Whisper OpenAI ~US$0,006/min) → tratar como texto. (b) **Missão p/ vários contatos?** Resolvido na Fatia 11 (disparo em lote).
+
+**Próximo (F1+):** (4) **`git push`** (tudo local, `origin/main` atrás — aguarda OK do Pedro). Depois: throttle do resumo (−custo), custo real no painel, transcrição de áudio, **deploy na VPS**.
