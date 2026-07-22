@@ -66,6 +66,18 @@ export const api = {
       informacoes?: string
       nomeContato?: string
     }) => req<Missao>('/missoes', { method: 'POST', body: JSON.stringify(data) }),
+    criarLote: (data: {
+      numeroId: string
+      objetivo: string
+      contexto?: string
+      tom?: string
+      informacoes?: string
+      contatos: { telefone: string; nome?: string }[]
+    }) =>
+      req<{ criadas: number; missoes: Missao[] }>('/missoes/lote', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
     editar: (
       id: string,
       patch: {

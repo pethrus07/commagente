@@ -15,9 +15,22 @@ import {
   tempoRelativo,
 } from '../lib/ui'
 
+// "5583999998888, Fulano" (um por linha; vírgula/; separa nome) → contatos válidos
+function parseContatos(txt: string): { telefone: string; nome?: string }[] {
+  return txt
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .map((l) => {
+      const [tel, ...resto] = l.split(/[,;\t]/)
+      return { telefone: (tel ?? '').replace(/\D/g, ''), nome: resto.join(' ').trim() || undefined }
+    })
+    .filter((c) => c.telefone.length >= 8)
+}
+
 function NovaMissaoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
   const [numeros, setNumeros] = useState<Numero[]>([])
-  const [form, setForm] = useState({ telefone: '', numeroId: '', objetivo: '', contexto: '', tom: '', informacoes: '', nomeContato: '' })
+  const [form, setForm] = useState({ numeroId: '', objetivo: '', contexto: '', tom: '', informacoes: '', contatos: '' })
   const [salvando, setSalvando] = useState(false)
 
   useEffect(() => {
@@ -28,22 +41,23 @@ function NovaMissaoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
     })
   }, [])
 
+  const contatos = parseContatos(form.contatos)
+
   const criar = async () => {
     if (!form.numeroId) return toast('Cadastre/conecte um número primeiro.', 'erro')
-    if (form.telefone.replace(/\D/g, '').length < 8) return toast('Telefone do lead inválido.', 'erro')
     if (!form.objetivo.trim()) return toast('Descreva o objetivo da missão.', 'erro')
+    if (contatos.length === 0) return toast('Informe ao menos um contato válido.', 'erro')
     setSalvando(true)
     try {
-      await api.missoes.criar({
-        telefone: form.telefone.replace(/\D/g, ''),
+      const { criadas } = await api.missoes.criarLote({
         numeroId: form.numeroId,
         objetivo: form.objetivo.trim(),
         contexto: form.contexto.trim() || undefined,
         tom: form.tom.trim() || undefined,
         informacoes: form.informacoes.trim() || undefined,
-        nomeContato: form.nomeContato.trim() || undefined,
+        contatos,
       })
-      toast('Missão criada.', 'ok')
+      toast(criadas === 1 ? 'Missão criada.' : `${criadas} missões criadas (uma por contato).`, 'ok')
       onFechar(true)
     } catch (e) {
       toast((e as Error).message, 'erro')
@@ -73,15 +87,25 @@ function NovaMissaoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
               ))}
             </select>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="mb-1 block text-xs text-slate-400">Telefone do lead</label>
-              <input value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} placeholder="5583999998888" className={campo} />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs text-slate-400">Nome (opcional)</label>
-              <input value={form.nomeContato} onChange={(e) => setForm({ ...form, nomeContato: e.target.value })} placeholder="Fulano" className={campo} />
-            </div>
+          <div>
+            <label className="mb-1 flex items-center justify-between text-xs text-slate-400">
+              <span>Contatos <span className="text-slate-600">— um por linha: telefone[, nome]</span></span>
+              {contatos.length > 0 && (
+                <span className="rounded-full bg-indigo-500/20 px-2 py-0.5 text-[11px] font-medium text-indigo-300">
+                  {contatos.length} {contatos.length === 1 ? 'contato' : 'contatos'}
+                </span>
+              )}
+            </label>
+            <textarea
+              value={form.contatos}
+              onChange={(e) => setForm({ ...form, contatos: e.target.value })}
+              rows={3}
+              placeholder={'5583999998888, Fornecedor A\n5511988887777, Fornecedor B\n5599...'}
+              className={cn(campo, 'resize-none font-mono text-[13px]')}
+            />
+            <p className="mt-1 text-[11px] leading-snug text-slate-500">
+              🚀 Cada contato vira uma conversa própria (memória e estado independentes). Cole sua lista de fornecedores/leads.
+            </p>
           </div>
           <div>
             <label className="mb-1 block text-xs text-slate-400">Objetivo</label>
@@ -107,7 +131,9 @@ function NovaMissaoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
         </div>
         <div className="mt-5 flex justify-end gap-2">
           <Button variant="ghost" onClick={() => onFechar(false)}>Cancelar</Button>
-          <Button onClick={criar} loading={salvando}>Criar missão</Button>
+          <Button onClick={criar} loading={salvando}>
+            {contatos.length > 1 ? `Criar ${contatos.length} missões` : 'Criar missão'}
+          </Button>
         </div>
       </Card>
     </div>

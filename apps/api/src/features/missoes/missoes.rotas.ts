@@ -5,6 +5,7 @@ import { z } from 'zod'
 import {
   assumirConversa,
   criarMissao,
+  criarMissaoEmLote,
   devolverParaIa,
   editarMissao,
   iniciarMissao,
@@ -33,6 +34,18 @@ const corpoEditar = z.object({
   nomeContato: z.string().optional(),
 })
 
+// disparo em lote: a mesma missão → vários contatos
+const corpoLote = z.object({
+  numeroId: z.string().uuid(),
+  objetivo: z.string().min(1),
+  contexto: z.string().optional(),
+  tom: z.string().optional(),
+  informacoes: z.string().optional(),
+  contatos: z
+    .array(z.object({ telefone: z.string().min(8), nome: z.string().optional() }))
+    .min(1),
+})
+
 const corpoEstado = z.object({ estado: z.nativeEnum(EstadoMissao) })
 
 const paramsId = z.object({ id: z.string().uuid() })
@@ -46,6 +59,14 @@ export async function missoesRotas(app: FastifyInstance) {
   })
 
   app.get('/missoes', async () => listarMissoes())
+
+  // disparo em lote: cria N missões (uma por contato) com a mesma definição
+  app.post('/missoes/lote', async (req, reply) => {
+    const dados = corpoLote.parse(req.body)
+    const r = await criarMissaoEmLote(dados)
+    reply.code(201)
+    return r
+  })
 
   // inbox de escalados (missões aguardando um humano)
   app.get('/escalados', async () => listarEscalados())

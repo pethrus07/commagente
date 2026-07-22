@@ -8,54 +8,74 @@ import { numerosRepo } from '../numeros/numeros.repo'
 import { validarTransicao } from './missao.dominio'
 import { missoesRepo } from './missoes.repo'
 
-export async function criarMissao(input: {
-  telefone: string
+type DadosMissao = {
   numeroId: string
   objetivo: string
   contexto?: string
   tom?: string
   informacoes?: string
-  nomeContato?: string
-}) {
+}
+
+// Disparo em LOTE: a MESMA definição de missão → N contatos. Cada contato vira
+// uma missão própria (conversa independente, com memória e estado próprios).
+export async function criarMissaoEmLote(
+  input: DadosMissao & { contatos: { telefone: string; nome?: string }[] },
+  origem = 'lote',
+) {
   const tenantId = await garantirTenantPadrao()
 
-  // garante o número
   const numero = await db.numeroWhatsapp.findUnique({
     where: { id: input.numeroId },
   })
   if (!numero) throw new ErroHttp(404, 'Número não encontrado')
+  if (!input.contatos.length)
+    throw new ErroHttp(400, 'Informe ao menos um contato')
 
-  // garante o contato (por telefone)
-  const contato = await db.contato.upsert({
-    where: { tenantId_telefone: { tenantId, telefone: input.telefone } },
-    update: input.nomeContato ? { nome: input.nomeContato } : {},
-    create: {
+  const missoes = []
+  for (const c of input.contatos) {
+    const telefone = c.telefone.replace(/\D/g, '')
+    if (telefone.length < 8) continue // pula linhas inválidas do lote
+
+    const contato = await db.contato.upsert({
+      where: { tenantId_telefone: { tenantId, telefone } },
+      update: c.nome ? { nome: c.nome } : {},
+      create: { tenantId, telefone, nome: c.nome, origem },
+    })
+
+    const missao = await missoesRepo.criar({
       tenantId,
-      telefone: input.telefone,
-      nome: input.nomeContato,
-      origem: 'manual',
-    },
-  })
+      contatoId: contato.id,
+      numeroId: input.numeroId,
+      objetivo: input.objetivo,
+      contexto: input.contexto,
+      tom: input.tom,
+      informacoes: input.informacoes,
+    })
+    await db.evento.create({
+      data: {
+        tenantId,
+        missaoId: missao.id,
+        tipo: 'missao_criada',
+        dados: { objetivo: input.objetivo, contatoId: contato.id, origem },
+      },
+    })
+    missoes.push(missao)
+  }
 
-  const missao = await missoesRepo.criar({
-    tenantId,
-    contatoId: contato.id,
-    numeroId: input.numeroId,
-    objetivo: input.objetivo,
-    contexto: input.contexto,
-    tom: input.tom,
-    informacoes: input.informacoes,
-  })
+  if (!missoes.length)
+    throw new ErroHttp(400, 'Nenhum contato válido no lote')
+  return { criadas: missoes.length, missoes }
+}
 
-  await db.evento.create({
-    data: {
-      tenantId,
-      missaoId: missao.id,
-      tipo: 'missao_criada',
-      dados: { objetivo: input.objetivo, contatoId: contato.id },
-    },
-  })
-  return missao
+// Criação individual — atalho sobre o lote (1 contato).
+export async function criarMissao(
+  input: DadosMissao & { telefone: string; nomeContato?: string },
+) {
+  const { missoes } = await criarMissaoEmLote(
+    { ...input, contatos: [{ telefone: input.telefone, nome: input.nomeContato }] },
+    'manual',
+  )
+  return missoes[0]
 }
 
 export async function listarMissoes() {
