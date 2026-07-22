@@ -9,6 +9,7 @@ type DefCampanha = {
   nome: string
   numeroId: string
   tipo?: string
+  modo?: string
   objetivo: string
   contexto?: string
   criterioConclusao?: string
@@ -57,6 +58,7 @@ export async function criarCampanha(
       numeroId: input.numeroId,
       nome: input.nome,
       tipo: input.tipo ?? 'vender',
+      modo: input.modo ?? 'auto',
       objetivo: input.objetivo,
       contexto: input.contexto,
       criterioConclusao: input.criterioConclusao,
@@ -95,6 +97,7 @@ function dispararDaCampanha(
     id: string
     numeroId: string
     tipo: string
+    modo: string
     objetivo: string
     contexto: string | null
     criterioConclusao: string | null
@@ -106,6 +109,7 @@ function dispararDaCampanha(
   return criarMissaoEmLote({
     numeroId: campanha.numeroId,
     tipo: campanha.tipo,
+    modo: campanha.modo,
     objetivo: campanha.objetivo,
     contexto: campanha.contexto ?? undefined,
     criterioConclusao: campanha.criterioConclusao ?? undefined,

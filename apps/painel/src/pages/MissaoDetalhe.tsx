@@ -37,6 +37,8 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
   const [iniciando, setIniciando] = useState(false)
   const [editando, setEditando] = useState(false)
   const [controlando, setControlando] = useState(false)
+  const [draft, setDraft] = useState<string | null>(null)
+  const [rasc, setRasc] = useState(false)
   const fimRef = useRef<HTMLDivElement>(null)
 
   const carregar = async () => {
@@ -56,6 +58,11 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
   useEffect(() => {
     fimRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [m?.mensagens?.length])
+
+  // sincroniza o rascunho editável quando a IA gera um novo (não sobrescreve edição do poll)
+  useEffect(() => {
+    setDraft(m?.rascunho ?? null)
+  }, [m?.rascunho])
 
   if (!m) {
     return <div className="grid place-items-center py-32"><Spinner className="h-6 w-6" /></div>
@@ -114,6 +121,32 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
       toast((e as Error).message, 'erro')
     } finally {
       setControlando(false)
+    }
+  }
+
+  const aprovarRasc = async () => {
+    setRasc(true)
+    try {
+      await api.missoes.aprovarRascunho(id, draft ?? undefined)
+      toast('Rascunho aprovado — a IA vai enviar. ✅', 'ok')
+      carregar()
+    } catch (e) {
+      toast((e as Error).message, 'erro')
+    } finally {
+      setRasc(false)
+    }
+  }
+
+  const descartarRasc = async () => {
+    setRasc(true)
+    try {
+      await api.missoes.descartarRascunho(id)
+      toast('Rascunho descartado.', 'ok')
+      carregar()
+    } catch (e) {
+      toast((e as Error).message, 'erro')
+    } finally {
+      setRasc(false)
     }
   }
 
@@ -176,6 +209,25 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
           <Button variant="ghost" onClick={devolver} loading={controlando} className="shrink-0">
             <Play className="h-4 w-4" /> Devolver pra IA
           </Button>
+        </div>
+      )}
+
+      {m.rascunho && (
+        <div className="mb-4 rounded-2xl border border-violet-500/30 bg-violet-500/10 p-4">
+          <div className="mb-2 flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-violet-300" />
+            <p className="text-sm font-medium text-violet-100">Rascunho da IA — aguardando sua aprovação (co-pilot)</p>
+          </div>
+          <textarea
+            value={draft ?? ''}
+            onChange={(e) => setDraft(e.target.value)}
+            rows={3}
+            className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-indigo-500/50 focus:outline-none"
+          />
+          <div className="mt-2 flex gap-2">
+            <Button onClick={aprovarRasc} loading={rasc}><Send className="h-4 w-4" /> Aprovar e enviar</Button>
+            <Button variant="ghost" onClick={descartarRasc} loading={rasc}><X className="h-4 w-4" /> Descartar</Button>
+          </div>
         </div>
       )}
 
@@ -333,6 +385,7 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
             </div>
             <dl className="space-y-1.5 text-sm">
               <Linha rotulo="Tipo" valor={TIPO_INFO[m.tipo]?.label ?? m.tipo} />
+              <Linha rotulo="Modo" valor={m.modo === 'copilot' ? 'Co-pilot (você aprova)' : 'Auto (IA envia)'} />
               {m.criterioConclusao && <Linha rotulo="Conclui quando" valor={m.criterioConclusao} />}
               {m.contexto && <Linha rotulo="Contexto" valor={m.contexto} />}
               <Linha rotulo="Categoria" valor={m.categoriaResultado ?? '—'} />
@@ -359,6 +412,7 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
 function EditarMissaoModal({ missao, onFechar }: { missao: Missao; onFechar: (salvou: boolean) => void }) {
   const [form, setForm] = useState({
     tipo: missao.tipo ?? 'vender',
+    modo: missao.modo ?? 'auto',
     objetivo: missao.objetivo,
     nomeContato: missao.contato?.nome ?? '',
     contexto: missao.contexto ?? '',
@@ -374,6 +428,7 @@ function EditarMissaoModal({ missao, onFechar }: { missao: Missao; onFechar: (sa
     try {
       await api.missoes.editar(missao.id, {
         tipo: form.tipo,
+        modo: form.modo,
         objetivo: form.objetivo.trim(),
         nomeContato: form.nomeContato.trim(),
         contexto: form.contexto.trim() || null,
@@ -413,6 +468,16 @@ function EditarMissaoModal({ missao, onFechar }: { missao: Missao; onFechar: (sa
                   )}
                 >
                   {TIPO_INFO[t].emoji} {TIPO_INFO[t].label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-slate-400">Modo</label>
+            <div className="flex gap-1.5">
+              {(['auto', 'copilot'] as const).map((md) => (
+                <button key={md} onClick={() => setForm({ ...form, modo: md })} className={cn('flex-1 rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 ring-inset transition', form.modo === md ? 'bg-indigo-500/20 text-indigo-200 ring-indigo-500/40' : 'text-slate-400 ring-white/10 hover:text-slate-200')}>
+                  {md === 'auto' ? '⚡ Auto (envia sozinha)' : '👁️ Co-pilot (você aprova)'}
                 </button>
               ))}
             </div>

@@ -17,6 +17,7 @@ const corpoCriar = z.object({
   nome: z.string().min(1),
   numeroId: z.string().uuid(),
   tipo: tipoMissao.optional(),
+  modo: z.enum(['auto', 'copilot']).optional(),
   objetivo: z.string().min(1),
   contexto: z.string().optional(),
   criterioConclusao: z.string().optional(),

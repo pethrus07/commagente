@@ -16,6 +16,14 @@ export const conversaRepo = {
     return db.missao.update({ where: { id }, data: { resumo } })
   },
 
+  // co-pilot: guarda/limpa a resposta rascunhada pela IA (aguardando aprovação)
+  salvarRascunho(id: string, rascunho: string) {
+    return db.missao.update({ where: { id }, data: { rascunho } })
+  },
+  limparRascunho(id: string) {
+    return db.missao.update({ where: { id }, data: { rascunho: null } })
+  },
+
   // memória INDIVIDUAL: mescla fatos novos no perfil do contato (persiste entre missões)
   async mesclarMemoriaContato(
     contatoId: string,

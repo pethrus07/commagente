@@ -12,7 +12,7 @@ const campo =
 
 function NovaCampanhaModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
   const [numeros, setNumeros] = useState<Numero[]>([])
-  const [form, setForm] = useState({ nome: '', numeroId: '', tipo: 'vender', objetivo: '', criterioConclusao: '', tom: '', informacoes: '' })
+  const [form, setForm] = useState({ nome: '', numeroId: '', tipo: 'vender', modo: 'auto', objetivo: '', criterioConclusao: '', tom: '', informacoes: '' })
   const [contatos, setContatos] = useState<{ telefone: string; nome?: string }[]>([])
   const [salvando, setSalvando] = useState(false)
 
@@ -35,6 +35,7 @@ function NovaCampanhaModal({ onFechar }: { onFechar: (criou: boolean) => void })
         nome: form.nome.trim(),
         numeroId: form.numeroId,
         tipo: form.tipo,
+        modo: form.modo,
         objetivo: form.objetivo.trim(),
         criterioConclusao: form.criterioConclusao.trim() || undefined,
         tom: form.tom.trim() || undefined,
@@ -68,6 +69,16 @@ function NovaCampanhaModal({ onFechar }: { onFechar: (criou: boolean) => void })
               {TIPOS_MISSAO.map((t) => (
                 <button key={t} onClick={() => setForm({ ...form, tipo: t })} className={cn('rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 ring-inset transition', form.tipo === t ? 'bg-indigo-500/20 text-indigo-200 ring-indigo-500/40' : 'text-slate-400 ring-white/10 hover:text-slate-200')}>
                   {TIPO_INFO[t].emoji} {TIPO_INFO[t].label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-slate-400">Modo</label>
+            <div className="flex gap-1.5">
+              {(['auto', 'copilot'] as const).map((md) => (
+                <button key={md} onClick={() => setForm({ ...form, modo: md })} className={cn('flex-1 rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 ring-inset transition', form.modo === md ? 'bg-indigo-500/20 text-indigo-200 ring-indigo-500/40' : 'text-slate-400 ring-white/10 hover:text-slate-200')}>
+                  {md === 'auto' ? '⚡ Auto' : '👁️ Co-pilot'}
                 </button>
               ))}
             </div>

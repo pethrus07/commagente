@@ -1,6 +1,8 @@
 // ⚙️ Aplicação — o HARNESS da conversa (a moldura determinística em volta do LLM).
 // 1 turno: monta contexto → IA (structured) → valida → aplica estado + fatos → responde.
+import { conferirDono } from '../../core/contexto'
 import { db } from '../../core/db'
+import { ErroHttp } from '../../core/erros'
 import { ia } from '../../core/ia'
 import { SaidaIASchema, type SaidaIA } from '../../core/ia/porta-ia'
 import { conhecimentoRepo } from '../conhecimento/conhecimento.repo'
@@ -97,6 +99,21 @@ async function executarTurno(missaoId: string) {
     return { ok: true as const, escalada: true }
   }
 
+  // 5b) CO-PILOT: em vez de enviar, guarda o rascunho pra aprovação humana e para aqui.
+  // (fatos/memória já foram mesclados acima; estado só muda quando o humano aprovar/agir)
+  if (missao.modo === 'copilot') {
+    await conversaRepo.salvarRascunho(missaoId, saida.resposta)
+    await db.evento.create({
+      data: {
+        tenantId: missao.tenantId,
+        missaoId,
+        tipo: 'rascunho',
+        dados: { categoria: saida.categoria ?? null },
+      },
+    })
+    return { ok: true as const, rascunho: true }
+  }
+
   // 6) aplica o novo estado (se a transição for válida)
   if (
     saida.novo_estado !== missao.estado &&
@@ -172,4 +189,35 @@ async function executarTurno(missaoId: string) {
     novo_estado: saida.novo_estado,
     enfileirado: true,
   }
+}
+
+// Co-pilot — humano aprova o rascunho (opcionalmente editado): enfileira o envio e limpa.
+export async function aprovarRascunho(missaoId: string, texto?: string) {
+  const missao = await missoesRepo.buscar(missaoId)
+  if (!missao) throw new ErroHttp(404, 'Missão não encontrada')
+  await conferirDono(missao.tenantId)
+  const conteudo = (texto?.trim() || missao.rascunho || '').trim()
+  if (!conteudo) throw new ErroHttp(400, 'Não há rascunho para aprovar.')
+  await filaRepo.enfileirar({
+    tenantId: missao.tenantId,
+    missaoId,
+    contatoId: missao.contatoId,
+    payload: {
+      numeroId: missao.numeroId,
+      telefone: missao.contato.telefone,
+      texto: conteudo,
+      tipo: 'conversa',
+    },
+    agendadoPara: new Date(Date.now() + jitterMs('conversa')),
+  })
+  await conversaRepo.limparRascunho(missaoId)
+  return { ok: true as const, enviado: true }
+}
+
+export async function descartarRascunho(missaoId: string) {
+  const missao = await missoesRepo.buscar(missaoId)
+  if (!missao) throw new ErroHttp(404, 'Missão não encontrada')
+  await conferirDono(missao.tenantId)
+  await conversaRepo.limparRascunho(missaoId)
+  return { ok: true as const }
 }

@@ -2,6 +2,7 @@
 import { EstadoMissao } from '@prisma/client'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
+import { aprovarRascunho, descartarRascunho } from '../conversa/conversa.caso-uso'
 import {
   assumirConversa,
   criarMissao,
@@ -16,11 +17,13 @@ import {
 } from './missoes.caso-uso'
 
 const tipoMissao = z.enum(['vender', 'qualificar', 'orcar', 'cobrar', 'suporte', 'outro'])
+const modoMissao = z.enum(['auto', 'copilot'])
 
 const corpoCriar = z.object({
   telefone: z.string().min(8),
   numeroId: z.string().uuid(),
   tipo: tipoMissao.optional(),
+  modo: modoMissao.optional(),
   objetivo: z.string().min(1),
   contexto: z.string().optional(),
   criterioConclusao: z.string().optional(),
@@ -32,6 +35,7 @@ const corpoCriar = z.object({
 // PATCH: todos opcionais; string vazia é permitida (limpa o campo → null no caso-uso).
 const corpoEditar = z.object({
   tipo: tipoMissao.optional(),
+  modo: modoMissao.optional(),
   objetivo: z.string().min(1).optional(),
   contexto: z.string().nullish(),
   criterioConclusao: z.string().nullish(),
@@ -44,6 +48,7 @@ const corpoEditar = z.object({
 const corpoLote = z.object({
   numeroId: z.string().uuid(),
   tipo: tipoMissao.optional(),
+  modo: modoMissao.optional(),
   objetivo: z.string().min(1),
   contexto: z.string().optional(),
   criterioConclusao: z.string().optional(),
@@ -112,5 +117,16 @@ export async function missoesRotas(app: FastifyInstance) {
   app.post('/missoes/:id/devolver-ia', async (req) => {
     const { id } = paramsId.parse(req.params)
     return devolverParaIa(id)
+  })
+
+  // Co-pilot: aprovar (opcionalmente editado) ou descartar o rascunho da IA
+  app.post('/missoes/:id/rascunho/aprovar', async (req) => {
+    const { id } = paramsId.parse(req.params)
+    const { texto } = z.object({ texto: z.string().optional() }).parse(req.body ?? {})
+    return aprovarRascunho(id, texto)
+  })
+  app.post('/missoes/:id/rascunho/descartar', async (req) => {
+    const { id } = paramsId.parse(req.params)
+    return descartarRascunho(id)
   })
 }

@@ -8,6 +8,7 @@ export const missoesRepo = {
     contatoId: string
     numeroId: string
     tipo?: string
+    modo?: string
     objetivo: string
     contexto?: string
     criterioConclusao?: string

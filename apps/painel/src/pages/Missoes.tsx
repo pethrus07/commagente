@@ -31,7 +31,7 @@ function parseContatos(txt: string): { telefone: string; nome?: string }[] {
 
 function NovaMissaoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
   const [numeros, setNumeros] = useState<Numero[]>([])
-  const [form, setForm] = useState({ numeroId: '', tipo: 'vender', objetivo: '', contexto: '', criterioConclusao: '', tom: '', informacoes: '', contatos: '' })
+  const [form, setForm] = useState({ numeroId: '', tipo: 'vender', modo: 'auto', objetivo: '', contexto: '', criterioConclusao: '', tom: '', informacoes: '', contatos: '' })
   const [salvando, setSalvando] = useState(false)
   const [base, setBase] = useState<ContatoResumo[]>([])
   const [sel, setSel] = useState<Set<string>>(new Set())
@@ -77,6 +77,7 @@ function NovaMissaoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
       const { criadas } = await api.missoes.criarLote({
         numeroId: form.numeroId,
         tipo: form.tipo,
+        modo: form.modo,
         objetivo: form.objetivo.trim(),
         contexto: form.contexto.trim() || undefined,
         criterioConclusao: form.criterioConclusao.trim() || undefined,
@@ -116,6 +117,16 @@ function NovaMissaoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
                   )}
                 >
                   {TIPO_INFO[t].emoji} {TIPO_INFO[t].label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-slate-400">Modo</label>
+            <div className="flex gap-1.5">
+              {(['auto', 'copilot'] as const).map((md) => (
+                <button key={md} onClick={() => setForm({ ...form, modo: md })} className={cn('flex-1 rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 ring-inset transition', form.modo === md ? 'bg-indigo-500/20 text-indigo-200 ring-indigo-500/40' : 'text-slate-400 ring-white/10 hover:text-slate-200')}>
+                  {md === 'auto' ? '⚡ Auto (envia sozinha)' : '👁️ Co-pilot (você aprova)'}
                 </button>
               ))}
             </div>

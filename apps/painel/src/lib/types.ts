@@ -71,10 +71,13 @@ export interface Mensagem {
 }
 
 export type TipoMissao = 'vender' | 'qualificar' | 'orcar' | 'cobrar' | 'suporte' | 'outro'
+export type ModoMissao = 'auto' | 'copilot'
 
 export interface Missao {
   id: string
   tipo: TipoMissao
+  modo: ModoMissao
+  rascunho: string | null
   objetivo: string
   contexto: string | null
   criterioConclusao: string | null

@@ -99,6 +99,7 @@ export const api = {
       nome: string
       numeroId: string
       tipo?: string
+      modo?: string
       objetivo: string
       contexto?: string
       criterioConclusao?: string
@@ -163,6 +164,7 @@ export const api = {
       telefone: string
       numeroId: string
       tipo?: string
+      modo?: string
       objetivo: string
       contexto?: string
       criterioConclusao?: string
@@ -173,6 +175,7 @@ export const api = {
     criarLote: (data: {
       numeroId: string
       tipo?: string
+      modo?: string
       objetivo: string
       contexto?: string
       criterioConclusao?: string
@@ -188,6 +191,7 @@ export const api = {
       id: string,
       patch: {
         tipo?: string
+        modo?: string
         objetivo?: string
         contexto?: string | null
         criterioConclusao?: string | null
@@ -200,6 +204,13 @@ export const api = {
         method: 'PATCH',
         body: JSON.stringify(patch),
       }),
+    aprovarRascunho: (id: string, texto?: string) =>
+      req(`/missoes/${id}/rascunho/aprovar`, {
+        method: 'POST',
+        body: JSON.stringify(texto != null ? { texto } : {}),
+      }),
+    descartarRascunho: (id: string) =>
+      req(`/missoes/${id}/rascunho/descartar`, { method: 'POST', body: '{}' }),
     mudarEstado: (id: string, estado: EstadoMissao) =>
       req<Missao>(`/missoes/${id}/estado`, {
         method: 'POST',

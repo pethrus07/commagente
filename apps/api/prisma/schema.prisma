@@ -190,6 +190,8 @@ model Missao {
   tom                String? // humor/estilo da conversa (ex.: "amigável e informal")
   informacoes        String? // base de fatos autorizados que a IA PODE afirmar (preço, prazo, condições)
   estado             EstadoMissao @default(configurada)
+  modo               String       @default("auto") // auto = IA envia sozinha · copilot = rascunha e aguarda aprovação
+  rascunho           String? // resposta da IA aguardando aprovação humana (modo copilot)
   iaPausada          Boolean      @default(false) @map("ia_pausada") // humano no controle → a IA não responde
   motivoEscala       String?      @map("motivo_escala") // por que foi escalada (mostrado no inbox)
   categoriaResultado String?      @map("categoria_resultado")
@@ -221,6 +223,7 @@ model Campanha {
   numeroId          String   @map("numero_id") @db.Uuid
   nome              String
   tipo              String   @default("vender")
+  modo              String   @default("auto") // auto | copilot (default das missões da campanha)
   objetivo          String
   contexto          String?
   criterioConclusao String?  @map("criterio_conclusao")
