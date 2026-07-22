@@ -10,7 +10,13 @@ export interface UsuarioSessao {
 
 const KEY = 'zap_token'
 const UKEY = 'zap_user'
+const TKEY = 'zap_tenant' // tenant selecionado pelo super-admin (impersonação)
 let aoSair: (() => void) | null = null
+
+export interface TenantSel {
+  id: string
+  nome: string
+}
 
 export const auth = {
   token: () => localStorage.getItem(KEY),
@@ -25,10 +31,20 @@ export const auth = {
   sair: () => {
     localStorage.removeItem(KEY)
     localStorage.removeItem(UKEY)
+    localStorage.removeItem(TKEY)
     aoSair?.()
   },
   // App registra aqui para reagir a logout / 401
   onSair: (cb: () => void) => {
     aoSair = cb
+  },
+  // tenant que o super-admin está visualizando (null = tenant padrão)
+  tenantSel: (): TenantSel | null => {
+    const s = localStorage.getItem(TKEY)
+    return s ? (JSON.parse(s) as TenantSel) : null
+  },
+  setTenantSel: (t: TenantSel | null) => {
+    if (t) localStorage.setItem(TKEY, JSON.stringify(t))
+    else localStorage.removeItem(TKEY)
   },
 }

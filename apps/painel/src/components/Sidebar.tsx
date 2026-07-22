@@ -1,8 +1,26 @@
-import { LayoutDashboard, LifeBuoy, LogOut, Smartphone, Target, Users, Zap } from 'lucide-react'
+import {
+  Building2,
+  LayoutDashboard,
+  LifeBuoy,
+  LogOut,
+  Smartphone,
+  Target,
+  Users,
+  Zap,
+} from 'lucide-react'
 import { type ComponentType, useEffect, useState } from 'react'
 import { api } from '../lib/api'
-import type { UsuarioSessao } from '../lib/auth'
+import type { TenantSel, UsuarioSessao } from '../lib/auth'
+import type { TenantResumo } from '../lib/types'
 import { cn } from '../lib/ui'
+
+export type Page =
+  | 'dashboard'
+  | 'numeros'
+  | 'missoes'
+  | 'escalados'
+  | 'contatos'
+  | 'tenants'
 
 const PAPEL_LABEL: Record<UsuarioSessao['papel'], string> = {
   super_admin: 'Super-admin',
@@ -10,9 +28,14 @@ const PAPEL_LABEL: Record<UsuarioSessao['papel'], string> = {
   operador: 'Operador',
 }
 
-export type Page = 'dashboard' | 'numeros' | 'missoes' | 'escalados' | 'contatos'
-
-const ITENS: { id: Page; label: string; icon: ComponentType<{ className?: string }> }[] = [
+type Item = {
+  id: Page
+  label: string
+  icon: ComponentType<{ className?: string }>
+  soSuperAdmin?: boolean
+}
+const ITENS: Item[] = [
+  { id: 'tenants', label: 'Tenants', icon: Building2, soSuperAdmin: true },
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'missoes', label: 'Missões', icon: Target },
   { id: 'escalados', label: 'Escalados', icon: LifeBuoy },
@@ -25,24 +48,37 @@ export function Sidebar({
   onNavegar,
   usuario,
   onSair,
+  tenantSel,
+  onTrocarTenant,
 }: {
   atual: Page
   onNavegar: (p: Page) => void
   usuario: UsuarioSessao
   onSair: () => void
+  tenantSel: TenantSel | null
+  onTrocarTenant: (t: TenantSel | null) => void
 }) {
+  const ehSuper = usuario.papel === 'super_admin'
   const [escalados, setEscalados] = useState(0)
+  const [tenants, setTenants] = useState<TenantResumo[]>([])
+
   useEffect(() => {
     const carregar = () =>
       api.stats().then((s) => setEscalados(s.missoesPorEstado.escalada ?? 0)).catch(() => {})
     carregar()
     const t = setInterval(carregar, 8000)
     return () => clearInterval(t)
-  }, [])
+  }, [tenantSel])
+
+  useEffect(() => {
+    if (ehSuper) api.admin.tenants().then(setTenants).catch(() => {})
+  }, [ehSuper])
+
+  const itens = ITENS.filter((i) => !i.soSuperAdmin || ehSuper)
 
   return (
     <aside className="flex w-60 shrink-0 flex-col border-r border-white/8 bg-white/[0.02] px-4 py-6">
-      <div className="mb-8 flex items-center gap-2.5 px-2">
+      <div className="mb-6 flex items-center gap-2.5 px-2">
         <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/30">
           <Zap className="h-5 w-5 text-white" fill="currentColor" />
         </div>
@@ -52,8 +88,29 @@ export function Sidebar({
         </div>
       </div>
 
+      {ehSuper && (
+        <div className="mb-5">
+          <label className="mb-1 flex items-center gap-1.5 px-1 text-[11px] font-medium uppercase tracking-wide text-slate-500">
+            <Building2 className="h-3 w-3" /> Visualizando
+          </label>
+          <select
+            value={tenantSel?.id ?? ''}
+            onChange={(e) => {
+              const t = tenants.find((x) => x.id === e.target.value)
+              onTrocarTenant(t ? { id: t.id, nome: t.nome } : null)
+            }}
+            className="w-full rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3 py-2 text-sm text-white focus:border-indigo-500/60 focus:outline-none"
+          >
+            <option value="" className="bg-slate-900">Tenant padrão</option>
+            {tenants.map((t) => (
+              <option key={t.id} value={t.id} className="bg-slate-900">{t.nome}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
       <nav className="flex flex-1 flex-col gap-1">
-        {ITENS.map((item) => {
+        {itens.map((item) => {
           const ativo = atual === item.id
           const Icon = item.icon
           return (

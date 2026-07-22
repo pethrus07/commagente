@@ -1,7 +1,7 @@
 import { CheckCircle2, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Sidebar, type Page } from './components/Sidebar'
-import { auth, type UsuarioSessao } from './lib/auth'
+import { auth, type TenantSel, type UsuarioSessao } from './lib/auth'
 import { useToasts } from './lib/toast'
 import { cn } from './lib/ui'
 import { Contatos } from './pages/Contatos'
@@ -11,6 +11,7 @@ import { Login } from './pages/Login'
 import { MissaoDetalhe } from './pages/MissaoDetalhe'
 import { Missoes } from './pages/Missoes'
 import { Numeros } from './pages/Numeros'
+import { Tenants } from './pages/Tenants'
 
 type Rota = { page: Page } | { page: 'missao'; id: string }
 
@@ -20,11 +21,13 @@ const TITULOS: Record<Page, { t: string; s: string }> = {
   escalados: { t: 'Escalados', s: 'Conversas que a IA entregou pra você' },
   contatos: { t: 'Contatos', s: 'Leads e clientes (CRM)' },
   numeros: { t: 'Números', s: 'Chips conectados via Evolution' },
+  tenants: { t: 'Tenants', s: 'Clientes da plataforma' },
 }
 
 export default function App() {
   const [rota, setRota] = useState<Rota>({ page: 'dashboard' })
   const [usuario, setUsuario] = useState<UsuarioSessao | null>(auth.usuario())
+  const [tenantSel, setTenantSel] = useState<TenantSel | null>(auth.tenantSel())
   const toasts = useToasts()
   const pageAtual: Page = rota.page === 'missao' ? 'missoes' : rota.page
   const titulo = TITULOS[pageAtual]
@@ -36,8 +39,18 @@ export default function App() {
 
   const sair = () => {
     auth.sair()
+    setTenantSel(null)
     setRota({ page: 'dashboard' })
   }
+
+  const trocarTenant = (t: TenantSel | null) => {
+    auth.setTenantSel(t)
+    setTenantSel(t)
+    setRota({ page: 'dashboard' })
+  }
+
+  // rótulo do tenant em foco (para o super-admin saber o que está vendo)
+  const escopo = usuario?.papel === 'super_admin' ? tenantSel?.nome ?? 'Tenant padrão' : null
 
   return (
     <>
@@ -50,6 +63,8 @@ export default function App() {
             onNavegar={(p) => setRota({ page: p })}
             usuario={usuario}
             onSair={sair}
+            tenantSel={tenantSel}
+            onTrocarTenant={trocarTenant}
           />
 
           <div className="flex min-w-0 flex-1 flex-col">
@@ -58,9 +73,16 @@ export default function App() {
                 <h1 className="text-lg font-semibold tracking-tight text-white">{titulo.t}</h1>
                 <p className="text-sm text-slate-500">{titulo.s}</p>
               </div>
+              {escopo && (
+                <span className="rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-300">
+                  {escopo}
+                </span>
+              )}
             </header>
 
-            <main className="flex-1 overflow-y-auto p-8">
+            {/* key por tenant: trocar de tenant remonta e recarrega as páginas */}
+            <main key={tenantSel?.id ?? 'padrao'} className="flex-1 overflow-y-auto p-8">
+              {rota.page === 'tenants' && <Tenants onVerTenant={trocarTenant} />}
               {rota.page === 'dashboard' && <Dashboard />}
               {rota.page === 'numeros' && <Numeros />}
               {rota.page === 'contatos' && <Contatos />}

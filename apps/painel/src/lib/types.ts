@@ -83,3 +83,13 @@ export interface QrResposta {
   base64: string
   codigo?: string
 }
+
+export interface TenantResumo {
+  id: string
+  nome: string
+  criadoEm: string
+  totalMissoes: number
+  totalNumeros: number
+  totalContatos: number
+  totalUsuarios: number
+}

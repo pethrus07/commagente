@@ -6,16 +6,19 @@ import type {
   Numero,
   QrResposta,
   Stats,
+  TenantResumo,
 } from './types'
 
 const BASE = '/api' // proxy do Vite -> API Fastify (:3000)
 
 async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
   const token = auth.token()
+  const tenant = auth.tenantSel() // super-admin visualizando um tenant
   const res = await fetch(BASE + path, {
     headers: {
       'content-type': 'application/json',
       ...(token ? { authorization: `Bearer ${token}` } : {}),
+      ...(tenant ? { 'x-tenant-id': tenant.id } : {}),
     },
     ...opts,
   })
@@ -38,6 +41,15 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ email, senha }),
     }),
+
+  admin: {
+    tenants: () => req<TenantResumo[]>('/admin/tenants'),
+    criarTenant: (data: { nome: string; adminEmail: string; adminSenha: string }) =>
+      req<{ id: string; nome: string; adminEmail: string }>('/admin/tenants', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+  },
 
   stats: () => req<Stats>('/stats'),
 
