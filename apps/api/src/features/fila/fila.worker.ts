@@ -16,6 +16,16 @@ function agoraHHmm(): string {
   }).format(new Date())
 }
 
+// dia atual "YYYY-MM-DD" no fuso configurado (para o reset diário do budget)
+function agoraData(): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: config.tz,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date())
+}
+
 let rodando = false
 
 async function tick() {
@@ -30,6 +40,13 @@ async function tick() {
         await filaRepo.marcar(item.id, 'erro', true)
         continue
       }
+      // reset diário: virou o dia (no TZ) → zera o contador antes de checar o budget
+      const hoje = agoraData()
+      if (numero.enviadosData !== hoje) {
+        await filaRepo.resetarContador(numero.id, hoje)
+        numero.enviadosHoje = 0
+      }
+
       // regras anti-bloqueio: fora da janela ou sem budget → deixa pendente (tenta depois)
       if (!dentroDaJanela(agoraHHmm(), numero.janelaInicio, numero.janelaFim)) {
         continue

@@ -47,4 +47,12 @@ export const filaRepo = {
       data: { enviadosHoje: { increment: 1 } },
     })
   },
+
+  // vira o dia → zera o contador e carimba a nova data-ref
+  resetarContador(numeroId: string, data: string) {
+    return db.numeroWhatsapp.update({
+      where: { id: numeroId },
+      data: { enviadosHoje: 0, enviadosData: data },
+    })
+  },
 }
