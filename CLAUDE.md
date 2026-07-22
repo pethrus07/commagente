@@ -14,6 +14,7 @@ Node + **Fastify** + TS · **PostgreSQL** (via **Prisma**) · fila no Postgres +
 - **docs/ARQUITETURA.md** — decisões + alternativas; §1.1 camadas; §1.2 o harness do agente.
 - **docs/MODELO-DADOS.md** — ERD + as 8 tabelas (schema em `apps/api/prisma/schema.prisma`).
 - **docs/estudos/** — pesquisa que fundamenta tudo (não versionar dados reais/LGPD).
+- **docs/pesquisa-mercado.html** — dossiê de mercado (abrir no navegador): ~50 concorrentes, quem faz "missões", features pra roubar, anti-ban, preços, posicionamento/fosso e o "tem que ter".
 
 ## Convenções
 - **Idioma:** PT-BR (código, docs, commits).

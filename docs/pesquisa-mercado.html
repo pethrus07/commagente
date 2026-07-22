@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- zapagente — dossiê de mercado -->
+<title>Mercado · Agentes de IA no WhatsApp — dossiê zapagente</title>
+<style>
+  :root {
+    --paper: #f6f8f7;
+    --surface: #ffffff;
+    --surface-2: #eef2f0;
+    --ink: #131a17;
+    --body: #45514b;
+    --muted: #6b776f;
+    --line: #e0e6e2;
+    --line-2: #cdd6d0;
+    --accent: #0e7a58;      /* teal-green sóbrio (messaging, sem neon) */
+    --accent-soft: #0e7a5814;
+    --signal: #a9741a;      /* âmbar = oportunidade / espaço em branco */
+    --signal-soft: #a9741a14;
+    --good: #0e7a58;
+    --warn: #a9741a;
+    --bad: #b03b3b;
+    --shadow: 0 1px 2px #131a170a, 0 8px 24px #131a1710;
+    --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #0c1210; --surface: #111815; --surface-2: #161e1a;
+      --ink: #e9efeb; --body: #b3bfb8; --muted: #83938b;
+      --line: #212b26; --line-2: #2c3830;
+      --accent: #3bbf8e; --accent-soft: #3bbf8e1a;
+      --signal: #e0a94a; --signal-soft: #e0a94a1a;
+      --good: #3bbf8e; --warn: #e0a94a; --bad: #e58686;
+      --shadow: 0 1px 2px #0006, 0 10px 30px #0004;
+    }
+  }
+  :root[data-theme="light"] {
+    --paper: #f6f8f7; --surface: #ffffff; --surface-2: #eef2f0;
+    --ink: #131a17; --body: #45514b; --muted: #6b776f; --line: #e0e6e2; --line-2: #cdd6d0;
+    --accent: #0e7a58; --accent-soft: #0e7a5814; --signal: #a9741a; --signal-soft: #a9741a14;
+    --good: #0e7a58; --warn: #a9741a; --bad: #b03b3b;
+    --shadow: 0 1px 2px #131a170a, 0 8px 24px #131a1710;
+  }
+  :root[data-theme="dark"] {
+    --paper: #0c1210; --surface: #111815; --surface-2: #161e1a;
+    --ink: #e9efeb; --body: #b3bfb8; --muted: #83938b; --line: #212b26; --line-2: #2c3830;
+    --accent: #3bbf8e; --accent-soft: #3bbf8e1a; --signal: #e0a94a; --signal-soft: #e0a94a1a;
+    --good: #3bbf8e; --warn: #e0a94a; --bad: #e58686;
+    --shadow: 0 1px 2px #0006, 0 10px 30px #0004;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0; background: var(--paper); color: var(--body);
+    font-family: var(--font-sans); font-size: 16.5px; line-height: 1.65;
+    -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+  .measure { max-width: 68ch; }
+
+  h1, h2, h3, h4 { color: var(--ink); text-wrap: balance; line-height: 1.15; letter-spacing: -0.02em; }
+  h2 { font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.1rem); font-weight: 800; margin: 0 0 .2em; }
+  h3 { font-size: 1.2rem; font-weight: 750; margin: 2em 0 .5em; letter-spacing: -0.01em; }
+  h4 { font-size: 1rem; font-weight: 700; margin: 1.4em 0 .3em; letter-spacing: 0; }
+  p { margin: 0 0 1em; }
+  a { color: var(--accent); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+  a:hover { border-bottom-color: var(--accent); }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+  strong { color: var(--ink); font-weight: 680; }
+  .mono { font-family: var(--font-mono); }
+  .eyebrow {
+    font-family: var(--font-mono); font-size: .72rem; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--accent); font-weight: 600;
+  }
+
+  /* ---- masthead ---- */
+  header.mast {
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, var(--surface), var(--paper));
+  }
+  .mast-inner { padding: 54px 0 40px; }
+  .kicker { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 22px; }
+  .kicker .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+  .kicker .tag { font-family: var(--font-mono); font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+  h1.title { font-size: clamp(2rem, 1.2rem + 3.4vw, 3.5rem); font-weight: 830; margin: 0 0 .35em; }
+  h1.title .hl { color: var(--accent); }
+  .lede { font-size: clamp(1.05rem, .98rem + .5vw, 1.3rem); color: var(--body); max-width: 60ch; }
+  .thesis {
+    margin-top: 26px; padding: 18px 22px; border-left: 3px solid var(--accent);
+    background: var(--accent-soft); border-radius: 0 10px 10px 0; max-width: 68ch;
+  }
+  .thesis p { margin: 0; color: var(--ink); font-size: 1.05rem; }
+
+  /* ---- stat strip ---- */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; margin: 30px 0 4px; }
+  .stat { background: var(--surface); padding: 18px 18px; }
+  .stat .n { font-size: 1.7rem; font-weight: 800; color: var(--ink); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .stat .n.sig { color: var(--signal); }
+  .stat .n.acc { color: var(--accent); }
+  .stat .l { font-size: .8rem; color: var(--muted); margin-top: 2px; }
+
+  /* ---- sections ---- */
+  section { padding: 46px 0; border-bottom: 1px solid var(--line); }
+  .sec-head { display: flex; gap: 16px; align-items: baseline; margin-bottom: 20px; }
+  .sec-num { font-family: var(--font-mono); font-size: .85rem; color: var(--accent); font-weight: 600; padding-top: .4em; }
+  .sec-head .measure { margin: 0; }
+  .sec-head p { color: var(--muted); margin: .3em 0 0; }
+
+  /* ---- cards / grid ---- */
+  .grid { display: grid; gap: 16px; }
+  .g2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .g3 { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; box-shadow: var(--shadow); }
+  .card h4 { margin-top: 0; }
+  .card p:last-child { margin-bottom: 0; }
+  .card .role { font-family: var(--font-mono); font-size: .7rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }
+
+  /* ---- chips ---- */
+  .chip { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-mono); font-size: .72rem; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; letter-spacing: .02em; }
+  .chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; }
+  .chip.sim { color: var(--good); background: color-mix(in srgb, var(--good) 12%, transparent); }
+  .chip.sim::before { background: var(--good); }
+  .chip.parcial { color: var(--warn); background: color-mix(in srgb, var(--warn) 13%, transparent); }
+  .chip.parcial::before { background: var(--warn); }
+  .chip.nao { color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, transparent); }
+  .chip.nao::before { background: var(--bad); }
+  .chip.na { color: var(--muted); background: var(--surface-2); }
+  .chip.na::before { background: var(--muted); }
+
+  /* ---- tables ---- */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
+  table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: .9rem; background: var(--surface); }
+  caption { text-align: left; color: var(--muted); font-size: .82rem; padding: 12px 16px 0; }
+  th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th { position: sticky; top: 0; background: var(--surface-2); color: var(--ink); font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; font-family: var(--font-mono); font-weight: 600; z-index: 1; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--accent-soft); }
+  td.name { color: var(--ink); font-weight: 640; white-space: nowrap; }
+  td .sub { display: block; font-size: .78rem; color: var(--muted); font-weight: 400; }
+  .num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  /* ---- lists ---- */
+  ul.clean { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+  ul.clean > li { padding-left: 26px; position: relative; }
+  ul.clean > li::before { content: ""; position: absolute; left: 6px; top: .62em; width: 7px; height: 7px; border-radius: 2px; background: var(--accent); transform: rotate(45deg); }
+  ol.steal { list-style: none; counter-reset: s; padding: 0; margin: 0; display: grid; gap: 14px; }
+  ol.steal > li { counter-increment: s; position: relative; padding: 16px 18px 16px 56px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+  ol.steal > li::before { content: counter(s, decimal-leading-zero); position: absolute; left: 18px; top: 16px; font-family: var(--font-mono); font-weight: 700; color: var(--accent); font-size: .95rem; }
+  ol.steal b { color: var(--ink); }
+  .src { font-family: var(--font-mono); font-size: .68rem; color: var(--muted); }
+
+  /* ---- callouts ---- */
+  .callout { border-radius: 14px; padding: 18px 22px; border: 1px solid var(--line); background: var(--surface); }
+  .callout.opp { border-left: 3px solid var(--signal); background: var(--signal-soft); }
+  .callout.risk { border-left: 3px solid var(--bad); background: color-mix(in srgb, var(--bad) 7%, transparent); }
+  .callout.win { border-left: 3px solid var(--accent); background: var(--accent-soft); }
+  .callout h4 { margin-top: 0; }
+  .callout .label { font-family: var(--font-mono); font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; }
+  .opp .label { color: var(--signal); } .risk .label { color: var(--bad); } .win .label { color: var(--accent); }
+
+  .tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 0; }
+  .pill { font-family: var(--font-mono); font-size: .72rem; padding: 3px 10px; border: 1px solid var(--line-2); border-radius: 999px; color: var(--muted); }
+
+  footer { padding: 40px 0 70px; color: var(--muted); font-size: .85rem; }
+  footer a { color: var(--muted); }
+  .toc { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 8px; }
+  .toc a { font-family: var(--font-mono); font-size: .78rem; color: var(--muted); border: none; }
+  .toc a:hover { color: var(--accent); }
+  hr.soft { border: none; border-top: 1px solid var(--line); margin: 26px 0; }
+</style>
+
+</head>
+<body>
+<header class="mast">
+  <div class="wrap mast-inner">
+    <div class="kicker">
+      <span class="dot"></span>
+      <span class="tag">Dossiê de mercado · zapagente</span>
+      <span class="tag">Jul 2026</span>
+      <span class="tag">6 frentes de pesquisa</span>
+    </div>
+    <h1 class="title">Agentes de IA no WhatsApp:<br>onde estão as <span class="hl">missões</span>.</h1>
+    <p class="lede">Levantamento competitivo de ponta a ponta — atendimento BR, WhatsApp API global, AI SDRs autônomos, plataformas de agentes, ecossistema não-oficial e o mundo do anti-ban. O que roubar de cada um, e onde o zapagente tem espaço em branco.</p>
+    <div class="thesis">
+      <p><strong>Tese central:</strong> o cruzamento que define o zapagente — <strong>IA proativa + missão por conversa + multi-conversa em paralelo + escala humana + WhatsApp-BR/PME + preço em R$</strong> — <strong>não é ocupado por ninguém</strong>. Quem faz proativo autônomo (AI SDRs) é caro, americano, e-mail-first e B2B; quem faz WhatsApp-BR é reativo + disparo burro. O passivo que sustenta tudo isso é o <strong>risco de ban</strong> da via não-oficial.</p>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="n acc">0</div><div class="l">players combinam os 5 atributos das "missões"</div></div>
+      <div class="stat"><div class="n bad" style="color:var(--bad)">15–30%</div><div class="l">ban/ano no perfil proativo + não-oficial</div></div>
+      <div class="stat"><div class="n sig">10–100×</div><div class="l">mais barato que o topo global (US$)</div></div>
+      <div class="stat"><div class="n">R$ 6,8 mi</div><div class="l">contas banidas no BR em 6 meses (2025)</div></div>
+    </div>
+    <div class="toc">
+      <a href="#resumo">01 Resumo</a><a href="#mapa">02 Mapa</a><a href="#missoes">03 "Missões"?</a>
+      <a href="#diretos">04 Concorrentes diretos</a><a href="#roubar">05 Roubar</a><a href="#memoria">06 Memória</a>
+      <a href="#antiban">07 Anti-ban</a><a href="#precos">08 Preços</a><a href="#fosso">09 Fosso</a>
+      <a href="#aprendizados">10 Aprendizados</a><a href="#temquetter">11 Tem que ter</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- 01 -->
+  <section id="resumo">
+    <div class="sec-head"><div class="sec-num">01</div><div class="measure"><h2>Resumo executivo</h2><p>O que o mapa inteiro diz, em cinco frases.</p></div></div>
+    <div class="measure">
+      <ul class="clean">
+        <li><strong>O mercado é quase todo reativo.</strong> "AI Agent" virou nome de marketing — na prática 99% só respondem inbound e fazem handoff. O proativo real (IA que <em>vai atrás</em>) existe só na franja de AI SDRs (caros/US) e em 2–3 nascentes no BR.</li>
+        <li><strong>Ninguém trata "missão" como primitivo com objetivo variável.</strong> Todos têm objetivo único (agendar reunião / qualificar). <strong>Cobrar, orçar e dar suporte com IA autônoma proativa são espaço em branco.</strong></li>
+        <li><strong>A palavra "missão" é território livre de marca.</strong> O setor chama de <span class="mono">Procedure</span> (Decagon, Intercom, Gradient Labs) ou <span class="mono">Topic/Goal</span> (Agentforce, Sierra). Ninguém diz "missão".</li>
+        <li><strong>Memória coletiva é imatura no mercado inteiro.</strong> Quase todos fazem memória individual (por contato); "sabedoria coletiva" que aprende entre conversas é raro — e é exatamente o que o zapagente já começou.</li>
+        <li><strong>A via não-oficial é o diferencial E o passivo.</strong> Iniciar conversa livre (sem template/custo) é o que os oficiais não fazem — e é o que a Meta bane. Anti-ban não é "nice-to-have": é sobrevivência do produto.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section id="mapa">
+    <div class="sec-head"><div class="sec-num">02</div><div class="measure"><h2>O mapa do mercado</h2><p>Seis territórios. O zapagente vive no topo de um deles.</p></div></div>
+    <div class="grid g2">
+      <div class="card"><span class="role">Território A · atendimento BR</span><h4>Multiatendimento &amp; CRM oficial</h4><p>Blip, Zenvia, Weni (enterprise); Huggy, Digisac, Poli, Umbler Talk, Tallos/RD, ChatGuru, JivoChat, Kommo, Leadster (PME). <strong>Reativo + API oficial.</strong> Campo de batalha de "inbox + chatbot + campanha".</p></div>
+      <div class="card"><span class="role">Território B · WhatsApp API global</span><h4>Automação sobre a Cloud API</h4><p>Wati, Respond.io, AiSensy, Interakt, Gupshup, Landbot, ManyChat, Trengo, Charles, SleekFlow. Cobra por assinatura + mensagem. <strong>Proativo só via template aprovado + janela de 24h.</strong></p></div>
+      <div class="card"><span class="role">Território C · AI SDRs</span><h4>Vendedores autônomos (≈ missões)</h4><p>11x, Artisan/Ava, Relevance/Bosh, Qualified/Piper, Regie, AiSDR, Salesforge, Jason AI. <strong>Autônomos e proativos de verdade</strong> — mas e-mail/LinkedIn, US$, B2B, objetivo único.</p></div>
+      <div class="card"><span class="role">Território D · plataformas de agentes</span><h4>"AI workforce" &amp; CX autônomo</h4><p>Sierra, Decagon, Intercom Fin, Agentforce, Ada, Cognigy, Gradient Labs. Onde roubar <strong>padrões de produto</strong>: como modelar objetivo+guardrails, memória e aprendizado.</p></div>
+      <div class="card"><span class="role">Território E · não-oficial / OSS</span><h4>Baileys → Evolution → produto</h4><p>Baileys/WPPConnect (engine) → Evolution/Uazapi/Z-API (gateway) → Typebot/Chatwoot/n8n/Dify (orquestração) → <strong>SaaS empacotado</strong>. É a nossa casa técnica.</p></div>
+      <div class="card"><span class="role">Território F · anti-ban / disparo</span><h4>Aquecimento &amp; maturação de chip</h4><p>Disparadores (Disparo Pro, Envio Pro) e aquecedores (ProtectZap, Aquecedor X1, blü). Ensinam o <strong>estado da arte de sobrevivência</strong> de número não-oficial.</p></div>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section id="missoes">
+    <div class="sec-head"><div class="sec-num">03</div><div class="measure"><h2>Alguém faz "missões"?</h2><p>A pergunta central. Resposta curta: <strong>ninguém faz o combo completo.</strong></p></div></div>
+    <p class="measure">Decompondo "missão" em cinco atributos e cruzando com quem chega perto. Verde = tem, âmbar = parcial, vermelho = não. A linha do zapagente é a única toda verde — e é justamente por isso que ela é defensável.</p>
+    <div class="table-wrap">
+      <table>
+        <caption>Proximidade ao conceito de "missão" — os players mais próximos de cada segmento.</caption>
+        <thead><tr>
+          <th>Player</th><th>Autônomo</th><th>Inicia proativo</th><th>Objetivo por conversa</th><th>Multi-conversa</th><th>Escala humana</th><th>WhatsApp</th><th>Faixa</th>
+        </tr></thead>
+        <tbody>
+          <tr><td class="name" style="color:var(--accent)">zapagente <span class="sub">o alvo</span></td>
+            <td><span class="chip sim">sim</span></td><td><span class="chip sim">sim</span></td><td><span class="chip sim">variável</span></td><td><span class="chip sim">sim</span></td><td><span class="chip sim">sim</span></td><td><span class="chip sim">nativo BR</span></td><td class="num">R$400/mês</td></tr>
+          <tr><td class="name">Relevance / Bosh <span class="sub">AI workforce</span></td>
+            <td><span class="chip sim">sim</span></td><td><span class="chip sim">sim</span></td><td><span class="chip parcial">só vender</span></td><td><span class="chip sim">sim</span></td><td><span class="chip sim">sim</span></td><td><span class="chip nao">não</span></td><td class="num">US$ (freemium+)</td></tr>
+          <tr><td class="name">Qualified / Piper <span class="sub">inbound SDR</span></td>
+            <td><span class="chip sim">sim</span></td><td><span class="chip nao">só inbound</span></td><td><span class="chip parcial">qualificar</span></td><td><span class="chip sim">forte</span></td><td><span class="chip sim">sim</span></td><td><span class="chip nao">site</span></td><td class="num">~US$40–68k/ano</td></tr>
+          <tr><td class="name">Regie.ai <span class="sub">sales auto-pilot</span></td>
+            <td><span class="chip sim">sim</span></td><td><span class="chip sim">sim</span></td><td><span class="chip parcial">reunião</span></td><td><span class="chip sim">sim</span></td><td><span class="chip sim">sim</span></td><td><span class="chip nao">e-mail</span></td><td class="num">enterprise US$</td></tr>
+          <tr><td class="name">Nuvia (BR) <span class="sub">prospecção B2B</span></td>
+            <td><span class="chip sim">sim</span></td><td><span class="chip sim">sim</span></td><td><span class="chip parcial">vender</span></td><td><span class="chip sim">sim</span></td><td><span class="chip sim">sim</span></td><td><span class="chip sim">sim</span></td><td class="num">sob consulta</td></tr>
+          <tr><td class="name">SleekFlow <span class="sub">AgentFlow</span></td>
+            <td><span class="chip sim">sim</span></td><td><span class="chip parcial">rollout</span></td><td><span class="chip parcial">papéis</span></td><td><span class="chip sim">sim</span></td><td><span class="chip sim">sim</span></td><td><span class="chip sim">sim (oficial)</span></td><td class="num">US$149–349/mês</td></tr>
+          <tr><td class="name">Respond.io <span class="sub">o + avançado dos PME</span></td>
+            <td><span class="chip sim">sim</span></td><td><span class="chip parcial">workflow</span></td><td><span class="chip nao">reativo</span></td><td><span class="chip sim">sim</span></td><td><span class="chip sim">sim</span></td><td><span class="chip sim">sim (oficial)</span></td><td class="num">US$159–279/mês</td></tr>
+          <tr><td class="name">Chatvolt (BR) <span class="sub">maior SaaS agente BR</span></td>
+            <td><span class="chip sim">sim</span></td><td><span class="chip nao">oficial: não</span></td><td><span class="chip nao">reativo</span></td><td><span class="chip sim">sim</span></td><td><span class="chip sim">sim</span></td><td><span class="chip parcial">oficial</span></td><td class="num">R$97–197/mês</td></tr>
+          <tr><td class="name">Letalk (BR) <span class="sub">disparo + IA + CRM</span></td>
+            <td><span class="chip parcial">fluxo+LLM</span></td><td><span class="chip sim">sim</span></td><td><span class="chip parcial">funil</span></td><td><span class="chip sim">sim</span></td><td><span class="chip sim">sim</span></td><td><span class="chip sim">sim</span></td><td class="num">R$297/mês+</td></tr>
+          <tr><td class="name">Blip / Botmaker <span class="sub">enterprise LatAm</span></td>
+            <td><span class="chip parcial">agents</span></td><td><span class="chip parcial">campanha</span></td><td><span class="chip nao">config</span></td><td><span class="chip sim">sim</span></td><td><span class="chip sim">sim</span></td><td><span class="chip sim">oficial</span></td><td class="num">R$1,5k–15k/mês</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid g2" style="margin-top:18px">
+      <div class="callout win"><span class="label">Mais próximos conceitualmente</span>
+        <p style="margin:.5em 0 0"><strong>Relevance/Bosh</strong> (multi-agente que delega, orientado a meta) · <strong>Qualified/Piper</strong> (paraleliza conversas em tempo real, mas só inbound) · <strong>Regie.ai</strong> (decide quem/quando/canal/quando chamar humano). Todos e-mail/site, US$, objetivo único.</p></div>
+      <div class="callout opp"><span class="label">O espaço em branco</span>
+        <p style="margin:.5em 0 0">Objetivo <strong>variável</strong> por conversa — <strong>cobrar / orçar / dar suporte</strong>, não só "agendar reunião" — em <strong>WhatsApp-BR proativo</strong>, para <strong>PME</strong>, com <strong>ritmo humano</strong>. Nenhum concorrente cobre isso.</p></div>
+    </div>
+  </section>
+
+  <!-- 04 -->
+  <section id="diretos">
+    <div class="sec-head"><div class="sec-num">04</div><div class="measure"><h2>Concorrentes diretos (BR)</h2><p>Quem realmente disputa o mesmo cliente — e o buraco de cada um.</p></div></div>
+    <div class="grid g2">
+      <div class="card"><h4>Letalk <span class="chip parcial" style="margin-left:6px">mais próximo</span></h4><p>Disparo pra base + IA que continua a conversa com contexto + CRM/pipeline num painel BR. É o mais perto do lado <strong>outbound/missões</strong>.</p><p style="color:var(--muted);font-size:.9rem"><strong style="color:var(--ink)">Buraco:</strong> não é agente <em>autônomo por missão</em> — é campanha → chatbot → CRM. Sem "cérebro" que decide o próximo passo; preso a limites de plano (250 msgs/dia no starter).</p></div>
+      <div class="card"><h4>ZapBR</h4><p>Multi-LLM (GPT/Claude/Gemini) + API WhatsApp + CRM num painel só. Muito próximo do <em>core</em> técnico.</p><p style="color:var(--muted);font-size:.9rem"><strong style="color:var(--ink)">Buraco:</strong> aparenta ser "responder", não "conduzir missão"; falta autonomia e memória por contato como conceito.</p></div>
+      <div class="card"><h4>Chatvolt</h4><p>Maior SaaS BR de agente de IA, painel excelente, 50+ modelos, agente no ar em &lt;1h.</p><p style="color:var(--muted);font-size:.9rem"><strong style="color:var(--ink)">Buraco:</strong> roda na <strong>API oficial da Meta → NÃO inicia conversa livre</strong>. É exatamente o que o zapagente faz e ele não.</p></div>
+      <div class="card"><h4>Uazapi / Z-API</h4><p>Trilha não-oficial gerenciada, proativa, barata (Uazapi &lt;R$200 por ~300 conexões).</p><p style="color:var(--muted);font-size:.9rem"><strong style="color:var(--ink)">Buraco:</strong> são só o <strong>cano</strong> — sem IA, sem missões, sem memória, sem painel de agente. (Podem virar <em>fallback de engine</em> nosso.)</p></div>
+    </div>
+    <div class="callout risk" style="margin-top:18px">
+      <span class="label">A ameaça que não é um produto</span>
+      <h4 style="margin:.3em 0 .2em">O combo grátis</h4>
+      <p style="margin:0"><strong>Evolution + Typebot + Dify + Chatwoot</strong> entrega ~70% do zapagente de graça (o Evolution já traz integração nativa com OpenAI, Typebot e Chatwoot + transcrição de áudio). O que ele <em>não</em> entrega, e é o nosso fosso: <strong>assistente autônomo com missões + memória por contato + memória coletiva + proatividade orquestrada num produto único</strong>. Venda-se por isso — não por "IA no WhatsApp" genérico (aí Chatvolt/Letalk ganham no marketing).</p>
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section id="roubar">
+    <div class="sec-head"><div class="sec-num">05</div><div class="measure"><h2>Melhores features pra roubar</h2><p>Priorizadas. O que já temos está marcado.</p></div></div>
+    <ol class="steal">
+      <li><b>Fechar o loop da missão — não só qualificar, agendar/cobrar/orçar.</b> Nuvia e Leadster agendam a reunião na agenda; a missão vale muito mais se devolve o resultado pronto, não só um lead "qualificado". <span class="src">↳ Nuvia, Leadster, AI SDRs</span></li>
+      <li><b>Auto-pilot vs Co-pilot como toggle por missão.</b> Salesforge deixa escolher autonomia total ou com aprovação — evoluir o nosso Modo A para "aprovar o 1º disparo, depois soltar". <span class="src">↳ Salesforge/Agent Frank · já temos base (Modo A)</span></li>
+      <li><b>Handover fluido IA↔humano na MESMA thread.</b> Umbler Talk faz bot, IA e humano na mesma conversa; entregar ao humano um resumo do que a IA já fez. É o que gera confiança do lojista PME. <span class="src">↳ Umbler Talk, Chatwoot · começamos na F1/escalada</span></li>
+      <li><b>Onboarding conversacional de 10 min ("descreva a missão").</b> Artisan/Blip Brain criam o agente conversando — casa perfeito com "missão em linguagem natural". Derruba a fricção de setup. <span class="src">↳ Artisan Ava 2.0, Blip Brain</span></li>
+      <li><b>Coaching moments (aprendizado supervisionado).</b> Ada guarda cada correção humana como memória reutilizável e aplica a casos similares. É memória + aprendizado num artefato só. <span class="src">↳ Ada · encaixa na memória coletiva que já temos</span></li>
+      <li><b>Áudio → transcrição (Whisper).</b> WhatsApp BR é cheio de áudio; a maioria global ignora. Rasayel faz; o Evolution já traz nativo; o Pedro já roda faster-whisper local. <span class="src">↳ Rasayel, Evolution nativo</span></li>
+      <li><b>Analytics por missão: placar + resumo automático + sync.</b> Cada conversa com "missão cumprida / handoff / descartada" como métrica primária — vira também base de pricing por resultado. <span class="src">↳ AI SDRs, Sierra, Digisac (resumo)</span></li>
+      <li><b>Builder visual de missões (estilo Typebot).</b> Deixar o não-dev (parceiro) montar missão arrastando blocos; hoje é código/config. <span class="src">↳ Typebot, Landbot</span></li>
+      <li><b>Free tier real por volume.</b> Weni libera 200 contatos / 1.000 conversas grátis — aquisição PME viral, prova valor sem contrato. <span class="src">↳ Weni</span></li>
+    </ol>
+  </section>
+
+  <!-- 06 -->
+  <section id="memoria">
+    <div class="sec-head"><div class="sec-num">06</div><div class="measure"><h2>Memória &amp; aprendizado</h2><p>Como o setor mais avançado modela — e por que a memória coletiva é nosso trunfo.</p></div></div>
+    <div class="measure">
+      <p>Consenso emergente da taxonomia de memória (útil pra estruturar o schema):</p>
+      <ul class="clean">
+        <li><strong>Working</strong> — a conversa ao vivo (curto prazo).</li>
+        <li><strong>Episódica</strong> — conversas passadas (histórico).</li>
+        <li><strong>Semântica</strong> — preferências e fatos estáveis do contato. <span class="mono" style="color:var(--muted);font-size:.85em">≈ nosso Contato.memoria</span></li>
+        <li><strong>Procedural</strong> — como resolver (workflows/regras da missão). <span class="mono" style="color:var(--muted);font-size:.85em">≈ máquina de estados da missão</span></li>
+        <li><strong>Coletiva</strong> — sabedoria operacional extraída do volume de conversas. <span class="mono" style="color:var(--signal);font-size:.85em">≈ nossa base de Conhecimento</span></li>
+      </ul>
+    </div>
+    <div class="grid g2" style="margin-top:20px">
+      <div class="callout win"><span class="label">Padrão de ouro do aprendizado</span>
+        <p style="margin:.5em 0 0"><strong>Ada Coaching</strong> + <strong>Sierra "assembly line"</strong>: a IA <em>propõe</em> melhorias a partir de conversas reais → humano <strong>aprova</strong> → nunca auto-aplica em produção. É exatamente o modelo "curada + IA sugere" que já implementamos em MEM-2.</p></div>
+      <div class="callout opp"><span class="label">Gap do mercado = nosso diferencial</span>
+        <p style="margin:.5em 0 0">Quase todos fazem memória <strong>só individual</strong> (Decagon admite ser user-level). <strong>Memória coletiva por empresa</strong> — objeções recorrentes, o que converte — praticamente não existe madura. É defensável, desde que o isolamento entre tenants seja sólido (já temos).</p></div>
+    </div>
+    <h3>Como nomear a "missão" (aprendendo com eles)</h3>
+    <p class="measure">Ninguém usa a palavra "missão" — os termos são <span class="mono">Procedure</span> (Decagon/Intercom/Gradient), <span class="mono">Topic</span> (Agentforce), <span class="mono">Goal/Skill</span> (Sierra), <span class="mono">Autoflow</span> (Forethought). <strong>Manter "missão" como marca</strong> (voltada ao parceiro) e mapear internamente. A regra vencedora de 2025/26: <strong>declarar objetivo + guardrails em linguagem natural e deixar o modelo planejar os passos</strong> — os estados viram <em>trilhos de segurança e checkpoint de progresso</em>, não árvore de decisão rígida (modelo LangGraph / Gradient Labs sobre execução durável).</p>
+    <div class="table-wrap">
+      <table>
+        <caption>Anatomia de uma missão — compondo o melhor de cada plataforma.</caption>
+        <thead><tr><th>Componente</th><th>O que é</th><th>Referência</th></tr></thead>
+        <tbody>
+          <tr><td class="name">Objetivo</td><td>meta em linguagem natural</td><td>Sierra Goal · Ada Guidance</td></tr>
+          <tr><td class="name">Guardrails</td><td>limites próprios da missão</td><td>Agentforce Topic-level</td></tr>
+          <tr><td class="name">Ações / ferramentas</td><td>o que o agente pode executar</td><td>Fin Actions · Relevance Tools</td></tr>
+          <tr><td class="name">Estados</td><td>trilho de progresso + execução durável</td><td>LangGraph · Gradient Labs/Temporal</td></tr>
+          <tr><td class="name">Conclusão</td><td>outcome definido (vira métrica e preço)</td><td>Sierra · Intercom Fin</td></tr>
+          <tr><td class="name">Escalada</td><td>condições de handoff pro humano</td><td>Fin (handoff é first-class)</td></tr>
+          <tr><td class="name">Memória</td><td>refs individual + coletiva</td><td>Decagon (memória dentro do procedure)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 07 -->
+  <section id="antiban">
+    <div class="sec-head"><div class="sec-num">07</div><div class="measure"><h2>Anti-ban: a realidade crua</h2><p>O passivo que sustenta o produto. Com números acionáveis.</p></div></div>
+    <div class="callout risk">
+      <span class="label">Perfil de risco do zapagente</span>
+      <p style="margin:.5em 0 0">Proativo (IA <em>inicia</em>) + não-oficial (Evolution/Baileys) + chips novos = <strong>o perfil de maior risco que existe</strong>. Bot reativo não-oficial: &lt;2% de ban/ano. <strong>Bot proativo não-oficial: 15–30%/ano.</strong> Ferramentas que fazem reverse do WhatsApp Web são detectadas em 2–8 semanas; ban é permanente (apelação vence em ~1,5–2,8% dos casos). O único caminho risco-zero é a <strong>API Oficial</strong> — que vira roadmap/upsell.</p>
+    </div>
+    <h3>O gatilho novo de 2026 (que ninguém no BR trata)</h3>
+    <p class="measure"><strong>Contador de mensagens não-respondidas:</strong> a Meta conta mensagens enviadas <strong>sem resposta em 48h</strong>, acumulativo, janela móvel de 30 dias — e <strong>aplica throttle mesmo sem denúncia</strong>, na oficial E na não-oficial. Tradução: <strong>não inicie mais do que você consegue fazer responder.</strong> A primeira mensagem precisa ser desenhada pra <em>provocar resposta</em>.</p>
+    <div class="table-wrap" style="margin-top:8px">
+      <table>
+        <caption>Zonas de segurança observadas (50+ deployments não-oficiais) + curva de aquecimento.</caption>
+        <thead><tr><th>Métrica</th><th>Seguro</th><th>Aviso</th><th>Perigo</th></tr></thead>
+        <tbody>
+          <tr><td class="name">Mensagens / hora</td><td><span class="chip sim num">&lt;30</span></td><td><span class="chip parcial num">30–60</span></td><td><span class="chip nao num">&gt;60</span></td></tr>
+          <tr><td class="name">Taxa de resposta</td><td><span class="chip sim num">&gt;30%</span></td><td><span class="chip parcial num">15–30%</span></td><td><span class="chip nao num">&lt;15%</span></td></tr>
+          <tr><td class="name">Novos contatos / dia</td><td><span class="chip sim num">&lt;20</span></td><td><span class="chip parcial num">20–50</span></td><td><span class="chip nao num">&gt;50</span></td></tr>
+          <tr><td class="name">Msgs idênticas / hora</td><td><span class="chip sim num">&lt;5</span></td><td><span class="chip parcial num">5–15</span></td><td><span class="chip nao num">&gt;15</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid g2" style="margin-top:16px">
+      <div class="card"><h4>Curva de aquecimento (chip novo)</h4>
+        <ul class="clean" style="font-size:.92rem">
+          <li><strong>Dias 1–5:</strong> uso <em>manual</em> real, zero automação (senão nasce marcado).</li>
+          <li><strong>Dias 1–3:</strong> 10–20 msgs · <strong>4–7:</strong> 25–50 · <strong>sem 2:</strong> 70–120 · <strong>sem 3:</strong> 150–250.</li>
+          <li>Não-oficial proativo, teto conservador mesmo aquecido: <strong>80–150/dia</strong>, <strong>&lt;30/hora</strong>.</li>
+          <li>Delays aleatórios <strong>10–45s</strong> (nunca fixos); só horário comercial.</li>
+        </ul>
+      </div>
+      <div class="card"><h4>Já fazemos certo ✓ · falta implementar</h4>
+        <p style="margin:0 0 .5em"><span class="chip sim">✓</span> fila com janela · budget diário · jitter/espaçamento serial · aquecimento (conceito) · IA que absorve respostas.</p>
+        <p style="margin:0"><span class="chip nao">falta</span> teto por estágio de chip · <strong>monitor de reply-rate + contador de não-respondidas com throttle</strong> · cap ≤2 iniciações/semana por contato · pool de chips rotativos (descartáveis) · variação de mensagem (3–5) · proxy residencial por chip.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 08 -->
+  <section id="precos">
+    <div class="sec-head"><div class="sec-num">08</div><div class="measure"><h2>Preços — benchmark</h2><p>Do PME brasileiro em R$ ao topo global em US$. O zapagente entra 10–100× abaixo do topo.</p></div></div>
+    <div class="table-wrap">
+      <table>
+        <caption>Faixas públicas de referência (2025/2026). Oficiais somam o custo por mensagem da Meta.</caption>
+        <thead><tr><th>Segmento</th><th>Player</th><th>Entrada</th><th>Modelo</th></tr></thead>
+        <tbody>
+          <tr><td>Alvo</td><td class="name" style="color:var(--accent)">zapagente</td><td class="num">~R$400/mês</td><td>assinatura + revenda multi-tenant</td></tr>
+          <tr><td rowspan="4">PME BR</td><td class="name">Clint</td><td class="num">R$299/mês</td><td>+R$99/agente · R$0,05–0,38/interação</td></tr>
+          <tr><td class="name">Chatvolt</td><td class="num">R$97–197/mês</td><td>SaaS oficial</td></tr>
+          <tr><td class="name">Letalk</td><td class="num">R$297/mês</td><td>250 msgs/dia no starter</td></tr>
+          <tr><td class="name">Digisac / Huggy</td><td class="num">R$299–989/mês</td><td>multiatendimento</td></tr>
+          <tr><td rowspan="2">Enterprise BR</td><td class="name">Zenvia</td><td class="num">R$1.999+/mês</td><td>+ fee por conversa</td></tr>
+          <tr><td class="name">Blip</td><td class="num">R$1.500–15.000/mês</td><td>enterprise + PS</td></tr>
+          <tr><td rowspan="3">Global PME</td><td class="name">Wati</td><td class="num">US$49–299/mês</td><td>+ fees + Astra AI à parte</td></tr>
+          <tr><td class="name">Respond.io</td><td class="num">US$79–279/mês</td><td>IA a partir do plano US$159</td></tr>
+          <tr><td class="name">SleekFlow</td><td class="num">US$149–349/mês</td><td>free tier + AgentFlow</td></tr>
+          <tr><td rowspan="3">AI SDR (US)</td><td class="name">Artisan / AiSDR</td><td class="num">US$250–900/mês</td><td>preço caindo rápido</td></tr>
+          <tr><td class="name">Salesforge / Jason</td><td class="num">US$499–2.500/mês</td><td>e-mail/LinkedIn</td></tr>
+          <tr><td class="name">Qualified / Piper</td><td class="num">~US$40–68k/ano</td><td>enterprise inbound</td></tr>
+          <tr><td>CX autônomo</td><td class="name">Sierra / Fin / Agentforce</td><td class="num">US$0,99–2,50/resolução</td><td>outcome-based (padrão novo)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="measure" style="margin-top:14px"><strong>Leitura:</strong> o benchmark BR de um agente funcional é R$400–1.500/mês (vs. SDR júnior &gt;R$3.000). A proposta atual ao parceiro está <strong>alinhada</strong>. Mas o preço global despenca (Artisan US$2.5k→US$250) — a vantagem de custo precisa virar vantagem de <strong>produto/canal</strong>, não só de preço. Tendência a observar: <strong>pricing por resultado/missão</strong> (US$0,99–2,50/resolução) — casa perfeitamente com o conceito de "missão cumprida".</p>
+  </section>
+
+  <!-- 09 -->
+  <section id="fosso">
+    <div class="sec-head"><div class="sec-num">09</div><div class="measure"><h2>Posicionamento &amp; fosso</h2><p>Onde jogar, o que dizer, o que blindar.</p></div></div>
+    <div class="grid g3">
+      <div class="card"><span class="role">Diferencial 1</span><h4>Vai atrás, não espera</h4><p>"Não é chatbot que responde — é agente que <strong>inicia</strong> a conversa e conduz rumo ao objetivo." Impossível pros oficiais sem template caro.</p></div>
+      <div class="card"><span class="role">Diferencial 2</span><h4>Missão variável</h4><p>Vender, qualificar, <strong>orçar, cobrar, dar suporte</strong> — o mercado inteiro só faz "agendar reunião". Cobrança e orçamento são espaço em branco.</p></div>
+      <div class="card"><span class="role">Diferencial 3</span><h4>WhatsApp BR nativo</h4><p>Áudio, gíria, informalidade, handoff no mesmo fio. Os globais são EN/Índia-first e e-mail-first.</p></div>
+      <div class="card"><span class="role">Diferencial 4</span><h4>Memória coletiva</h4><p>Aprende entre conversas (o que converte, objeções). Raro no mercado — defensável com isolamento sólido.</p></div>
+      <div class="card"><span class="role">Diferencial 5</span><h4>Preço PME + revenda</h4><p>R$ acessível + multi-tenant whitelabel pra agências/parceiros (modelo Celiware/parceiro). Ninguém no proativo-autônomo mira esse canal.</p></div>
+      <div class="card"><span class="role">Diferencial 6</span><h4>Ritmo humano como conversão</h4><p>Timing humano não é só anti-ban — <strong>aumenta resposta</strong> ("parece pessoa"). A API oficial entrega instantâneo e robótico.</p></div>
+    </div>
+    <div class="grid g2" style="margin-top:18px">
+      <div class="callout risk"><span class="label">Riscos a blindar</span>
+        <ul class="clean" style="margin-top:.6em">
+          <li><strong>Ban da via não-oficial</strong> — o trunfo é o passivo. Anti-ban sério antes de escalar volume.</li>
+          <li><strong>LGPD / opt-in</strong> — proativo frio sem consentimento é multa + denúncia + ban. Opt-in rastreável + opt-out imediato.</li>
+          <li><strong>"Somos oficiais Meta"</strong> — é o argumento nº1 que os incumbentes usarão contra você. Tenha resposta (ritmo humano + escada pra API oficial).</li>
+          <li><strong>Preço global caindo</strong> — não competir só por preço.</li>
+        </ul>
+      </div>
+      <div class="callout win"><span class="label">A frase de posicionamento</span>
+        <p style="margin:.5em 0 0;font-size:1.08rem;color:var(--ink)">"O primeiro <strong>agente com missão</strong> do WhatsApp brasileiro: ele <strong>inicia</strong> a conversa, conduz vender/qualificar/orçar/cobrar sozinho, <strong>aprende</strong> com cada atendimento e chama você quando precisa — no ritmo de gente, não de robô."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 -->
+  <section id="aprendizados">
+    <div class="sec-head"><div class="sec-num">10</div><div class="measure"><h2>O que aprendemos</h2><p>As viradas de chave do levantamento — o "e daí" de tudo acima.</p></div></div>
+    <div class="measure">
+      <ul class="clean">
+        <li><strong>O mercado é reativo; o proativo-por-missão é vazio.</strong> Essa é a razão de existir do zapagente. Se virarmos "mais um chatbot que responde", perdemos pra Chatvolt/Letalk no marketing. Tudo tem que dizer <em>"agente que vai atrás"</em>, não <em>"IA que atende"</em>.</li>
+        <li><strong>"Missão" é marca nossa — e a arquitetura vencedora já é conhecida.</strong> Ninguém usa a palavra (é <span class="mono">Procedure</span>/<span class="mono">Topic</span>/<span class="mono">Goal</span>). O padrão que venceu: <strong>objetivo + guardrails em linguagem natural, o modelo planeja</strong>; estados = trilho de segurança, não árvore rígida.</li>
+        <li><strong>Objetivo único domina — cobrar / orçar / suporte é terra de ninguém.</strong> O mundo só faz "agendar reunião". Nossa variedade de missões é diferencial pouco disputado (cobrança = recorrência; orçamento = ticket alto).</li>
+        <li><strong>Memória: individual é commodity, coletiva é o fosso.</strong> E o jeito certo de aprender (Ada/Sierra: <em>IA sugere → humano aprova → nunca auto-aplica</em>) é exatamente o que já fizemos. Estávamos no estado da arte sem saber.</li>
+        <li><strong>Anti-ban não é feature — é sobrevivência.</strong> Nosso perfil é o de maior risco (15–30%/ano). E o gatilho de 2026 (mensagens não-respondidas) ninguém no BR trata — é onde podemos ser melhores que todos.</li>
+        <li><strong>A via não-oficial é trunfo E passivo.</strong> Iniciar conversa livre é o que os oficiais não fazem — e é o que a Meta bane. Precisa de uma <strong>escada pra API oficial</strong> como upsell.</li>
+        <li><strong>Preço não é fosso.</strong> Estamos alinhados ao BR, mas o global despenca. A vantagem tem que ser produto/canal — e a tendência é <strong>cobrar por missão cumprida</strong> (outcome), que casa com o nosso conceito.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 11 -->
+  <section id="temquetter">
+    <div class="sec-head"><div class="sec-num">11</div><div class="measure"><h2>Tem que ter no zapagente</h2><p>Os inegociáveis, por tier. <span class="chip sim">já temos</span> <span class="chip parcial">parcial</span> <span class="chip nao">falta</span></p></div></div>
+    <div class="grid g2">
+      <div class="card" style="border-left:3px solid var(--bad)">
+        <span class="role" style="color:var(--bad)">Tier 0 · sobrevivência</span>
+        <h4>Sem isto, toma ban e morre</h4>
+        <ul class="clean" style="font-size:.93rem">
+          <li><span class="chip nao">falta</span> <strong>Anti-ban maduro</strong> — teto por estágio de chip · <strong>monitor de reply-rate + contador de não-respondidas com throttle</strong> · pool de chips rotativos · cap de iniciação por contato · aquecimento formalizado.</li>
+          <li><span class="chip sim">base</span> Fila janela/budget/jitter/espaçamento serial — conceito já correto.</li>
+          <li><span class="chip parcial">parcial</span> <strong>Opt-in rastreável + opt-out imediato</strong> (LGPD + anti-denúncia).</li>
+          <li><span class="chip nao">falta</span> 1ª mensagem desenhada pra <strong>gerar resposta</strong> (combate o gatilho de não-respondidas).</li>
+        </ul>
+      </div>
+      <div class="card" style="border-left:3px solid var(--accent)">
+        <span class="role" style="color:var(--accent)">Tier 1 · identidade "agente com missão"</span>
+        <h4>O que nos faz únicos</h4>
+        <ul class="clean" style="font-size:.93rem">
+          <li><span class="chip parcial">parcial</span> <strong>Missão como primitivo, objetivo VARIÁVEL</strong> (vender/qualificar/orçar/cobrar/suporte) com anatomia completa.</li>
+          <li><span class="chip sim">temos</span> Inicia proativo (Modo A) — refinar o gancho de resposta.</li>
+          <li><span class="chip nao">falta</span> <strong>Fechar o loop</strong> — agendar / registrar resultado, não só "qualificar".</li>
+          <li><span class="chip parcial">parcial</span> Escala humana no mesmo fio + <strong>resumo pro humano</strong> no handoff.</li>
+          <li><span class="chip nao">falta</span> <strong>Placar por missão</strong> (cumprida/handoff/descartada) como métrica primária.</li>
+        </ul>
+      </div>
+      <div class="card" style="border-left:3px solid var(--accent)">
+        <span class="role" style="color:var(--accent)">Tier 2 · memória / aprendizado</span>
+        <h4>O fosso defensável</h4>
+        <ul class="clean" style="font-size:.93rem">
+          <li><span class="chip sim">temos</span> Memória individual por contato (MEM-1).</li>
+          <li><span class="chip sim">temos</span> Memória coletiva "curada + IA sugere" / coaching (MEM-2) — padrão de ouro do setor.</li>
+          <li><span class="chip parcial">parcial</span> <strong>Auto-pilot vs Co-pilot por missão</strong> — evoluir o Modo A ("aprova o 1º, depois solta").</li>
+        </ul>
+      </div>
+      <div class="card" style="border-left:3px solid var(--signal)">
+        <span class="role" style="color:var(--signal)">Tier 3 · diferenciação BR + comercial</span>
+        <h4>Onde ampliamos a vantagem</h4>
+        <ul class="clean" style="font-size:.93rem">
+          <li><span class="chip nao">falta</span> <strong>Áudio → transcrição (Whisper)</strong> — WhatsApp BR é cheio de áudio; esforço baixo, whisper local já roda.</li>
+          <li><span class="chip nao">falta</span> Builder visual de missões pro não-dev (o parceiro monta arrastando).</li>
+          <li><span class="chip sim">temos</span> Multi-tenant / whitelabel de revenda (canal Celiware).</li>
+          <li><span class="chip nao">futuro</span> Escada pra API oficial (upsell risco-zero pra quem escala).</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout risk" style="margin-top:18px">
+      <span class="label">Se fosse UM só</span>
+      <p style="margin:.4em 0 0"><strong>Tier 0 (anti-ban).</strong> Todo o resto nos faz <em>melhores</em>; o anti-ban nos mantém <em>vivos</em>. E agora temos os números exatos do mercado pra calibrar (tetos, curva de aquecimento, o contador de não-respondidas de 2026). <strong>Decisão do Pedro (jul/2026): faremos todos os tiers</strong> — começando pelo 0.</p>
+    </div>
+    <div class="callout opp" style="margin-top:14px">
+      <span class="label">Pergunta em aberto</span>
+      <p style="margin:.4em 0 0">"TinyTeams" não foi confirmável como produto de WhatsApp — provável confusão com o conceito <em>Tiny Teams</em> ou com <em>TinyAgents</em> (agente genérico multi-app). Vale confirmar a URL exata que você tinha em mente.</p>
+    </div>
+  </section>
+
+  <footer>
+    <p><strong style="color:var(--ink)">Metodologia.</strong> 6 frentes de pesquisa web em paralelo (jul/2026): atendimento BR · WhatsApp API global · AI SDRs autônomos · plataformas de agentes de IA · ecossistema não-oficial/OSS · anti-ban/aquecimento. ~50 players analisados. Fontes primárias das próprias plataformas + análises de terceiros (Fin.ai, Chatarmin, SocialHub, Pragmaz, Achiya, WASenderApi, Capterra, entre outras) citadas nos relatórios de origem.</p>
+    <p>Dossiê interno · zapagente (Pedro × Celiware) · não distribuir sem contexto de risco da via não-oficial.</p>
+  </footer>
+</main>
+
+<script>
+  // reforça o data-theme quando o viewer alterna (o host carimba data-theme na raiz)
+  (function () {
+    try {
+      var root = document.documentElement;
+      if (!root.getAttribute('data-theme')) {
+        var m = window.matchMedia('(prefers-color-scheme: dark)');
+        root.setAttribute('data-theme', m.matches ? 'dark' : 'light');
+        m.addEventListener('change', function (e) {
+          if (!root.dataset.themeLocked) root.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+        });
+      }
+    } catch (e) {}
+  })();
+</script>
+</body>
+</html>
