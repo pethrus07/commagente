@@ -54,4 +54,13 @@ Fase **F0 (MVP)**. **Fatia 1 — Fundação: FEITA**.
 - API ganhou `GET /numeros` e `GET /stats` (leitura p/ o painel).
 - Rodar: `cd apps/painel && npm install && npm run dev` → http://localhost:5173.
 
-**Próximo → Fatia 4b (adapter OpenAI real):** implementar `core/ia/provedor-openai.ts` (precisa `OPENAI_API_KEY` no `.env` + `IA_PROVIDER=openai`). Também falta wire do **Modo A** (iniciar missão / 1ª mensagem outbound).
+**Fatia 4b — OpenAI real: FEITA** (`core/ia/provedor-openai.ts`, chat completions + JSON mode; `IA_PROVIDER=openai`, `OPENAI_MODEL=gpt-4o-mini`). **Modo A — FEITO** (`POST /missoes/:id/iniciar` → IA abre a conversa). **DEMO AO VIVO PRO PARCEIRO: sucesso** (a IA conduziu a venda sozinha).
+
+**Fatia 8 — Config de missão + guardrail anti-alucinação: FEITA** (branch `main`, commit `c3ca5d1`):
+- `Missao` ganhou **`tom`** (humor/estilo) e **`informacoes`** (base de fatos AUTORIZADOS: preço/prazo/condições que a IA pode afirmar).
+- **Guardrail** na `montarPersona`: regra inviolável — a IA **nunca inventa** preço/número/prazo/promessa; fora das informações autorizadas ela **confirma ou escala** (`precisa_humano`). O provedor OpenAI renderiza o bloco de informações com alta saliência (e avisa explicitamente quando não há nenhuma).
+- **`PATCH /missoes/:id`** (`editarMissao`) — editar objetivo/contexto/tom/informações/nome; reflete no próximo turno.
+- **Painel:** campos de tom/informações no criar + **card de Configuração** e **modal de edição** no detalhe.
+- ✅ Validado com **OpenAI real** (sem WhatsApp): sem info → não inventa preço e escala; com preço autorizado → usa o valor real.
+
+**Próximo (F1+ antes do deploy):** (2) **escalada pra humano no painel** (fila/inbox de escalados + destravar `escalada→em_conversa`); (3) **cap de conversas ativas** + janela/budget de produção; (4) **`git push`**. Depois: throttle do resumo (−custo), custo real no painel, **deploy na VPS**. Melhoria pedida pelo Pedro: painel virar um **mini kanban-CRM** (missões/números/contatos organizados) — manter em mente ao evoluir o painel.
