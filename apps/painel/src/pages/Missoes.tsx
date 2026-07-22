@@ -1,9 +1,9 @@
 import { type ReactNode, useEffect, useMemo, useState } from 'react'
-import { ChevronRight, LayoutGrid, List, Plus, Target, X } from 'lucide-react'
+import { Check, ChevronRight, LayoutGrid, List, Plus, Target, X } from 'lucide-react'
 import { api } from '../lib/api'
 import { COLUNAS, TIPO_INFO, TIPOS_MISSAO, podeTransicionar } from '../lib/estados'
 import { toast } from '../lib/toast'
-import type { EstadoMissao, Missao, Numero } from '../lib/types'
+import type { ContatoResumo, EstadoMissao, Missao, Numero } from '../lib/types'
 import {
   Badge,
   Button,
@@ -33,6 +33,9 @@ function NovaMissaoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
   const [numeros, setNumeros] = useState<Numero[]>([])
   const [form, setForm] = useState({ numeroId: '', tipo: 'vender', objetivo: '', contexto: '', criterioConclusao: '', tom: '', informacoes: '', contatos: '' })
   const [salvando, setSalvando] = useState(false)
+  const [base, setBase] = useState<ContatoResumo[]>([])
+  const [sel, setSel] = useState<Set<string>>(new Set())
+  const [buscaBase, setBuscaBase] = useState('')
 
   useEffect(() => {
     api.numeros.listar().then((ns) => {
@@ -40,9 +43,30 @@ function NovaMissaoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
       const conectado = ns.find((n) => n.statusConexao === 'conectado') ?? ns[0]
       if (conectado) setForm((f) => ({ ...f, numeroId: conectado.id }))
     })
+    api.contatos.listar().then((cs) => setBase(cs.filter((c) => !c.optOut))).catch(() => {})
   }, [])
 
-  const contatos = parseContatos(form.contatos)
+  const baseFiltrada = useMemo(() => {
+    const q = buscaBase.trim().toLowerCase()
+    if (!q) return base
+    return base.filter((c) => (c.nome ?? '').toLowerCase().includes(q) || c.telefone.includes(q.replace(/\D/g, '')))
+  }, [base, buscaBase])
+
+  // combina os selecionados da base + os colados, sem duplicar telefone
+  const contatos = useMemo(() => {
+    const daBase = base.filter((c) => sel.has(c.id)).map((c) => ({ telefone: c.telefone, nome: c.nome ?? undefined }))
+    const colados = parseContatos(form.contatos)
+    const vistos = new Set<string>()
+    return [...daBase, ...colados].filter((c) => (vistos.has(c.telefone) ? false : vistos.add(c.telefone)))
+  }, [base, sel, form.contatos])
+
+  const alternar = (id: string) =>
+    setSel((s) => {
+      const n = new Set(s)
+      if (n.has(id)) n.delete(id)
+      else n.add(id)
+      return n
+    })
 
   const criar = async () => {
     if (!form.numeroId) return toast('Cadastre/conecte um número primeiro.', 'erro')
@@ -109,22 +133,48 @@ function NovaMissaoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
           </div>
           <div>
             <label className="mb-1 flex items-center justify-between text-xs text-slate-400">
-              <span>Contatos <span className="text-slate-600">— um por linha: telefone[, nome]</span></span>
+              <span>Escolher da base</span>
               {contatos.length > 0 && (
                 <span className="rounded-full bg-indigo-500/20 px-2 py-0.5 text-[11px] font-medium text-indigo-300">
-                  {contatos.length} {contatos.length === 1 ? 'contato' : 'contatos'}
+                  {contatos.length} no total
                 </span>
               )}
             </label>
+            <input
+              value={buscaBase}
+              onChange={(e) => setBuscaBase(e.target.value)}
+              placeholder="Buscar contato pra adicionar…"
+              className={campo}
+            />
+            <div className="mt-1.5 max-h-40 divide-y divide-white/5 overflow-y-auto rounded-xl border border-white/10">
+              {base.length === 0 ? (
+                <p className="px-3 py-3 text-xs text-slate-600">Base vazia — importe contatos na aba Contatos, ou cole números abaixo.</p>
+              ) : baseFiltrada.length === 0 ? (
+                <p className="px-3 py-3 text-xs text-slate-600">Nenhum contato encontrado.</p>
+              ) : (
+                baseFiltrada.slice(0, 60).map((c) => (
+                  <button key={c.id} type="button" onClick={() => alternar(c.id)} className="flex w-full items-center gap-2.5 px-3 py-2 text-left hover:bg-white/5">
+                    <span className={cn('grid h-4 w-4 shrink-0 place-items-center rounded border', sel.has(c.id) ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-white/25')}>
+                      {sel.has(c.id) && <Check className="h-3 w-3" />}
+                    </span>
+                    <span className="truncate text-sm text-slate-200">{c.nome ?? `+${c.telefone}`}</span>
+                    {c.nome && <span className="ml-auto shrink-0 text-[11px] tabular-nums text-slate-500">+{c.telefone}</span>}
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-slate-400">Ou cole novos números <span className="text-slate-600">— um por linha: telefone[, nome]</span></label>
             <textarea
               value={form.contatos}
               onChange={(e) => setForm({ ...form, contatos: e.target.value })}
-              rows={3}
-              placeholder={'5583999998888, Fornecedor A\n5511988887777, Fornecedor B\n5599...'}
+              rows={2}
+              placeholder={'5583999998888, Fornecedor A\n5511988887777, Fornecedor B'}
               className={cn(campo, 'resize-none font-mono text-[13px]')}
             />
             <p className="mt-1 text-[11px] leading-snug text-slate-500">
-              🚀 Cada contato vira uma conversa própria (memória e estado independentes). Cole sua lista de fornecedores/leads.
+              🚀 Cada contato vira uma conversa própria (memória e estado independentes).
             </p>
           </div>
           <div>
