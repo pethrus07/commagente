@@ -21,6 +21,11 @@ export const config = {
   openaiKey: process.env.OPENAI_API_KEY ?? '',
   openaiModelo: process.env.OPENAI_MODEL ?? 'gpt-4o-mini',
 
+  // Transcrição de áudio (Tier 3) — provider-agnostic (TRANSCRITOR_PROVIDER).
+  // openai usa a mesma OPENAI_API_KEY; modelo/idioma configuráveis.
+  transcritorModelo: process.env.TRANSCRITOR_MODELO ?? 'whisper-1',
+  transcritorIdioma: process.env.TRANSCRITOR_IDIOMA ?? 'pt',
+
   // URL que a Evolution (no Docker) usa pra chamar nosso webhook.
   // Em dev a API roda no host → host.docker.internal alcança a :3000.
   webhookUrl:

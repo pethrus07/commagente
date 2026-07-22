@@ -1,5 +1,14 @@
 // 💛 Domínio — normaliza o evento cru da Evolution num modelo interno (regra pura, sem I/O).
 import type { StatusEnvio } from '@prisma/client'
+import type { ChaveMensagem } from '../../core/evolution/porta-whatsapp'
+
+/** dados p/ obter o áudio de uma nota de voz (Tier 3) */
+export interface AudioRecebido {
+  chave: ChaveMensagem
+  mimetype?: string
+  /** base64 já embutido no webhook (se webhookBase64=true); senão baixamos sob demanda */
+  base64?: string
+}
 
 export type EventoWa =
   | {
@@ -10,6 +19,8 @@ export type EventoWa =
       conteudo: string
       providerMsgId: string
       fromMe: boolean
+      /** presente quando a mensagem é uma nota de voz — a Aplicação transcreve */
+      audio?: AudioRecebido
     }
   | { tipo: 'status'; instancia: string; providerMsgId: string; status: string }
   | { tipo: 'ignorado' }
@@ -48,19 +59,39 @@ export function normalizarEvento(payload: Payload): EventoWa {
     if (!jid || jid.endsWith('@g.us') || jid === 'status@broadcast') {
       return { tipo: 'ignorado' }
     }
-    const conteudo = textoDaMensagem(data?.message)
     const telefone = telefoneDoJid(jid)
-    // sem texto (mídia pura, reação, etc.) → fora do escopo da Fatia 2
-    if (!conteudo || !telefone) return { tipo: 'ignorado' }
-    return {
-      tipo: 'mensagem',
+    if (!telefone) return { tipo: 'ignorado' }
+    const providerMsgId: string = data?.key?.id ?? ''
+    const fromMe = Boolean(data?.key?.fromMe)
+    const base = {
+      tipo: 'mensagem' as const,
       instancia: instance,
       telefone,
       nome: data?.pushName,
-      conteudo,
-      providerMsgId: data?.key?.id ?? '',
-      fromMe: Boolean(data?.key?.fromMe),
+      providerMsgId,
+      fromMe,
     }
+
+    const conteudo = textoDaMensagem(data?.message)
+    if (conteudo) return { ...base, conteudo }
+
+    // Tier 3: nota de voz → a Aplicação transcreve e segue o fluxo de texto normal.
+    const audioMsg = data?.message?.audioMessage
+    if (audioMsg) {
+      return {
+        ...base,
+        conteudo: '',
+        audio: {
+          chave: { id: providerMsgId, remoteJid: jid, fromMe },
+          mimetype: audioMsg.mimetype,
+          // base64 pode vir embutido (webhookBase64=true) em vários lugares
+          base64: data?.message?.base64 ?? data?.base64 ?? audioMsg.base64,
+        },
+      }
+    }
+
+    // outras mídias (imagem/vídeo/documento/reação) → fora de escopo por ora
+    return { tipo: 'ignorado' }
   }
 
   if (event === 'messages.update') {

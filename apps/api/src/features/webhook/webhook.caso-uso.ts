@@ -2,10 +2,35 @@
 // Fatia 3: inbound vira Mensagem (ligada à missão ativa, se houver) e destrava
 // a conversa (na_fila → em_conversa). Status de entrega atualiza a msg de saída.
 import { db } from '../../core/db'
+import { evolutionClient } from '../../core/evolution/evolution.client'
+import { transcritor } from '../../core/transcricao'
 import { processarTurno } from '../conversa/conversa.caso-uso'
 import { missoesRepo } from '../missoes/missoes.repo'
+import type { AudioRecebido } from './webhook.dominio'
 import { ehPedidoOptOut, mapearStatusEnvio, normalizarEvento } from './webhook.dominio'
 import { webhookRepo } from './webhook.repo'
+
+// Tier 3: obtém o base64 do áudio (do próprio webhook ou baixando na Evolution) e transcreve.
+// Nunca lança: falha vira '' e o chamador registra a nota de voz pro operador.
+async function transcreverAudio(
+  instancia: string,
+  audio: AudioRecebido,
+): Promise<string> {
+  try {
+    let base64 = audio.base64
+    let mimetype = audio.mimetype
+    if (!base64) {
+      const m = await evolutionClient.baixarMidiaBase64(instancia, audio.chave)
+      base64 = m.base64
+      mimetype = mimetype ?? m.mimetype
+    }
+    if (!base64) return ''
+    return await transcritor.transcrever({ base64, mimetype })
+  } catch (err) {
+    console.error('[audio] transcrição falhou:', err)
+    return ''
+  }
+}
 
 export async function processarWebhook(payload: unknown) {
   const evento = normalizarEvento((payload ?? {}) as Record<string, unknown>)
@@ -32,11 +57,38 @@ export async function processarWebhook(payload: unknown) {
       numero.id,
       contato.id,
     )
+
+    // Tier 3: nota de voz → transcreve pra texto e segue o fluxo normal.
+    let conteudo = evento.conteudo
+    if (evento.audio) {
+      const texto = await transcreverAudio(evento.instancia, evento.audio)
+      await db.evento.create({
+        data: {
+          tenantId: numero.tenantId,
+          missaoId: missao?.id ?? null,
+          tipo: 'audio_transcrito',
+          dados: { ok: Boolean(texto), chars: texto.length },
+        },
+      })
+      if (!texto) {
+        // não deu pra transcrever → registra a nota de voz pro operador, sem acionar a IA
+        await webhookRepo.gravarMensagemEntrada({
+          tenantId: numero.tenantId,
+          missaoId: missao?.id ?? null,
+          contatoId: contato.id,
+          conteudo: '🎤 (áudio recebido — não foi possível transcrever)',
+          providerMsgId: evento.providerMsgId,
+        })
+        return
+      }
+      conteudo = texto
+    }
+
     await webhookRepo.gravarMensagemEntrada({
       tenantId: numero.tenantId,
       missaoId: missao?.id ?? null,
       contatoId: contato.id,
-      conteudo: evento.conteudo,
+      conteudo,
       providerMsgId: evento.providerMsgId,
     })
 
@@ -44,10 +96,10 @@ export async function processarWebhook(payload: unknown) {
     await webhookRepo.registrarOptInInbound(contato.id)
 
     // OPT-OUT: pediu pra parar → bloqueia envios futuros e NÃO aciona a IA
-    if (ehPedidoOptOut(evento.conteudo)) {
+    if (ehPedidoOptOut(conteudo)) {
       await webhookRepo.marcarOptOut(contato.id)
       await db.evento.create({
-        data: { tenantId: numero.tenantId, missaoId: missao?.id ?? null, tipo: 'opt_out', dados: { texto: evento.conteudo.slice(0, 120) } },
+        data: { tenantId: numero.tenantId, missaoId: missao?.id ?? null, tipo: 'opt_out', dados: { texto: conteudo.slice(0, 120) } },
       })
       return
     }

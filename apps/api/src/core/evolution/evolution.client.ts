@@ -2,6 +2,7 @@
 // Referência de endpoints: Evolution API v2 (Baileys).
 import { config } from '../config'
 import type {
+  ChaveMensagem,
   PortaWhatsApp,
   Presenca,
   QrCode,
@@ -118,5 +119,15 @@ export const evolutionClient: PortaWhatsApp = {
       if (!telefone) return []
       return [{ telefone, nome: c.pushName ?? c.name ?? undefined }]
     })
+  },
+
+  async baixarMidiaBase64(instancia: string, chave: ChaveMensagem) {
+    // v2: POST /chat/getBase64FromMediaMessage/{instance} → baixa e devolve a mídia em base64.
+    const r = await req<{ base64?: string; mimetype?: string }>(
+      'POST',
+      `/chat/getBase64FromMediaMessage/${instancia}`,
+      { message: { key: chave }, convertToMp4: false },
+    )
+    return { base64: r.base64 ?? '', mimetype: r.mimetype }
   },
 }

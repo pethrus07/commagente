@@ -13,6 +13,13 @@ export interface QrCode {
 
 export type Presenca = 'composing' | 'paused'
 
+/** chave que identifica uma mensagem no provider (pra baixar mídia depois) */
+export interface ChaveMensagem {
+  id: string
+  remoteJid: string
+  fromMe: boolean
+}
+
 export interface PortaWhatsApp {
   /** cria a instância/sessão na ponte (idempotente do lado de quem chama) */
   criarInstancia(instancia: string): Promise<void>
@@ -37,4 +44,9 @@ export interface PortaWhatsApp {
   ): Promise<void>
   /** lê a agenda de contatos do número conectado (pra importar) */
   buscarContatos(instancia: string): Promise<{ telefone: string; nome?: string }[]>
+  /** baixa a mídia (ex.: nota de voz) de uma mensagem recebida, em base64 */
+  baixarMidiaBase64(
+    instancia: string,
+    chave: ChaveMensagem,
+  ): Promise<{ base64: string; mimetype?: string }>
 }
