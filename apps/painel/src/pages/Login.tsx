@@ -25,7 +25,7 @@ export function Login({ onEntrar }: { onEntrar: (u: UsuarioSessao) => void }) {
   }
 
   const campo =
-    'w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-slate-600 focus:border-indigo-500/50 focus:outline-none'
+    'w-full rounded-xl border border-line bg-surface2 px-4 py-2.5 text-sm text-content placeholder:text-subtle focus:border-indigo-500/50 focus:outline-none'
 
   return (
     <div className="grid min-h-screen place-items-center p-4">
@@ -35,14 +35,14 @@ export function Login({ onEntrar }: { onEntrar: (u: UsuarioSessao) => void }) {
             <Zap className="h-7 w-7 text-white" fill="currentColor" />
           </div>
           <div>
-            <h1 className="text-xl font-semibold tracking-tight text-white">zapagente</h1>
-            <p className="text-sm text-slate-500">Assistente de WhatsApp com IA</p>
+            <h1 className="text-xl font-semibold tracking-tight text-content">zapagente</h1>
+            <p className="text-sm text-muted">Assistente de WhatsApp com IA</p>
           </div>
         </div>
 
-        <div className="space-y-3 rounded-2xl border border-white/8 bg-white/[0.03] p-6 backdrop-blur">
+        <div className="space-y-3 rounded-2xl border border-line bg-surface p-6 shadow-xl shadow-black/5">
           <div>
-            <label className="mb-1 block text-xs text-slate-400">E-mail</label>
+            <label className="mb-1 block text-xs text-muted">E-mail</label>
             <input
               type="email"
               value={email}
@@ -54,7 +54,7 @@ export function Login({ onEntrar }: { onEntrar: (u: UsuarioSessao) => void }) {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-slate-400">Senha</label>
+            <label className="mb-1 block text-xs text-muted">Senha</label>
             <input
               type="password"
               value={senha}

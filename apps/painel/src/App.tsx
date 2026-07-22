@@ -68,13 +68,13 @@ export default function App() {
           />
 
           <div className="flex min-w-0 flex-1 flex-col">
-            <header className="flex items-center justify-between border-b border-white/8 px-8 py-5">
+            <header className="flex items-center justify-between border-b border-line px-8 py-5">
               <div>
-                <h1 className="text-lg font-semibold tracking-tight text-white">{titulo.t}</h1>
-                <p className="text-sm text-slate-500">{titulo.s}</p>
+                <h1 className="text-lg font-semibold tracking-tight text-content">{titulo.t}</h1>
+                <p className="text-sm text-muted">{titulo.s}</p>
               </div>
               {escopo && (
-                <span className="rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-300">
+                <span className="rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-700 dark:text-indigo-300">
                   {escopo}
                 </span>
               )}
@@ -102,8 +102,8 @@ export default function App() {
             className={cn(
               'flex items-center gap-2.5 rounded-xl border px-4 py-3 text-sm shadow-xl',
               t.tipo === 'ok'
-                ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-200'
-                : 'border-rose-500/30 bg-rose-500/15 text-rose-200',
+                ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-700 dark:text-emerald-200'
+                : 'border-rose-500/30 bg-rose-500/15 text-rose-700 dark:text-rose-200',
             )}
           >
             {t.tipo === 'ok' ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}

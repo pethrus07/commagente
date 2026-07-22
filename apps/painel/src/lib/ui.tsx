@@ -11,29 +11,29 @@ export const ESTADO_INFO: Record<
   EstadoMissao,
   { label: string; badge: string; dot: string }
 > = {
-  configurada: { label: 'Configurada', badge: 'bg-slate-500/15 text-slate-300 ring-slate-500/30', dot: 'bg-slate-400' },
-  na_fila: { label: 'Na fila', badge: 'bg-amber-500/15 text-amber-300 ring-amber-500/30', dot: 'bg-amber-400' },
-  em_conversa: { label: 'Em conversa', badge: 'bg-indigo-500/15 text-indigo-300 ring-indigo-500/30', dot: 'bg-indigo-400' },
-  concluida: { label: 'Concluída', badge: 'bg-emerald-500/15 text-emerald-300 ring-emerald-500/30', dot: 'bg-emerald-400' },
-  descartada: { label: 'Descartada', badge: 'bg-rose-500/15 text-rose-300 ring-rose-500/30', dot: 'bg-rose-400' },
-  escalada: { label: 'Escalada', badge: 'bg-orange-500/15 text-orange-300 ring-orange-500/30', dot: 'bg-orange-400' },
-  sem_resposta: { label: 'Sem resposta', badge: 'bg-zinc-500/15 text-zinc-300 ring-zinc-500/30', dot: 'bg-zinc-400' },
-  arquivada: { label: 'Arquivada', badge: 'bg-neutral-600/15 text-neutral-400 ring-neutral-600/30', dot: 'bg-neutral-500' },
+  configurada: { label: 'Configurada', badge: 'bg-slate-500/15 text-slate-600 ring-slate-500/30 dark:text-slate-300', dot: 'bg-slate-400' },
+  na_fila: { label: 'Na fila', badge: 'bg-amber-500/15 text-amber-700 ring-amber-500/30 dark:text-amber-300', dot: 'bg-amber-400' },
+  em_conversa: { label: 'Em conversa', badge: 'bg-indigo-500/15 text-indigo-700 ring-indigo-500/30 dark:text-indigo-300', dot: 'bg-indigo-400' },
+  concluida: { label: 'Concluída', badge: 'bg-emerald-500/15 text-emerald-700 ring-emerald-500/30 dark:text-emerald-300', dot: 'bg-emerald-400' },
+  descartada: { label: 'Descartada', badge: 'bg-rose-500/15 text-rose-700 ring-rose-500/30 dark:text-rose-300', dot: 'bg-rose-400' },
+  escalada: { label: 'Escalada', badge: 'bg-orange-500/15 text-orange-700 ring-orange-500/30 dark:text-orange-300', dot: 'bg-orange-400' },
+  sem_resposta: { label: 'Sem resposta', badge: 'bg-zinc-500/15 text-zinc-600 ring-zinc-500/30 dark:text-zinc-300', dot: 'bg-zinc-400' },
+  arquivada: { label: 'Arquivada', badge: 'bg-neutral-500/15 text-neutral-600 ring-neutral-500/30 dark:text-neutral-400', dot: 'bg-neutral-500' },
 }
 
 export const CONEXAO_INFO: Record<
   StatusConexao,
   { label: string; badge: string; dot: string; pulse: boolean }
 > = {
-  conectado: { label: 'Conectado', badge: 'bg-emerald-500/15 text-emerald-300 ring-emerald-500/30', dot: 'bg-emerald-400', pulse: false },
-  conectando: { label: 'Conectando', badge: 'bg-amber-500/15 text-amber-300 ring-amber-500/30', dot: 'bg-amber-400', pulse: true },
-  desconectado: { label: 'Desconectado', badge: 'bg-rose-500/15 text-rose-300 ring-rose-500/30', dot: 'bg-rose-400', pulse: false },
+  conectado: { label: 'Conectado', badge: 'bg-emerald-500/15 text-emerald-700 ring-emerald-500/30 dark:text-emerald-300', dot: 'bg-emerald-400', pulse: false },
+  conectando: { label: 'Conectando', badge: 'bg-amber-500/15 text-amber-700 ring-amber-500/30 dark:text-amber-300', dot: 'bg-amber-400', pulse: true },
+  desconectado: { label: 'Desconectado', badge: 'bg-rose-500/15 text-rose-700 ring-rose-500/30 dark:text-rose-300', dot: 'bg-rose-400', pulse: false },
 }
 
 // ─── componentes ─────────────────────────────────────────────
 export function Card({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={cn('rounded-2xl border border-white/8 bg-white/[0.03] backdrop-blur', className)}>
+    <div className={cn('rounded-2xl border border-line bg-surface', className)}>
       {children}
     </div>
   )
@@ -59,8 +59,8 @@ export function Button({ variant = 'primary', loading, children, className, disa
   const styles = {
     primary: 'bg-indigo-500 text-white hover:bg-indigo-400 shadow-lg shadow-indigo-500/20',
     danger: 'bg-rose-500/90 text-white hover:bg-rose-500',
-    ghost: 'bg-white/5 text-slate-200 hover:bg-white/10 ring-1 ring-inset ring-white/10',
-    subtle: 'text-slate-400 hover:text-slate-100 hover:bg-white/5',
+    ghost: 'bg-surface2 text-content hover:brightness-110 ring-1 ring-inset ring-line',
+    subtle: 'text-muted hover:text-content hover:bg-surface2',
   }[variant]
   return (
     <button
@@ -75,16 +75,16 @@ export function Button({ variant = 'primary', loading, children, className, disa
 }
 
 export function Spinner({ className }: { className?: string }) {
-  return <Loader2 className={cn('h-5 w-5 animate-spin text-slate-500', className)} />
+  return <Loader2 className={cn('h-5 w-5 animate-spin text-subtle', className)} />
 }
 
 export function EmptyState({ icon, titulo, texto, acao }: { icon: ReactNode; titulo: string; texto?: string; acao?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-white/10 px-6 py-16 text-center">
-      <div className="grid h-12 w-12 place-items-center rounded-2xl bg-white/5 text-slate-400">{icon}</div>
+    <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-line-strong px-6 py-16 text-center">
+      <div className="grid h-12 w-12 place-items-center rounded-2xl bg-surface2 text-muted">{icon}</div>
       <div>
-        <p className="font-medium text-slate-200">{titulo}</p>
-        {texto && <p className="mt-1 text-sm text-slate-500">{texto}</p>}
+        <p className="font-medium text-content">{titulo}</p>
+        {texto && <p className="mt-1 text-sm text-muted">{texto}</p>}
       </div>
       {acao}
     </div>
