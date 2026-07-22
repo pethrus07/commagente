@@ -7,6 +7,7 @@ const PAGINAS: [string, string][] = [
   ['Dashboard', 'Dashboard'],
   ['Missões', 'Missões'],
   ['Campanhas', 'Campanhas'],
+  ['Programadas', 'Programadas'],
   ['Escalados', 'Escalados'],
   ['Contatos', 'Contatos'],
   ['Conhecimento', 'Conhecimento'],
