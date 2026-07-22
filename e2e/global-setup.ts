@@ -2,7 +2,7 @@ import { request } from '@playwright/test'
 import { mkdirSync, writeFileSync } from 'node:fs'
 
 // Faz login (super-admin) via API e grava um storageState com o token + o tenant
-// "Celiware" selecionado (é o único com número conectado → habilita missão/campanha).
+// "PEDRO" selecionado (é o que tem número conectado → habilita missão/campanha).
 const API = 'http://localhost:3000'
 const ORIGIN = 'http://localhost:5173'
 
@@ -18,7 +18,7 @@ export default async function globalSetup() {
 
   const tRes = await ctx.get('/admin/tenants', { headers: { authorization: `Bearer ${token}` } })
   const tenants = (await tRes.json()) as { id: string; nome: string }[]
-  const celi = tenants.find((t) => t.nome === 'Celiware') ?? tenants[0]
+  const celi = tenants.find((t) => t.nome === 'PEDRO') ?? tenants[0]
 
   const localStorage = [
     { name: 'zap_token', value: token },

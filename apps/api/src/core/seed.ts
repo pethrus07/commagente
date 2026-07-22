@@ -5,7 +5,7 @@ import { senha } from './senha'
 import { garantirTenantPadrao } from './tenant'
 
 export async function seedInicial() {
-  await garantirTenantPadrao() // tenant Celiware (usado pelos casos-de-uso hoje)
+  await garantirTenantPadrao() // tenant padrão "PEDRO" (fallback dos casos-de-uso)
 
   const email = config.superAdmin.email.toLowerCase()
   const existe = await db.usuario.findUnique({ where: { email } })
