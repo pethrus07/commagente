@@ -1,9 +1,9 @@
 // ⚙️ Aplicação — métricas agregadas para o dashboard do painel.
+import { tenantAtual } from '../../core/contexto'
 import { db } from '../../core/db'
-import { garantirTenantPadrao } from '../../core/tenant'
 
 export async function obterStats() {
-  const tenantId = await garantirTenantPadrao()
+  const tenantId = await tenantAtual()
   const inicioHoje = new Date()
   inicioHoje.setHours(0, 0, 0, 0)
 

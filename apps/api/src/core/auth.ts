@@ -1,6 +1,7 @@
 // 🔐 Autenticação — payload do JWT + hook global que protege as rotas.
 import type { Papel } from '@prisma/client'
 import type { FastifyReply, FastifyRequest } from 'fastify'
+import { contexto } from './contexto'
 
 export interface TokenUsuario {
   sub: string // id do usuário
@@ -29,6 +30,12 @@ export async function autenticar(req: FastifyRequest, reply: FastifyReply) {
   } catch {
     return reply.code(401).send({ ok: false, erro: 'nao_autenticado' })
   }
+  // popula o contexto da requisição (tenant/papel) para os casos-de-uso
+  contexto.definir({
+    usuarioId: req.user.sub,
+    tenantId: req.user.tenantId,
+    papel: req.user.papel,
+  })
 }
 
 // exige um papel específico (ex.: super-admin nas rotas /admin)

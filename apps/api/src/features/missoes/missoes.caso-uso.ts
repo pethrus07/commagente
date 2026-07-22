@@ -2,7 +2,7 @@
 import type { EstadoMissao, Prisma } from '@prisma/client'
 import { db } from '../../core/db'
 import { ErroHttp } from '../../core/erros'
-import { garantirTenantPadrao } from '../../core/tenant'
+import { tenantAtual } from '../../core/contexto'
 import { processarTurno } from '../conversa/conversa.caso-uso'
 import { numerosRepo } from '../numeros/numeros.repo'
 import { validarTransicao } from './missao.dominio'
@@ -22,7 +22,7 @@ export async function criarMissaoEmLote(
   input: DadosMissao & { contatos: { telefone: string; nome?: string }[] },
   origem = 'lote',
 ) {
-  const tenantId = await garantirTenantPadrao()
+  const tenantId = await tenantAtual()
 
   const numero = await db.numeroWhatsapp.findUnique({
     where: { id: input.numeroId },
@@ -79,13 +79,13 @@ export async function criarMissao(
 }
 
 export async function listarMissoes() {
-  const tenantId = await garantirTenantPadrao()
+  const tenantId = await tenantAtual()
   return missoesRepo.listar(tenantId)
 }
 
 // Inbox de escalados — missões que a IA entregou pra um humano.
 export async function listarEscalados() {
-  const tenantId = await garantirTenantPadrao()
+  const tenantId = await tenantAtual()
   return missoesRepo.listarEscalados(tenantId)
 }
 

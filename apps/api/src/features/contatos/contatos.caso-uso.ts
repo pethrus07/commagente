@@ -1,9 +1,9 @@
 // ⚙️ Aplicação — leitura de contatos (o "C" do CRM) com contagem de missões.
+import { tenantAtual } from '../../core/contexto'
 import { db } from '../../core/db'
-import { garantirTenantPadrao } from '../../core/tenant'
 
 export async function listarContatos() {
-  const tenantId = await garantirTenantPadrao()
+  const tenantId = await tenantAtual()
   const contatos = await db.contato.findMany({
     where: { tenantId },
     orderBy: { criadoEm: 'desc' },

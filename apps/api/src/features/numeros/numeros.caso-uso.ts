@@ -4,20 +4,20 @@ import { config } from '../../core/config'
 import { ErroHttp } from '../../core/erros'
 import { evolutionClient } from '../../core/evolution/evolution.client'
 import type { PortaWhatsApp, QrCode } from '../../core/evolution/porta-whatsapp'
-import { garantirTenantPadrao } from '../../core/tenant'
+import { tenantAtual } from '../../core/contexto'
 import { numerosRepo } from './numeros.repo'
 
 // injeta a porta (aqui, o adapter Evolution)
 const wa: PortaWhatsApp = evolutionClient
 
 export async function cadastrarNumero(telefone: string, instancia?: string) {
-  const tenantId = await garantirTenantPadrao()
+  const tenantId = await tenantAtual()
   const nomeInstancia = instancia ?? `zap-${telefone}`
   return numerosRepo.criar(tenantId, telefone, nomeInstancia)
 }
 
 export async function listarNumeros() {
-  const tenantId = await garantirTenantPadrao()
+  const tenantId = await tenantAtual()
   return numerosRepo.listar(tenantId)
 }
 
