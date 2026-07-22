@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   LifeBuoy,
   LogOut,
+  Megaphone,
   Moon,
   Smartphone,
   Sun,
@@ -34,6 +35,7 @@ export type Page =
   | 'dashboard'
   | 'numeros'
   | 'missoes'
+  | 'campanhas'
   | 'escalados'
   | 'contatos'
   | 'conhecimento'
@@ -43,6 +45,7 @@ const ITENS: Item[] = [
   { id: 'tenants', label: 'Tenants', icon: Building2, soSuperAdmin: true },
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'missoes', label: 'Missões', icon: Target },
+  { id: 'campanhas', label: 'Campanhas', icon: Megaphone },
   { id: 'escalados', label: 'Escalados', icon: LifeBuoy },
   { id: 'contatos', label: 'Contatos', icon: Users },
   { id: 'conhecimento', label: 'Conhecimento', icon: BookOpen },

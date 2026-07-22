@@ -17,6 +17,7 @@ type DadosMissao = {
   criterioConclusao?: string
   tom?: string
   informacoes?: string
+  campanhaId?: string
 }
 
 // Disparo em LOTE: a MESMA definição de missão → N contatos. Cada contato vira
@@ -58,6 +59,7 @@ export async function criarMissaoEmLote(
       criterioConclusao: input.criterioConclusao,
       tom: input.tom,
       informacoes: input.informacoes,
+      campanhaId: input.campanhaId,
     })
     await db.evento.create({
       data: {

@@ -138,6 +138,17 @@ export interface Conhecimento {
   criadoEm: string
 }
 
+export interface CampanhaResumo {
+  id: string
+  nome: string
+  tipo: TipoMissao
+  objetivo: string
+  numeroId: string
+  criadoEm: string
+  total: number
+  cumpridas: number
+}
+
 export interface TenantResumo {
   id: string
   nome: string

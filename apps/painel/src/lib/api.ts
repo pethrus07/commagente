@@ -1,5 +1,6 @@
 import { auth, type UsuarioSessao } from './auth'
 import type {
+  CampanhaResumo,
   Conhecimento,
   ContatoResumo,
   EstadoMissao,
@@ -91,6 +92,23 @@ export const api = {
   },
 
   escalados: () => req<Missao[]>('/escalados'),
+
+  campanhas: {
+    listar: () => req<CampanhaResumo[]>('/campanhas'),
+    criar: (data: {
+      nome: string
+      numeroId: string
+      tipo?: string
+      objetivo: string
+      contexto?: string
+      criterioConclusao?: string
+      tom?: string
+      informacoes?: string
+      contatos: { telefone: string; nome?: string }[]
+    }) => req<{ campanha: { id: string }; criadas: number }>('/campanhas', { method: 'POST', body: JSON.stringify(data) }),
+    adicionarContatos: (id: string, contatos: { telefone: string; nome?: string }[]) =>
+      req<{ criadas: number }>(`/campanhas/${id}/contatos`, { method: 'POST', body: JSON.stringify({ contatos }) }),
+  },
 
   contatos: {
     listar: () => req<ContatoResumo[]>('/contatos'),

@@ -68,6 +68,7 @@ model Tenant {
   eventos      Evento[]
   usuarios     Usuario[]
   conhecimento Conhecimento[]
+  campanhas    Campanha[]
 
   @@map("tenants")
 }
@@ -121,8 +122,9 @@ model NumeroWhatsapp {
   janelaFim          String        @default("20:00") @map("janela_fim")
   criadoEm           DateTime      @default(now()) @map("criado_em")
 
-  tenant  Tenant   @relation(fields: [tenantId], references: [id])
-  missoes Missao[]
+  tenant    Tenant     @relation(fields: [tenantId], references: [id])
+  missoes   Missao[]
+  campanhas Campanha[]
 
   @@index([tenantId])
   @@map("numeros_whatsapp")
@@ -179,6 +181,7 @@ model Missao {
   tenantId           String       @map("tenant_id") @db.Uuid
   contatoId          String       @map("contato_id") @db.Uuid
   templateId         String?      @map("template_id") @db.Uuid
+  campanhaId         String?      @map("campanha_id") @db.Uuid // agrupa missões de uma campanha
   numeroId           String       @map("numero_id") @db.Uuid
   tipo               String       @default("vender") // vender|qualificar|orcar|cobrar|suporte|outro
   objetivo           String
@@ -200,13 +203,37 @@ model Missao {
   tenant    Tenant          @relation(fields: [tenantId], references: [id])
   contato   Contato         @relation(fields: [contatoId], references: [id])
   template  MissaoTemplate? @relation(fields: [templateId], references: [id])
+  campanha  Campanha?       @relation(fields: [campanhaId], references: [id])
   numero    NumeroWhatsapp  @relation(fields: [numeroId], references: [id])
   mensagens Mensagem[]
   fila      FilaEnvio[]
   eventos   Evento[]
 
   @@index([tenantId, estado])
+  @@index([campanhaId])
   @@map("missoes")
+}
+
+// ─── Campanhas (a MESMA missão disparada/agrupada p/ vários contatos) ──
+model Campanha {
+  id                String   @id @default(uuid()) @db.Uuid
+  tenantId          String   @map("tenant_id") @db.Uuid
+  numeroId          String   @map("numero_id") @db.Uuid
+  nome              String
+  tipo              String   @default("vender")
+  objetivo          String
+  contexto          String?
+  criterioConclusao String?  @map("criterio_conclusao")
+  tom               String?
+  informacoes       String?
+  criadoEm          DateTime @default(now()) @map("criado_em")
+
+  tenant  Tenant         @relation(fields: [tenantId], references: [id])
+  numero  NumeroWhatsapp @relation(fields: [numeroId], references: [id])
+  missoes Missao[]
+
+  @@index([tenantId])
+  @@map("campanhas")
 }
 
 // ─── Mensagens (histórico da conversa) ───────────────────────

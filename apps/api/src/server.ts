@@ -7,6 +7,7 @@ import { db } from './core/db'
 import { seedInicial } from './core/seed'
 import { adminRotas } from './features/admin/admin.rotas'
 import { authRotas } from './features/auth/auth.rotas'
+import { campanhasRotas } from './features/campanhas/campanhas.rotas'
 import { conhecimentoRotas } from './features/conhecimento/conhecimento.rotas'
 import { contatosRotas } from './features/contatos/contatos.rotas'
 import { envioRotas } from './features/envio/envio.rotas'
@@ -57,6 +58,7 @@ app.register(missoesRotas)
 app.register(statsRotas)
 app.register(contatosRotas)
 app.register(conhecimentoRotas)
+app.register(campanhasRotas)
 
 app
   .listen({ port: config.porta, host: '0.0.0.0' })
