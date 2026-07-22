@@ -1,7 +1,7 @@
 import { type ReactNode, useEffect, useMemo, useState } from 'react'
 import { ChevronRight, LayoutGrid, List, Plus, Target, X } from 'lucide-react'
 import { api } from '../lib/api'
-import { COLUNAS, podeTransicionar } from '../lib/estados'
+import { COLUNAS, TIPO_INFO, TIPOS_MISSAO, podeTransicionar } from '../lib/estados'
 import { toast } from '../lib/toast'
 import type { EstadoMissao, Missao, Numero } from '../lib/types'
 import {
@@ -31,7 +31,7 @@ function parseContatos(txt: string): { telefone: string; nome?: string }[] {
 
 function NovaMissaoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
   const [numeros, setNumeros] = useState<Numero[]>([])
-  const [form, setForm] = useState({ numeroId: '', objetivo: '', contexto: '', tom: '', informacoes: '', contatos: '' })
+  const [form, setForm] = useState({ numeroId: '', tipo: 'vender', objetivo: '', contexto: '', criterioConclusao: '', tom: '', informacoes: '', contatos: '' })
   const [salvando, setSalvando] = useState(false)
 
   useEffect(() => {
@@ -52,8 +52,10 @@ function NovaMissaoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
     try {
       const { criadas } = await api.missoes.criarLote({
         numeroId: form.numeroId,
+        tipo: form.tipo,
         objetivo: form.objetivo.trim(),
         contexto: form.contexto.trim() || undefined,
+        criterioConclusao: form.criterioConclusao.trim() || undefined,
         tom: form.tom.trim() || undefined,
         informacoes: form.informacoes.trim() || undefined,
         contatos,
@@ -77,6 +79,23 @@ function NovaMissaoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
           <button onClick={() => onFechar(false)} className="text-slate-500 hover:text-slate-200"><X className="h-5 w-5" /></button>
         </div>
         <div className="space-y-3">
+          <div>
+            <label className="mb-1 block text-xs text-slate-400">Tipo de missão</label>
+            <div className="flex flex-wrap gap-1.5">
+              {TIPOS_MISSAO.map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setForm({ ...form, tipo: t })}
+                  className={cn(
+                    'rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 ring-inset transition',
+                    form.tipo === t ? 'bg-indigo-500/20 text-indigo-200 ring-indigo-500/40' : 'text-slate-400 ring-white/10 hover:text-slate-200',
+                  )}
+                >
+                  {TIPO_INFO[t].emoji} {TIPO_INFO[t].label}
+                </button>
+              ))}
+            </div>
+          </div>
           <div>
             <label className="mb-1 block text-xs text-slate-400">Número (chip)</label>
             <select value={form.numeroId} onChange={(e) => setForm({ ...form, numeroId: e.target.value })} className={campo}>
@@ -111,6 +130,11 @@ function NovaMissaoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
           <div>
             <label className="mb-1 block text-xs text-slate-400">Objetivo</label>
             <input value={form.objetivo} onChange={(e) => setForm({ ...form, objetivo: e.target.value })} placeholder="Qualificar o lead e agendar uma conversa" className={campo} />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-slate-400">Critério de conclusão (opcional)</label>
+            <input value={form.criterioConclusao} onChange={(e) => setForm({ ...form, criterioConclusao: e.target.value })} placeholder="Ex.: reunião agendada · orçamento aceito · pagamento confirmado" className={campo} />
+            <p className="mt-1 text-[11px] leading-snug text-slate-500">🎯 Quando isto acontece, a IA marca a missão como <b>concluída</b>.</p>
           </div>
           <div>
             <label className="mb-1 block text-xs text-slate-400">Contexto (opcional)</label>
@@ -236,6 +260,9 @@ export function Missoes({ onAbrir }: { onAbrir: (id: string) => void }) {
                       onClick={() => onAbrir(m.id)}
                       className="group cursor-pointer rounded-xl border border-white/8 bg-white/[0.04] p-3 transition hover:border-white/20 hover:bg-white/[0.07] active:cursor-grabbing"
                     >
+                      <span className="mb-1 inline-block text-[10px] font-semibold uppercase tracking-wide text-indigo-300/80">
+                        {TIPO_INFO[m.tipo]?.emoji} {TIPO_INFO[m.tipo]?.label ?? m.tipo}
+                      </span>
                       <p className="line-clamp-2 text-sm font-medium text-slate-100">{m.objetivo}</p>
                       <p className="mt-1.5 flex items-center gap-1 truncate text-xs text-slate-500">
                         {m.contato?.nome ?? `+${m.contato?.telefone ?? '—'}`}

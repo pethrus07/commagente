@@ -7,19 +7,41 @@ const ULTIMAS = 8 // nº de mensagens recentes no contexto (o resto vira resumo 
 
 const TOM_PADRAO = 'cordial, objetivo e natural'
 
+// comportamento por TIPO de missão (o "objetivo variável" — o que ninguém no mercado faz).
+const GUIA_TIPO: Record<string, string> = {
+  vender:
+    'FOCO — VENDER: desperte interesse, mostre valor e conduza rumo ao fechamento ou ao próximo passo (agendar/enviar proposta).',
+  qualificar:
+    'FOCO — QUALIFICAR: descubra se há fit (necessidade, orçamento, urgência e quem decide) e classifique o lead.',
+  orcar:
+    'FOCO — ORÇAR: colete os requisitos necessários pra montar um orçamento (o quê, quantidade, prazo, especificações) antes de prometer valores.',
+  cobrar:
+    'FOCO — COBRAR com educação e firmeza: lembre do pagamento pendente, confirme o valor, ofereça formas de pagar e registre a promessa de pagamento. NUNCA ameace, constranja ou exponha a pessoa.',
+  suporte:
+    'FOCO — SUPORTE: entenda o problema, ajude a resolver com paciência e escale a um humano se não conseguir.',
+  outro: '',
+}
+
 // compõe a "persona" (instrução de sistema) a partir da missão.
-// Aqui mora o GUARDRAIL anti-alucinação (regra provider-agnostic).
-function montarPersona(
-  objetivo: string,
-  contexto?: string | null,
-  tom?: string | null,
-): string {
+// Aqui moram o comportamento por tipo, o critério de conclusão e o GUARDRAIL anti-alucinação.
+function montarPersona(m: {
+  tipo: string
+  objetivo: string
+  contexto?: string | null
+  tom?: string | null
+  criterioConclusao?: string | null
+}): string {
   const linhas = [
     'Você é um assistente que conduz conversas de WhatsApp em nome de uma empresa, no ritmo humano.',
-    `Objetivo desta conversa: ${objetivo}.`,
+    GUIA_TIPO[m.tipo] ?? '',
+    `Objetivo desta conversa: ${m.objetivo}.`,
   ]
-  if (contexto) linhas.push(`Contexto: ${contexto}.`)
-  linhas.push(`Tom da conversa: ${tom?.trim() || TOM_PADRAO}. Uma ideia por mensagem.`)
+  if (m.contexto) linhas.push(`Contexto: ${m.contexto}.`)
+  if (m.criterioConclusao)
+    linhas.push(
+      `A missão está CUMPRIDA quando: ${m.criterioConclusao}. Ao cumprir, use novo_estado="concluida".`,
+    )
+  linhas.push(`Tom da conversa: ${m.tom?.trim() || TOM_PADRAO}. Uma ideia por mensagem.`)
   // ── Guardrail anti-alucinação (a regra que faltou no demo do "R$99") ──
   linhas.push(
     'REGRAS INVIOLÁVEIS: (1) NUNCA invente preços, valores, prazos, datas, números, ' +
@@ -28,13 +50,15 @@ function montarPersona(
       'chute: diga com naturalidade que vai confirmar e retornar; se for decisivo pra fechar, ' +
       'escale (precisa_humano=true). (3) Nunca prometa o que não pode cumprir.',
   )
-  return linhas.join(' ')
+  return linhas.filter(Boolean).join(' ')
 }
 
 // aceita a missão (com mensagens) vinda do repo; só lê os campos que precisa
 type MissaoComMsgs = {
+  tipo: string
   objetivo: string
   contexto: string | null
+  criterioConclusao: string | null
   tom: string | null
   informacoes: string | null
   estado: EstadoMissao
@@ -49,7 +73,13 @@ export function montarFicha(
   conhecimento?: string[] | null,
 ): ContextoIA {
   return {
-    persona: montarPersona(missao.objetivo, missao.contexto, missao.tom),
+    persona: montarPersona({
+      tipo: missao.tipo,
+      objetivo: missao.objetivo,
+      contexto: missao.contexto,
+      tom: missao.tom,
+      criterioConclusao: missao.criterioConclusao,
+    }),
     objetivo: missao.objetivo,
     contexto: missao.contexto,
     informacoes: missao.informacoes,

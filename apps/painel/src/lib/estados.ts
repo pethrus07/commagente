@@ -1,4 +1,15 @@
-import type { EstadoMissao } from './types'
+import type { EstadoMissao, TipoMissao } from './types'
+
+// tipos de missão (o "objetivo variável") — rótulos p/ o painel
+export const TIPO_INFO: Record<TipoMissao, { label: string; emoji: string }> = {
+  vender: { label: 'Vender', emoji: '💰' },
+  qualificar: { label: 'Qualificar', emoji: '🔍' },
+  orcar: { label: 'Orçar', emoji: '🧾' },
+  cobrar: { label: 'Cobrar', emoji: '⏰' },
+  suporte: { label: 'Suporte', emoji: '🛟' },
+  outro: { label: 'Outro', emoji: '•' },
+}
+export const TIPOS_MISSAO = Object.keys(TIPO_INFO) as TipoMissao[]
 
 // espelho da máquina de estados do domínio (transições válidas → mostra ações e valida o drag)
 export const TRANSICOES: Record<EstadoMissao, EstadoMissao[]> = {

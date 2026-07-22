@@ -15,11 +15,15 @@ import {
   obterMissao,
 } from './missoes.caso-uso'
 
+const tipoMissao = z.enum(['vender', 'qualificar', 'orcar', 'cobrar', 'suporte', 'outro'])
+
 const corpoCriar = z.object({
   telefone: z.string().min(8),
   numeroId: z.string().uuid(),
+  tipo: tipoMissao.optional(),
   objetivo: z.string().min(1),
   contexto: z.string().optional(),
+  criterioConclusao: z.string().optional(),
   tom: z.string().optional(),
   informacoes: z.string().optional(),
   nomeContato: z.string().optional(),
@@ -27,8 +31,10 @@ const corpoCriar = z.object({
 
 // PATCH: todos opcionais; string vazia é permitida (limpa o campo → null no caso-uso).
 const corpoEditar = z.object({
+  tipo: tipoMissao.optional(),
   objetivo: z.string().min(1).optional(),
   contexto: z.string().nullish(),
+  criterioConclusao: z.string().nullish(),
   tom: z.string().nullish(),
   informacoes: z.string().nullish(),
   nomeContato: z.string().optional(),
@@ -37,8 +43,10 @@ const corpoEditar = z.object({
 // disparo em lote: a mesma missão → vários contatos
 const corpoLote = z.object({
   numeroId: z.string().uuid(),
+  tipo: tipoMissao.optional(),
   objetivo: z.string().min(1),
   contexto: z.string().optional(),
+  criterioConclusao: z.string().optional(),
   tom: z.string().optional(),
   informacoes: z.string().optional(),
   contatos: z

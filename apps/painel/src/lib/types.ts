@@ -62,10 +62,14 @@ export interface Mensagem {
   criadaEm: string
 }
 
+export type TipoMissao = 'vender' | 'qualificar' | 'orcar' | 'cobrar' | 'suporte' | 'outro'
+
 export interface Missao {
   id: string
+  tipo: TipoMissao
   objetivo: string
   contexto: string | null
+  criterioConclusao: string | null
   tom: string | null
   informacoes: string | null
   estado: EstadoMissao

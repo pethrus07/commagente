@@ -117,16 +117,20 @@ export const api = {
     criar: (data: {
       telefone: string
       numeroId: string
+      tipo?: string
       objetivo: string
       contexto?: string
+      criterioConclusao?: string
       tom?: string
       informacoes?: string
       nomeContato?: string
     }) => req<Missao>('/missoes', { method: 'POST', body: JSON.stringify(data) }),
     criarLote: (data: {
       numeroId: string
+      tipo?: string
       objetivo: string
       contexto?: string
+      criterioConclusao?: string
       tom?: string
       informacoes?: string
       contatos: { telefone: string; nome?: string }[]
@@ -138,8 +142,10 @@ export const api = {
     editar: (
       id: string,
       patch: {
+        tipo?: string
         objetivo?: string
         contexto?: string | null
+        criterioConclusao?: string | null
         tom?: string | null
         informacoes?: string | null
         nomeContato?: string

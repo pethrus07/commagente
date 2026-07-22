@@ -180,8 +180,10 @@ model Missao {
   contatoId          String       @map("contato_id") @db.Uuid
   templateId         String?      @map("template_id") @db.Uuid
   numeroId           String       @map("numero_id") @db.Uuid
+  tipo               String       @default("vender") // vender|qualificar|orcar|cobrar|suporte|outro
   objetivo           String
   contexto           String?
+  criterioConclusao  String?      @map("criterio_conclusao") // quando a missão está cumprida
   tom                String? // humor/estilo da conversa (ex.: "amigável e informal")
   informacoes        String? // base de fatos autorizados que a IA PODE afirmar (preço, prazo, condições)
   estado             EstadoMissao @default(configurada)

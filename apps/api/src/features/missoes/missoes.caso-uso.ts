@@ -11,8 +11,10 @@ import { missoesRepo } from './missoes.repo'
 
 type DadosMissao = {
   numeroId: string
+  tipo?: string
   objetivo: string
   contexto?: string
+  criterioConclusao?: string
   tom?: string
   informacoes?: string
 }
@@ -50,8 +52,10 @@ export async function criarMissaoEmLote(
       tenantId,
       contatoId: contato.id,
       numeroId: input.numeroId,
+      tipo: input.tipo,
       objetivo: input.objetivo,
       contexto: input.contexto,
+      criterioConclusao: input.criterioConclusao,
       tom: input.tom,
       informacoes: input.informacoes,
     })
@@ -137,8 +141,10 @@ export async function obterMissao(id: string) {
 export async function editarMissao(
   id: string,
   patch: {
+    tipo?: string
     objetivo?: string
     contexto?: string | null
+    criterioConclusao?: string | null
     tom?: string | null
     informacoes?: string | null
     nomeContato?: string
@@ -149,8 +155,10 @@ export async function editarMissao(
   await conferirDono(missao.tenantId)
 
   const dados: Prisma.MissaoUpdateInput = {}
+  if (patch.tipo !== undefined) dados.tipo = patch.tipo
   if (patch.objetivo !== undefined) dados.objetivo = patch.objetivo
   if (patch.contexto !== undefined) dados.contexto = patch.contexto
+  if (patch.criterioConclusao !== undefined) dados.criterioConclusao = patch.criterioConclusao
   if (patch.tom !== undefined) dados.tom = patch.tom
   if (patch.informacoes !== undefined) dados.informacoes = patch.informacoes
 

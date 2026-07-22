@@ -15,7 +15,7 @@ import {
   X,
 } from 'lucide-react'
 import { api } from '../lib/api'
-import { TRANSICOES } from '../lib/estados'
+import { TIPO_INFO, TIPOS_MISSAO, TRANSICOES } from '../lib/estados'
 import { toast } from '../lib/toast'
 import type { EstadoMissao, Missao } from '../lib/types'
 import {
@@ -138,6 +138,7 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
           <ArrowLeft className="h-4 w-4" />
         </button>
         <div className="min-w-0 flex-1">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-indigo-300/80">{TIPO_INFO[m.tipo]?.emoji} {TIPO_INFO[m.tipo]?.label ?? m.tipo}</p>
           <p className="truncate font-semibold text-white">{m.objetivo}</p>
           <p className="text-xs text-slate-500">{m.contato?.nome ? `${m.contato.nome} · ` : ''}+{m.contato?.telefone}</p>
         </div>
@@ -320,6 +321,8 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Missão</p>
             </div>
             <dl className="space-y-1.5 text-sm">
+              <Linha rotulo="Tipo" valor={TIPO_INFO[m.tipo]?.label ?? m.tipo} />
+              {m.criterioConclusao && <Linha rotulo="Conclui quando" valor={m.criterioConclusao} />}
               {m.contexto && <Linha rotulo="Contexto" valor={m.contexto} />}
               <Linha rotulo="Categoria" valor={m.categoriaResultado ?? '—'} />
               <Linha rotulo="Número" valor={m.numero ? `+${m.numero.telefone}` : '—'} />
@@ -344,9 +347,11 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
 
 function EditarMissaoModal({ missao, onFechar }: { missao: Missao; onFechar: (salvou: boolean) => void }) {
   const [form, setForm] = useState({
+    tipo: missao.tipo ?? 'vender',
     objetivo: missao.objetivo,
     nomeContato: missao.contato?.nome ?? '',
     contexto: missao.contexto ?? '',
+    criterioConclusao: missao.criterioConclusao ?? '',
     tom: missao.tom ?? '',
     informacoes: missao.informacoes ?? '',
   })
@@ -357,9 +362,11 @@ function EditarMissaoModal({ missao, onFechar }: { missao: Missao; onFechar: (sa
     setSalvando(true)
     try {
       await api.missoes.editar(missao.id, {
+        tipo: form.tipo,
         objetivo: form.objetivo.trim(),
         nomeContato: form.nomeContato.trim(),
         contexto: form.contexto.trim() || null,
+        criterioConclusao: form.criterioConclusao.trim() || null,
         tom: form.tom.trim() || null,
         informacoes: form.informacoes.trim() || null,
       })
@@ -383,8 +390,29 @@ function EditarMissaoModal({ missao, onFechar }: { missao: Missao; onFechar: (sa
         </div>
         <div className="space-y-3">
           <div>
+            <label className="mb-1 block text-xs text-slate-400">Tipo de missão</label>
+            <div className="flex flex-wrap gap-1.5">
+              {TIPOS_MISSAO.map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setForm({ ...form, tipo: t })}
+                  className={cn(
+                    'rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 ring-inset transition',
+                    form.tipo === t ? 'bg-indigo-500/20 text-indigo-200 ring-indigo-500/40' : 'text-slate-400 ring-white/10 hover:text-slate-200',
+                  )}
+                >
+                  {TIPO_INFO[t].emoji} {TIPO_INFO[t].label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
             <label className="mb-1 block text-xs text-slate-400">Objetivo</label>
             <input value={form.objetivo} onChange={(e) => setForm({ ...form, objetivo: e.target.value })} className={campo} />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-slate-400">Critério de conclusão</label>
+            <input value={form.criterioConclusao} onChange={(e) => setForm({ ...form, criterioConclusao: e.target.value })} placeholder="Ex.: reunião agendada · pagamento confirmado" className={campo} />
           </div>
           <div>
             <label className="mb-1 block text-xs text-slate-400">Nome do contato</label>

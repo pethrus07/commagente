@@ -7,8 +7,10 @@ export const missoesRepo = {
     tenantId: string
     contatoId: string
     numeroId: string
+    tipo?: string
     objetivo: string
     contexto?: string
+    criterioConclusao?: string
     tom?: string
     informacoes?: string
     templateId?: string
