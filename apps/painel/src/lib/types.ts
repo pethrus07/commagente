@@ -33,6 +33,15 @@ export interface Contato {
   origem: string | null
 }
 
+export interface ContatoResumo {
+  id: string
+  nome: string | null
+  telefone: string
+  origem: string | null
+  criadoEm: string
+  totalMissoes: number
+}
+
 export interface Mensagem {
   id: string
   direcao: Direcao

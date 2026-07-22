@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Sidebar, type Page } from './components/Sidebar'
 import { useToasts } from './lib/toast'
 import { cn } from './lib/ui'
+import { Contatos } from './pages/Contatos'
 import { Dashboard } from './pages/Dashboard'
 import { Escalados } from './pages/Escalados'
 import { MissaoDetalhe } from './pages/MissaoDetalhe'
@@ -15,6 +16,7 @@ const TITULOS: Record<Page, { t: string; s: string }> = {
   dashboard: { t: 'Dashboard', s: 'Visão geral do assistente' },
   missoes: { t: 'Missões', s: 'Conversas conduzidas pela IA' },
   escalados: { t: 'Escalados', s: 'Conversas que a IA entregou pra você' },
+  contatos: { t: 'Contatos', s: 'Leads e clientes (CRM)' },
   numeros: { t: 'Números', s: 'Chips conectados via Evolution' },
 }
 
@@ -39,6 +41,7 @@ export default function App() {
         <main className="flex-1 overflow-y-auto p-8">
           {rota.page === 'dashboard' && <Dashboard />}
           {rota.page === 'numeros' && <Numeros />}
+          {rota.page === 'contatos' && <Contatos />}
           {rota.page === 'escalados' && <Escalados onAbrir={(id) => setRota({ page: 'missao', id })} />}
           {rota.page === 'missoes' && <Missoes onAbrir={(id) => setRota({ page: 'missao', id })} />}
           {rota.page === 'missao' && <MissaoDetalhe id={rota.id} onVoltar={() => setRota({ page: 'missoes' })} />}

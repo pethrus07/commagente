@@ -2,6 +2,7 @@ import Fastify, { type FastifyError } from 'fastify'
 import { ZodError } from 'zod'
 import { config } from './core/config'
 import { db } from './core/db'
+import { contatosRotas } from './features/contatos/contatos.rotas'
 import { envioRotas } from './features/envio/envio.rotas'
 import { iniciarWorker } from './features/fila/fila.worker'
 import { missoesRotas } from './features/missoes/missoes.rotas'
@@ -42,6 +43,7 @@ app.register(webhookRotas)
 app.register(envioRotas)
 app.register(missoesRotas)
 app.register(statsRotas)
+app.register(contatosRotas)
 
 app
   .listen({ port: config.porta, host: '0.0.0.0' })

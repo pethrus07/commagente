@@ -1,14 +1,15 @@
-import { LayoutDashboard, LifeBuoy, Smartphone, Target, Zap } from 'lucide-react'
+import { LayoutDashboard, LifeBuoy, Smartphone, Target, Users, Zap } from 'lucide-react'
 import { type ComponentType, useEffect, useState } from 'react'
 import { api } from '../lib/api'
 import { cn } from '../lib/ui'
 
-export type Page = 'dashboard' | 'numeros' | 'missoes' | 'escalados'
+export type Page = 'dashboard' | 'numeros' | 'missoes' | 'escalados' | 'contatos'
 
 const ITENS: { id: Page; label: string; icon: ComponentType<{ className?: string }> }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'missoes', label: 'Missões', icon: Target },
   { id: 'escalados', label: 'Escalados', icon: LifeBuoy },
+  { id: 'contatos', label: 'Contatos', icon: Users },
   { id: 'numeros', label: 'Números', icon: Smartphone },
 ]
 

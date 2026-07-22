@@ -14,6 +14,7 @@ import {
   X,
 } from 'lucide-react'
 import { api } from '../lib/api'
+import { TRANSICOES } from '../lib/estados'
 import { toast } from '../lib/toast'
 import type { EstadoMissao, Missao } from '../lib/types'
 import {
@@ -26,18 +27,6 @@ import {
   cn,
   hora,
 } from '../lib/ui'
-
-// espelho da máquina de estados do domínio (para mostrar ações válidas)
-const TRANSICOES: Record<EstadoMissao, EstadoMissao[]> = {
-  configurada: ['na_fila', 'descartada', 'arquivada'],
-  na_fila: ['em_conversa', 'descartada', 'arquivada'],
-  em_conversa: ['concluida', 'sem_resposta', 'descartada', 'escalada'],
-  escalada: ['em_conversa', 'concluida', 'descartada', 'arquivada'],
-  concluida: ['arquivada'],
-  sem_resposta: ['na_fila', 'arquivada'],
-  descartada: ['arquivada'],
-  arquivada: [],
-}
 
 export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => void }) {
   const [m, setM] = useState<Missao | null>(null)

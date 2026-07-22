@@ -1,4 +1,11 @@
-import type { Missao, Numero, QrResposta, Stats, EstadoMissao } from './types'
+import type {
+  ContatoResumo,
+  EstadoMissao,
+  Missao,
+  Numero,
+  QrResposta,
+  Stats,
+} from './types'
 
 const BASE = '/api' // proxy do Vite -> API Fastify (:3000)
 
@@ -49,6 +56,8 @@ export const api = {
   },
 
   escalados: () => req<Missao[]>('/escalados'),
+
+  contatos: () => req<ContatoResumo[]>('/contatos'),
 
   missoes: {
     listar: () => req<Missao[]>('/missoes'),

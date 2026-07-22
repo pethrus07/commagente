@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
-import { ChevronRight, Plus, Target, X } from 'lucide-react'
+import { type ReactNode, useEffect, useMemo, useState } from 'react'
+import { ChevronRight, LayoutGrid, List, Plus, Target, X } from 'lucide-react'
 import { api } from '../lib/api'
+import { COLUNAS, podeTransicionar } from '../lib/estados'
 import { toast } from '../lib/toast'
 import type { EstadoMissao, Missao, Numero } from '../lib/types'
 import {
@@ -142,8 +143,10 @@ function NovaMissaoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
 
 export function Missoes({ onAbrir }: { onAbrir: (id: string) => void }) {
   const [missoes, setMissoes] = useState<Missao[] | null>(null)
+  const [vista, setVista] = useState<'board' | 'lista'>('board')
   const [filtro, setFiltro] = useState<EstadoMissao | 'todas'>('todas')
   const [modal, setModal] = useState(false)
+  const [arrastando, setArrastando] = useState<Missao | null>(null)
 
   const carregar = async () => {
     try {
@@ -154,6 +157,8 @@ export function Missoes({ onAbrir }: { onAbrir: (id: string) => void }) {
   }
   useEffect(() => {
     carregar()
+    const t = setInterval(carregar, 6000)
+    return () => clearInterval(t)
   }, [])
 
   const filtros = useMemo(() => {
@@ -162,50 +167,125 @@ export function Missoes({ onAbrir }: { onAbrir: (id: string) => void }) {
     return contagem
   }, [missoes])
 
+  // arrastar um card para outra coluna = mudar de estado (validado pelo domínio)
+  const mover = async (m: Missao, estado: EstadoMissao) => {
+    if (m.estado === estado) return
+    if (!podeTransicionar(m.estado, estado)) {
+      toast(`Transição ${ESTADO_INFO[m.estado].label} → ${ESTADO_INFO[estado].label} não é permitida.`, 'erro')
+      return
+    }
+    // otimista: move na hora, confirma no servidor
+    setMissoes((ms) => (ms ?? []).map((x) => (x.id === m.id ? { ...x, estado } : x)))
+    try {
+      await api.missoes.mudarEstado(m.id, estado)
+    } catch (e) {
+      toast((e as Error).message, 'erro')
+    } finally {
+      carregar()
+    }
+  }
+
   const visiveis = (missoes ?? []).filter((m) => filtro === 'todas' || m.estado === filtro)
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-2">
-          <Chip ativo={filtro === 'todas'} onClick={() => setFiltro('todas')} label="Todas" n={missoes?.length ?? 0} />
-          {(Object.keys(ESTADO_INFO) as EstadoMissao[])
-            .filter((e) => (filtros.get(e) ?? 0) > 0)
-            .map((e) => (
-              <Chip key={e} ativo={filtro === e} onClick={() => setFiltro(e)} label={ESTADO_INFO[e].label} n={filtros.get(e) ?? 0} dot={ESTADO_INFO[e].dot} />
-            ))}
+    <div className="flex h-full flex-col">
+      <div className="mb-5 flex items-center justify-between gap-3">
+        <div className="inline-flex rounded-xl bg-white/5 p-1 ring-1 ring-inset ring-white/10">
+          <VistaBtn ativo={vista === 'board'} onClick={() => setVista('board')} icon={<LayoutGrid className="h-4 w-4" />} label="Board" />
+          <VistaBtn ativo={vista === 'lista'} onClick={() => setVista('lista')} icon={<List className="h-4 w-4" />} label="Lista" />
         </div>
         <Button onClick={() => setModal(true)}><Plus className="h-4 w-4" /> Nova missão</Button>
       </div>
 
       {missoes === null ? (
-        <div className="grid place-items-center py-20"><Spinner className="h-6 w-6" /></div>
-      ) : visiveis.length === 0 ? (
-        <EmptyState icon={<Target className="h-6 w-6" />} titulo="Nenhuma missão aqui" texto="Crie uma missão e solte a IA pra conduzir a conversa." acao={<Button onClick={() => setModal(true)}><Plus className="h-4 w-4" /> Nova missão</Button>} />
-      ) : (
-        <div className="space-y-2.5">
-          {visiveis.map((m) => {
-            const info = ESTADO_INFO[m.estado]
+        <div className="grid flex-1 place-items-center"><Spinner className="h-6 w-6" /></div>
+      ) : missoes.length === 0 ? (
+        <EmptyState icon={<Target className="h-6 w-6" />} titulo="Nenhuma missão ainda" texto="Crie uma missão (para 1 ou vários contatos) e solte a IA pra conduzir a conversa." acao={<Button onClick={() => setModal(true)}><Plus className="h-4 w-4" /> Nova missão</Button>} />
+      ) : vista === 'board' ? (
+        <div className="flex flex-1 gap-3 overflow-x-auto pb-2">
+          {COLUNAS.map((estado) => {
+            const cards = (missoes ?? []).filter((m) => m.estado === estado)
+            const soltavel = arrastando ? podeTransicionar(arrastando.estado, estado) && arrastando.estado !== estado : false
+            const info = ESTADO_INFO[estado]
             return (
-              <button
-                key={m.id}
-                onClick={() => onAbrir(m.id)}
-                className="group flex w-full items-center gap-4 rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-left transition hover:border-white/15 hover:bg-white/[0.05]"
+              <div
+                key={estado}
+                onDragOver={(e) => soltavel && e.preventDefault()}
+                onDrop={() => arrastando && mover(arrastando, estado)}
+                className={cn(
+                  'flex w-64 shrink-0 flex-col rounded-2xl border p-2 transition',
+                  arrastando
+                    ? soltavel
+                      ? 'border-indigo-500/50 bg-indigo-500/[0.06]'
+                      : 'border-white/5 bg-transparent opacity-40'
+                    : 'border-white/8 bg-white/[0.02]',
+                )}
               >
-                <div className={cn('grid h-10 w-10 shrink-0 place-items-center rounded-xl', info.badge)}>
-                  <Target className="h-5 w-5" />
+                <div className="mb-2 flex items-center gap-2 px-2 py-1">
+                  <Dot className={info.dot} />
+                  <span className="text-sm font-medium text-slate-200">{info.label}</span>
+                  <span className="ml-auto rounded-full bg-white/10 px-1.5 text-[11px] tabular-nums text-slate-400">{cards.length}</span>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium text-slate-100">{m.objetivo}</p>
-                  <p className="truncate text-xs text-slate-500">
-                    {m.contato?.nome ? `${m.contato.nome} · ` : ''}+{m.contato?.telefone ?? '—'} · {tempoRelativo(m.criadoEm)}
-                  </p>
+                <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
+                  {cards.map((m) => (
+                    <div
+                      key={m.id}
+                      draggable
+                      onDragStart={() => setArrastando(m)}
+                      onDragEnd={() => setArrastando(null)}
+                      onClick={() => onAbrir(m.id)}
+                      className="group cursor-pointer rounded-xl border border-white/8 bg-white/[0.04] p-3 transition hover:border-white/20 hover:bg-white/[0.07] active:cursor-grabbing"
+                    >
+                      <p className="line-clamp-2 text-sm font-medium text-slate-100">{m.objetivo}</p>
+                      <p className="mt-1.5 flex items-center gap-1 truncate text-xs text-slate-500">
+                        {m.contato?.nome ?? `+${m.contato?.telefone ?? '—'}`}
+                        {m.iaPausada && <span className="ml-1 rounded bg-amber-500/20 px-1 text-[10px] text-amber-300">humano</span>}
+                      </p>
+                      <p className="mt-1 text-[11px] text-slate-600">{tempoRelativo(m.criadoEm)}</p>
+                    </div>
+                  ))}
+                  {cards.length === 0 && (
+                    <p className="px-2 py-6 text-center text-xs text-slate-600">—</p>
+                  )}
                 </div>
-                <Badge className={info.badge}><Dot className={info.dot} /> {info.label}</Badge>
-                <ChevronRight className="h-4 w-4 shrink-0 text-slate-600 group-hover:text-slate-300" />
-              </button>
+              </div>
             )
           })}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-wrap gap-2">
+            <Chip ativo={filtro === 'todas'} onClick={() => setFiltro('todas')} label="Todas" n={missoes?.length ?? 0} />
+            {(Object.keys(ESTADO_INFO) as EstadoMissao[])
+              .filter((e) => (filtros.get(e) ?? 0) > 0)
+              .map((e) => (
+                <Chip key={e} ativo={filtro === e} onClick={() => setFiltro(e)} label={ESTADO_INFO[e].label} n={filtros.get(e) ?? 0} dot={ESTADO_INFO[e].dot} />
+              ))}
+          </div>
+          <div className="space-y-2.5">
+            {visiveis.map((m) => {
+              const info = ESTADO_INFO[m.estado]
+              return (
+                <button
+                  key={m.id}
+                  onClick={() => onAbrir(m.id)}
+                  className="group flex w-full items-center gap-4 rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-left transition hover:border-white/15 hover:bg-white/[0.05]"
+                >
+                  <div className={cn('grid h-10 w-10 shrink-0 place-items-center rounded-xl', info.badge)}>
+                    <Target className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium text-slate-100">{m.objetivo}</p>
+                    <p className="truncate text-xs text-slate-500">
+                      {m.contato?.nome ? `${m.contato.nome} · ` : ''}+{m.contato?.telefone ?? '—'} · {tempoRelativo(m.criadoEm)}
+                    </p>
+                  </div>
+                  <Badge className={info.badge}><Dot className={info.dot} /> {info.label}</Badge>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-slate-600 group-hover:text-slate-300" />
+                </button>
+              )
+            })}
+          </div>
         </div>
       )}
 
@@ -218,6 +298,21 @@ export function Missoes({ onAbrir }: { onAbrir: (id: string) => void }) {
         />
       )}
     </div>
+  )
+}
+
+function VistaBtn({ ativo, onClick, icon, label }: { ativo: boolean; onClick: () => void; icon: ReactNode; label: string }) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition',
+        ativo ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-slate-200',
+      )}
+    >
+      {icon}
+      {label}
+    </button>
   )
 }
 
