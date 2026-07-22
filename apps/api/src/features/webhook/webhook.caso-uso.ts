@@ -14,6 +14,14 @@ export async function processarWebhook(payload: unknown) {
     const numero = await webhookRepo.acharNumeroPorInstancia(evento.instancia)
     if (!numero) return // instância desconhecida
 
+    // idempotência: a Evolution pode reentregar o mesmo evento → não processa 2×
+    if (
+      evento.providerMsgId &&
+      (await webhookRepo.existeMensagem(numero.tenantId, evento.providerMsgId))
+    ) {
+      return
+    }
+
     const contato = await webhookRepo.upsertContato(
       numero.tenantId,
       evento.telefone,

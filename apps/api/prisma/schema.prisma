@@ -219,6 +219,7 @@ model Mensagem {
   missao  Missao? @relation(fields: [missaoId], references: [id])
   contato Contato @relation(fields: [contatoId], references: [id])
 
+  @@unique([tenantId, providerMsgId]) // idempotência: não grava a mesma mensagem 2× (NULLs são distintos)
   @@index([missaoId, criadaEm])
   @@map("mensagens")
 }

@@ -1,7 +1,7 @@
 // 🖥️ Apresentação — envio manual de texto (teste da Fatia 2).
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { enviarTexto } from './envio.caso-uso'
+import { enviarTextoManual } from './envio.caso-uso'
 
 const corpo = z.object({
   numeroId: z.string().uuid(),
@@ -13,6 +13,6 @@ const corpo = z.object({
 export async function envioRotas(app: FastifyInstance) {
   app.post('/envio', async (req) => {
     const { numeroId, telefone, texto, missaoId } = corpo.parse(req.body)
-    return enviarTexto(numeroId, telefone, texto, missaoId)
+    return enviarTextoManual(numeroId, telefone, texto, missaoId)
   })
 }

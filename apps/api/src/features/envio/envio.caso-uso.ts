@@ -1,11 +1,26 @@
 // ⚙️ Aplicação — executor de envio (envio DIRETO; fila anti-bloqueio vem na Fatia 6).
 // Já entra a "digitação simulada" (presença) e a gravação em `mensagens`.
+import { conferirDono } from '../../core/contexto'
 import { ErroHttp } from '../../core/erros'
 import { evolutionClient } from '../../core/evolution/evolution.client'
 import type { PortaWhatsApp } from '../../core/evolution/porta-whatsapp'
 import { envioRepo } from './envio.repo'
 
 const wa: PortaWhatsApp = evolutionClient
+
+// Envio MANUAL (rota /envio): valida que o número é do tenant da requisição.
+// O worker usa enviarTexto direto (sem contexto de request → sem esse check).
+export async function enviarTextoManual(
+  numeroId: string,
+  telefone: string,
+  texto: string,
+  missaoId?: string,
+) {
+  const numero = await envioRepo.buscarNumero(numeroId)
+  if (!numero) throw new ErroHttp(404, 'Número não encontrado')
+  await conferirDono(numero.tenantId)
+  return enviarTexto(numeroId, telefone, texto, missaoId)
+}
 
 // tempo de "digitando…" proporcional ao texto, limitado (ritmo humano)
 function msDigitando(texto: string): number {

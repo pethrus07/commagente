@@ -9,6 +9,11 @@ export const webhookRepo = {
     })
   },
 
+  // idempotência: já gravamos essa mensagem? (evita processar/responder 2×)
+  existeMensagem(tenantId: string, providerMsgId: string) {
+    return db.mensagem.findFirst({ where: { tenantId, providerMsgId } })
+  },
+
   upsertContato(tenantId: string, telefone: string, nome?: string) {
     return db.contato.upsert({
       where: { tenantId_telefone: { tenantId, telefone } },
