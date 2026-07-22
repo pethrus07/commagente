@@ -55,4 +55,12 @@ export const filaRepo = {
       data: { enviadosHoje: 0, enviadosData: data },
     })
   },
+
+  // anti-rajada: marca o próximo horário permitido de envio do número
+  marcarProximoEnvio(numeroId: string, quando: Date) {
+    return db.numeroWhatsapp.update({
+      where: { id: numeroId },
+      data: { proximoEnvioEm: quando },
+    })
+  },
 }

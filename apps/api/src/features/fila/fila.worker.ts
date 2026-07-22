@@ -1,10 +1,15 @@
 // ⚙️/🔌 O worker do motor anti-bloqueio: tira da fila e envia no ritmo humano.
 import { config } from '../../core/config'
 import { enviarTexto } from '../envio/envio.caso-uso'
-import { dentroDaJanela, temBudget } from './fila.dominio'
+import { dentroDaJanela, intervaloEnvioMs, temBudget } from './fila.dominio'
 import { filaRepo } from './fila.repo'
 
-type Payload = { numeroId: string; telefone: string; texto: string }
+type Payload = {
+  numeroId: string
+  telefone: string
+  texto: string
+  tipo?: 'novo' | 'conversa'
+}
 
 // hora atual "HH:mm" no fuso configurado (ex.: America/Sao_Paulo)
 function agoraHHmm(): string {
@@ -53,11 +58,23 @@ async function tick() {
       }
       if (!temBudget(numero.enviadosHoje, numero.budgetDiario)) continue
 
+      // ANTI-RAJADA: respeita o intervalo mínimo entre envios do mesmo número.
+      // (o item fica pendente e é reprocessado quando chegar a hora)
+      const agora = Date.now()
+      if (numero.proximoEnvioEm && agora < numero.proximoEnvioEm.getTime()) {
+        continue
+      }
+
       await filaRepo.marcar(item.id, 'enviando')
       try {
         await enviarTexto(p.numeroId, p.telefone, p.texto, item.missaoId ?? undefined)
         await filaRepo.marcar(item.id, 'ok')
         await filaRepo.incrementarEnviados(p.numeroId)
+        // agenda o próximo envio permitido deste número (espaça o gotejamento)
+        await filaRepo.marcarProximoEnvio(
+          p.numeroId,
+          new Date(Date.now() + intervaloEnvioMs(p.tipo ?? 'conversa')),
+        )
       } catch (err) {
         console.error('[fila] falha ao enviar item', item.id, err)
         await filaRepo.marcar(item.id, 'erro', true)

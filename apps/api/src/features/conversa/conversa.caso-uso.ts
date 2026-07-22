@@ -104,7 +104,10 @@ async function executarTurno(missaoId: string) {
   }
 
   // 7) enfileira a resposta — o worker anti-bloqueio envia no ritmo humano
-  // (janela de horário + budget + jitter). Substitui o envio direto.
+  // (janela + budget + jitter + espaçamento serial por número). Substitui o envio direto.
+  // opener (1ª saída da missão) espaça mais que uma resposta dentro da conversa.
+  const ehOpener = !missao.mensagens.some((m) => m.direcao === 'out')
+  const tipo = ehOpener ? 'novo' : 'conversa'
   await filaRepo.enfileirar({
     tenantId: missao.tenantId,
     missaoId,
@@ -113,8 +116,9 @@ async function executarTurno(missaoId: string) {
       numeroId: missao.numeroId,
       telefone: missao.contato.telefone,
       texto: saida.resposta,
+      tipo,
     },
-    agendadoPara: new Date(Date.now() + jitterMs('conversa')),
+    agendadoPara: new Date(Date.now() + jitterMs(tipo)),
   })
   await db.evento.create({
     data: {

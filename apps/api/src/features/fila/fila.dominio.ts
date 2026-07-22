@@ -30,3 +30,13 @@ export function jitterMs(tipo: 'novo' | 'conversa'): number {
     ? 6000 + Math.floor(Math.random() * 5000)
     : 3000 + Math.floor(Math.random() * 4000)
 }
+
+// ANTI-RAJADA: intervalo mínimo (com jitter) entre DOIS envios do MESMO número.
+// Impede que um disparo em lote ou a reabertura da janela mandem tudo de uma vez.
+// Abrir contato novo espaça bem mais que responder dentro de uma conversa ativa.
+// 'novo' ~45–90s · 'conversa' ~12–30s
+export function intervaloEnvioMs(tipo: 'novo' | 'conversa'): number {
+  return tipo === 'novo'
+    ? 45_000 + Math.floor(Math.random() * 45_000)
+    : 12_000 + Math.floor(Math.random() * 18_000)
+}

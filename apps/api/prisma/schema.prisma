@@ -116,6 +116,7 @@ model NumeroWhatsapp {
   enviadosHoje       Int           @default(0) @map("enviados_hoje")
   enviadosData       String?       @map("enviados_data") // dia-ref (YYYY-MM-DD no TZ) do contador; muda o dia → zera
   maxConversasAtivas Int           @default(20) @map("max_conversas_ativas") // cap de conversas simultâneas conduzidas pela IA
+  proximoEnvioEm     DateTime?     @map("proximo_envio_em") // anti-rajada: só envia de novo a partir daqui
   janelaInicio       String        @default("08:00") @map("janela_inicio") // HH:mm
   janelaFim          String        @default("20:00") @map("janela_fim")
   criadoEm           DateTime      @default(now()) @map("criado_em")
