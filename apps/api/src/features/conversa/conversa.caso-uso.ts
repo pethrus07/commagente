@@ -14,6 +14,9 @@ export async function processarTurno(missaoId: string) {
   const missao = await missoesRepo.buscar(missaoId)
   if (!missao) return { ok: false as const, motivo: 'missao_inexistente' }
 
+  // 0) guardrail de controle: se um humano assumiu (IA pausada), a IA não responde.
+  if (missao.iaPausada) return { ok: true as const, pausada: true }
+
   // 1) monta a ficha (contexto rico: persona + resumo + fatos + últimas N)
   const ctx = montarFicha(missao)
 
@@ -28,10 +31,13 @@ export async function processarTurno(missaoId: string) {
     })
   }
 
-  // 5) guardrail: precisa de humano → escala e NÃO responde automático
+  // 5) guardrail: precisa de humano → escala, PAUSA a IA e NÃO responde automático
   if (saida.precisa_humano) {
+    const pausa = { iaPausada: true, motivoEscala: saida.motivo_escala ?? null }
     if (podeTransicionar(missao.estado, 'escalada')) {
-      await missoesRepo.atualizarEstado(missaoId, 'escalada')
+      await missoesRepo.atualizarEstado(missaoId, 'escalada', pausa)
+    } else {
+      await missoesRepo.atualizar(missaoId, pausa)
     }
     await db.evento.create({
       data: {

@@ -131,6 +131,8 @@ model Missao {
   tom                String? // humor/estilo da conversa (ex.: "amigável e informal")
   informacoes        String? // base de fatos autorizados que a IA PODE afirmar (preço, prazo, condições)
   estado             EstadoMissao @default(configurada)
+  iaPausada          Boolean      @default(false) @map("ia_pausada") // humano no controle → a IA não responde
+  motivoEscala       String?      @map("motivo_escala") // por que foi escalada (mostrado no inbox)
   categoriaResultado String?      @map("categoria_resultado")
   resumo             String? // resumo rolante (memória)
   fatos              Json? // fatos extraídos (memória)

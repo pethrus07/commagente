@@ -35,9 +35,15 @@ export const api = {
       req<{ status: Numero['statusConexao'] }>(`/numeros/${id}/status`),
   },
 
+  escalados: () => req<Missao[]>('/escalados'),
+
   missoes: {
     listar: () => req<Missao[]>('/missoes'),
     obter: (id: string) => req<Missao>(`/missoes/${id}`),
+    assumir: (id: string) =>
+      req<Missao>(`/missoes/${id}/assumir`, { method: 'POST', body: '{}' }),
+    devolverIa: (id: string) =>
+      req<Missao>(`/missoes/${id}/devolver-ia`, { method: 'POST', body: '{}' }),
     criar: (data: {
       telefone: string
       numeroId: string

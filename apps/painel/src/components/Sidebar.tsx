@@ -1,16 +1,27 @@
-import { LayoutDashboard, Smartphone, Target, Zap } from 'lucide-react'
-import type { ComponentType } from 'react'
+import { LayoutDashboard, LifeBuoy, Smartphone, Target, Zap } from 'lucide-react'
+import { type ComponentType, useEffect, useState } from 'react'
+import { api } from '../lib/api'
 import { cn } from '../lib/ui'
 
-export type Page = 'dashboard' | 'numeros' | 'missoes'
+export type Page = 'dashboard' | 'numeros' | 'missoes' | 'escalados'
 
 const ITENS: { id: Page; label: string; icon: ComponentType<{ className?: string }> }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'missoes', label: 'Missões', icon: Target },
+  { id: 'escalados', label: 'Escalados', icon: LifeBuoy },
   { id: 'numeros', label: 'Números', icon: Smartphone },
 ]
 
 export function Sidebar({ atual, onNavegar }: { atual: Page; onNavegar: (p: Page) => void }) {
+  const [escalados, setEscalados] = useState(0)
+  useEffect(() => {
+    const carregar = () =>
+      api.stats().then((s) => setEscalados(s.missoesPorEstado.escalada ?? 0)).catch(() => {})
+    carregar()
+    const t = setInterval(carregar, 8000)
+    return () => clearInterval(t)
+  }, [])
+
   return (
     <aside className="flex w-60 shrink-0 flex-col border-r border-white/8 bg-white/[0.02] px-4 py-6">
       <div className="mb-8 flex items-center gap-2.5 px-2">
@@ -39,7 +50,12 @@ export function Sidebar({ atual, onNavegar }: { atual: Page; onNavegar: (p: Page
               )}
             >
               <Icon className={cn('h-[18px] w-[18px]', ativo ? 'text-indigo-400' : 'text-slate-500 group-hover:text-slate-300')} />
-              {item.label}
+              <span className="flex-1 text-left">{item.label}</span>
+              {item.id === 'escalados' && escalados > 0 && (
+                <span className="grid h-5 min-w-5 place-items-center rounded-full bg-rose-500 px-1.5 text-[11px] font-semibold tabular-nums text-white">
+                  {escalados}
+                </span>
+              )}
             </button>
           )
         })}

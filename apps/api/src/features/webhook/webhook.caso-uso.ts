@@ -40,7 +40,9 @@ export async function processarWebhook(payload: unknown) {
 
     // Cérebro IA conduz a resposta (Fatia 4). Fire-and-forget: não segura o 200
     // do webhook (o executor simula digitação ~6s). Fatia 6 troca por fila/worker.
-    if (missao) {
+    // Fatia 9: se a missão está com a IA pausada (humano assumiu), NÃO responde —
+    // a mensagem entra no histórico e o operador responde na mão pelo painel.
+    if (missao && !missao.iaPausada) {
       void processarTurno(missao.id).catch((err) =>
         console.error('[conversa] processarTurno falhou:', err),
       )

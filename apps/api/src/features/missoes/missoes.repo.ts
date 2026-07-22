@@ -39,6 +39,18 @@ export const missoesRepo = {
     })
   },
 
+  // inbox de escalados: missões aguardando um humano + última mensagem (preview)
+  listarEscalados(tenantId: string) {
+    return db.missao.findMany({
+      where: { tenantId, estado: 'escalada' },
+      orderBy: { criadoEm: 'desc' },
+      include: {
+        contato: true,
+        mensagens: { orderBy: { criadaEm: 'desc' }, take: 1 },
+      },
+    })
+  },
+
   atualizarEstado(
     id: string,
     estado: EstadoMissao,

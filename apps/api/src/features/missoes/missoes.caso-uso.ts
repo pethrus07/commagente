@@ -62,6 +62,42 @@ export async function listarMissoes() {
   return missoesRepo.listar(tenantId)
 }
 
+// Inbox de escalados — missões que a IA entregou pra um humano.
+export async function listarEscalados() {
+  const tenantId = await garantirTenantPadrao()
+  return missoesRepo.listarEscalados(tenantId)
+}
+
+// Humano assume a conversa: tira do inbox (escalada → em_conversa) mas mantém a
+// IA pausada — quem responde agora é a pessoa, pelo painel.
+export async function assumirConversa(id: string) {
+  const missao = await missoesRepo.buscar(id)
+  if (!missao) throw new ErroHttp(404, 'Missão não encontrada')
+
+  const extra: Prisma.MissaoUpdateInput = { iaPausada: true }
+  if (missao.estado === 'escalada') {
+    extra.estado = 'em_conversa'
+    if (!missao.iniciadaEm) extra.iniciadaEm = new Date()
+  }
+  const atualizada = await missoesRepo.atualizar(id, extra)
+  await db.evento.create({
+    data: { tenantId: missao.tenantId, missaoId: id, tipo: 'humano_assumiu' },
+  })
+  return atualizada
+}
+
+// Devolve a conversa para a IA (ela volta a responder na próxima mensagem do lead).
+export async function devolverParaIa(id: string) {
+  const missao = await missoesRepo.buscar(id)
+  if (!missao) throw new ErroHttp(404, 'Missão não encontrada')
+
+  const atualizada = await missoesRepo.atualizar(id, { iaPausada: false })
+  await db.evento.create({
+    data: { tenantId: missao.tenantId, missaoId: id, tipo: 'devolvida_ia' },
+  })
+  return atualizada
+}
+
 export async function obterMissao(id: string) {
   const missao = await missoesRepo.buscar(id)
   if (!missao) throw new ErroHttp(404, 'Missão não encontrada')

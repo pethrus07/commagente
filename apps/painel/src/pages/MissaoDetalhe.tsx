@@ -2,8 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import {
   ArrowLeft,
   Brain,
+  Hand,
   Info,
+  LifeBuoy,
   Pencil,
+  Play,
   Rocket,
   Send,
   ShieldCheck,
@@ -42,6 +45,7 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
   const [enviando, setEnviando] = useState(false)
   const [iniciando, setIniciando] = useState(false)
   const [editando, setEditando] = useState(false)
+  const [controlando, setControlando] = useState(false)
   const fimRef = useRef<HTMLDivElement>(null)
 
   const carregar = async () => {
@@ -92,6 +96,32 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
     }
   }
 
+  const assumir = async () => {
+    setControlando(true)
+    try {
+      await api.missoes.assumir(id)
+      toast('Você assumiu a conversa — a IA está pausada. 🤝', 'ok')
+      carregar()
+    } catch (e) {
+      toast((e as Error).message, 'erro')
+    } finally {
+      setControlando(false)
+    }
+  }
+
+  const devolver = async () => {
+    setControlando(true)
+    try {
+      await api.missoes.devolverIa(id)
+      toast('Devolvido pra IA — ela responde na próxima mensagem do lead. 🤖', 'ok')
+      carregar()
+    } catch (e) {
+      toast((e as Error).message, 'erro')
+    } finally {
+      setControlando(false)
+    }
+  }
+
   const enviar = async () => {
     if (!texto.trim() || !m.numero || !m.contato) return
     setEnviando(true)
@@ -126,6 +156,32 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
           <Pencil className="h-4 w-4" />
         </button>
       </div>
+
+      {m.estado === 'escalada' && (
+        <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 sm:flex-row sm:items-center">
+          <LifeBuoy className="h-5 w-5 shrink-0 text-rose-300" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-rose-100">A IA escalou esta conversa pra você</p>
+            <p className="text-xs text-rose-200/70">{m.motivoEscala ? `Motivo: ${m.motivoEscala}` : 'Um humano precisa assumir.'}</p>
+          </div>
+          <Button onClick={assumir} loading={controlando} className="shrink-0">
+            <Hand className="h-4 w-4" /> Assumir conversa
+          </Button>
+        </div>
+      )}
+
+      {m.estado !== 'escalada' && m.iaPausada && (
+        <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 sm:flex-row sm:items-center">
+          <Hand className="h-5 w-5 shrink-0 text-amber-300" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-amber-100">Você está no controle — a IA está pausada</p>
+            <p className="text-xs text-amber-200/70">Responda pelo campo abaixo. Devolva pra IA quando quiser que ela retome.</p>
+          </div>
+          <Button variant="ghost" onClick={devolver} loading={controlando} className="shrink-0">
+            <Play className="h-4 w-4" /> Devolver pra IA
+          </Button>
+        </div>
+      )}
 
       <div className="grid flex-1 grid-cols-1 gap-4 overflow-hidden lg:grid-cols-[1fr_320px]">
         {/* conversa */}

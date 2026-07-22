@@ -4,6 +4,7 @@ import { Sidebar, type Page } from './components/Sidebar'
 import { useToasts } from './lib/toast'
 import { cn } from './lib/ui'
 import { Dashboard } from './pages/Dashboard'
+import { Escalados } from './pages/Escalados'
 import { MissaoDetalhe } from './pages/MissaoDetalhe'
 import { Missoes } from './pages/Missoes'
 import { Numeros } from './pages/Numeros'
@@ -13,6 +14,7 @@ type Rota = { page: Page } | { page: 'missao'; id: string }
 const TITULOS: Record<Page, { t: string; s: string }> = {
   dashboard: { t: 'Dashboard', s: 'Visão geral do assistente' },
   missoes: { t: 'Missões', s: 'Conversas conduzidas pela IA' },
+  escalados: { t: 'Escalados', s: 'Conversas que a IA entregou pra você' },
   numeros: { t: 'Números', s: 'Chips conectados via Evolution' },
 }
 
@@ -37,6 +39,7 @@ export default function App() {
         <main className="flex-1 overflow-y-auto p-8">
           {rota.page === 'dashboard' && <Dashboard />}
           {rota.page === 'numeros' && <Numeros />}
+          {rota.page === 'escalados' && <Escalados onAbrir={(id) => setRota({ page: 'missao', id })} />}
           {rota.page === 'missoes' && <Missoes onAbrir={(id) => setRota({ page: 'missao', id })} />}
           {rota.page === 'missao' && <MissaoDetalhe id={rota.id} onVoltar={() => setRota({ page: 'missoes' })} />}
         </main>

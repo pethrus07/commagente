@@ -3,9 +3,12 @@ import { EstadoMissao } from '@prisma/client'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import {
+  assumirConversa,
   criarMissao,
+  devolverParaIa,
   editarMissao,
   iniciarMissao,
+  listarEscalados,
   listarMissoes,
   mudarEstado,
   obterMissao,
@@ -44,6 +47,9 @@ export async function missoesRotas(app: FastifyInstance) {
 
   app.get('/missoes', async () => listarMissoes())
 
+  // inbox de escalados (missões aguardando um humano)
+  app.get('/escalados', async () => listarEscalados())
+
   app.get('/missoes/:id', async (req) => {
     const { id } = paramsId.parse(req.params)
     return obterMissao(id)
@@ -67,5 +73,15 @@ export async function missoesRotas(app: FastifyInstance) {
   app.post('/missoes/:id/iniciar', async (req) => {
     const { id } = paramsId.parse(req.params)
     return iniciarMissao(id)
+  })
+
+  // Escalada humana — humano assume (IA pausa) / devolve pra IA (IA volta)
+  app.post('/missoes/:id/assumir', async (req) => {
+    const { id } = paramsId.parse(req.params)
+    return assumirConversa(id)
+  })
+  app.post('/missoes/:id/devolver-ia', async (req) => {
+    const { id } = paramsId.parse(req.params)
+    return devolverParaIa(id)
   })
 }

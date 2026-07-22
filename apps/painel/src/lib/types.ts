@@ -48,6 +48,8 @@ export interface Missao {
   tom: string | null
   informacoes: string | null
   estado: EstadoMissao
+  iaPausada: boolean
+  motivoEscala: string | null
   categoriaResultado: string | null
   resumo: string | null
   fatos: Record<string, unknown> | null
