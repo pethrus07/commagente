@@ -60,6 +60,12 @@ async function tick() {
       }
       if (!temBudget(numero.enviadosHoje, numero.budgetDiario)) continue
 
+      // OPT-OUT: o contato pediu pra parar → cancela o envio (não retenta)
+      if (await filaRepo.contatoOptOut(item.contatoId)) {
+        await filaRepo.marcar(item.id, 'erro')
+        continue
+      }
+
       // ANTI-RAJADA: respeita o intervalo mínimo entre envios do mesmo número.
       // (o item fica pendente e é reprocessado quando chegar a hora)
       const agora = Date.now()

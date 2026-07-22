@@ -137,6 +137,10 @@ model Contato {
   dados    Json? // dados livres do lead
   memoria  Json? // memória INDIVIDUAL: fatos consolidados do contato (persistem entre missões)
   origem   String? // manual | indicacao | lista
+  optOut      Boolean   @default(false) @map("opt_out") // pediu pra não receber → bloqueia envios
+  optOutEm    DateTime? @map("opt_out_em")
+  optInEm     DateTime? @map("opt_in_em") // registro de consentimento (LGPD)
+  optInOrigem String?   @map("opt_in_origem") // manual | lote | inbound
   criadoEm DateTime @default(now()) @map("criado_em")
 
   tenant    Tenant      @relation(fields: [tenantId], references: [id])

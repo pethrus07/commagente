@@ -1,9 +1,10 @@
 // ⚙️ Aplicação — processa o evento normalizado do webhook.
 // Fatia 3: inbound vira Mensagem (ligada à missão ativa, se houver) e destrava
 // a conversa (na_fila → em_conversa). Status de entrega atualiza a msg de saída.
+import { db } from '../../core/db'
 import { processarTurno } from '../conversa/conversa.caso-uso'
 import { missoesRepo } from '../missoes/missoes.repo'
-import { mapearStatusEnvio, normalizarEvento } from './webhook.dominio'
+import { ehPedidoOptOut, mapearStatusEnvio, normalizarEvento } from './webhook.dominio'
 import { webhookRepo } from './webhook.repo'
 
 export async function processarWebhook(payload: unknown) {
@@ -38,6 +39,18 @@ export async function processarWebhook(payload: unknown) {
       conteudo: evento.conteudo,
       providerMsgId: evento.providerMsgId,
     })
+
+    // consentimento implícito: o lead falou primeiro → registra opt-in (se ainda não houver)
+    await webhookRepo.registrarOptInInbound(contato.id)
+
+    // OPT-OUT: pediu pra parar → bloqueia envios futuros e NÃO aciona a IA
+    if (ehPedidoOptOut(evento.conteudo)) {
+      await webhookRepo.marcarOptOut(contato.id)
+      await db.evento.create({
+        data: { tenantId: numero.tenantId, missaoId: missao?.id ?? null, tipo: 'opt_out', dados: { texto: evento.conteudo.slice(0, 120) } },
+      })
+      return
+    }
 
     // lead respondeu numa missão que estava só na fila → a conversa começou
     if (missao?.estado === 'na_fila') {

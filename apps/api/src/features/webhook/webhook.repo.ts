@@ -14,6 +14,22 @@ export const webhookRepo = {
     return db.mensagem.findFirst({ where: { tenantId, providerMsgId } })
   },
 
+  // opt-out: o contato pediu pra parar → bloqueia envios futuros
+  marcarOptOut(contatoId: string) {
+    return db.contato.update({
+      where: { id: contatoId },
+      data: { optOut: true, optOutEm: new Date() },
+    })
+  },
+
+  // consentimento implícito (só grava se ainda não houver registro de opt-in)
+  registrarOptInInbound(contatoId: string) {
+    return db.contato.updateMany({
+      where: { id: contatoId, optInEm: null },
+      data: { optInEm: new Date(), optInOrigem: 'inbound' },
+    })
+  },
+
   upsertContato(tenantId: string, telefone: string, nome?: string) {
     return db.contato.upsert({
       where: { tenantId_telefone: { tenantId, telefone } },

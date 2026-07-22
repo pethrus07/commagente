@@ -41,6 +41,15 @@ export const filaRepo = {
     return db.numeroWhatsapp.findUnique({ where: { id } })
   },
 
+  // opt-out: contato pediu pra parar de receber?
+  async contatoOptOut(contatoId: string): Promise<boolean> {
+    const c = await db.contato.findUnique({
+      where: { id: contatoId },
+      select: { optOut: true },
+    })
+    return c?.optOut ?? false
+  },
+
   incrementarEnviados(numeroId: string) {
     return db.numeroWhatsapp.update({
       where: { id: numeroId },

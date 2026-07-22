@@ -78,6 +78,20 @@ export function normalizarEvento(payload: Payload): EventoWa {
   return { tipo: 'ignorado' }
 }
 
+// detecta pedido de opt-out ("PARAR", "sair da lista", etc.) — sinais fortes só,
+// pra não confundir com objeção normal no meio da conversa ("não quero o plano caro").
+const RE_OPTOUT =
+  /(^| )(parar|pare|stop|unsubscribe|sair da lista|cancelar inscri\w*|descadastr\w+|me (remov\w+|tir\w+ da lista)|para de (me )?(mandar|enviar|perturbar)|nao (quero (mais )?receber|perturbe|me (mande|envie)))( |$|!|\.|,)/
+
+export function ehPedidoOptOut(texto: string): boolean {
+  const t = texto
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '') // remove acentos
+    .trim()
+  return RE_OPTOUT.test(t)
+}
+
 // mapeia o status cru da Evolution para o nosso StatusEnvio (ou null se irrelevante)
 export function mapearStatusEnvio(evoStatus: string): StatusEnvio | null {
   const s = evoStatus.toUpperCase()

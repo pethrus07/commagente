@@ -42,7 +42,8 @@ export async function criarMissaoEmLote(
     const contato = await db.contato.upsert({
       where: { tenantId_telefone: { tenantId, telefone } },
       update: c.nome ? { nome: c.nome } : {},
-      create: { tenantId, telefone, nome: c.nome, origem },
+      // opt-in registrado na criação manual/lote (operador declara ter consentimento)
+      create: { tenantId, telefone, nome: c.nome, origem, optInEm: new Date(), optInOrigem: origem },
     })
 
     const missao = await missoesRepo.criar({
@@ -180,6 +181,11 @@ export async function iniciarMissao(id: string) {
   const missao = await missoesRepo.buscar(id)
   if (!missao) throw new ErroHttp(404, 'Missão não encontrada')
   await conferirDono(missao.tenantId)
+
+  // opt-out: respeita quem pediu pra não receber
+  if (missao.contato.optOut) {
+    throw new ErroHttp(409, 'Este contato pediu pra não receber mensagens (opt-out).')
+  }
 
   // cap anti-bloqueio: limita conversas simultâneas conduzidas pela IA no número
   if (missao.estado === 'configurada') {
