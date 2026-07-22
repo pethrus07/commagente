@@ -4,6 +4,7 @@ import { db } from '../../core/db'
 import { ErroHttp } from '../../core/erros'
 import { garantirTenantPadrao } from '../../core/tenant'
 import { processarTurno } from '../conversa/conversa.caso-uso'
+import { numerosRepo } from '../numeros/numeros.repo'
 import { validarTransicao } from './missao.dominio'
 import { missoesRepo } from './missoes.repo'
 
@@ -151,7 +152,16 @@ export async function editarMissao(
 export async function iniciarMissao(id: string) {
   const missao = await missoesRepo.buscar(id)
   if (!missao) throw new ErroHttp(404, 'Missão não encontrada')
+
+  // cap anti-bloqueio: limita conversas simultâneas conduzidas pela IA no número
   if (missao.estado === 'configurada') {
+    const ativas = await numerosRepo.contarAtivas(missao.numeroId)
+    if (ativas >= missao.numero.maxConversasAtivas) {
+      throw new ErroHttp(
+        409,
+        `Cap de conversas ativas atingido (${missao.numero.maxConversasAtivas}) neste número. Conclua ou arquive alguma antes de iniciar outra.`,
+      )
+    }
     await missoesRepo.atualizarEstado(id, 'na_fila')
   }
   await processarTurno(id) // gera opener via IA + enfileira; worker envia

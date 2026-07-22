@@ -21,6 +21,33 @@ export async function listarNumeros() {
   return numerosRepo.listar(tenantId)
 }
 
+const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/
+
+// Edita os knobs anti-bloqueio do número (janela de horário, budget diário, cap).
+export async function atualizarConfigNumero(
+  id: string,
+  patch: {
+    janelaInicio?: string
+    janelaFim?: string
+    budgetDiario?: number
+    maxConversasAtivas?: number
+  },
+) {
+  const numero = await numerosRepo.buscar(id)
+  if (!numero) throw new ErroHttp(404, 'Número não encontrado')
+
+  if (patch.janelaInicio && !HHMM.test(patch.janelaInicio))
+    throw new ErroHttp(400, 'janelaInicio inválida (use HH:mm)')
+  if (patch.janelaFim && !HHMM.test(patch.janelaFim))
+    throw new ErroHttp(400, 'janelaFim inválida (use HH:mm)')
+  if (patch.budgetDiario !== undefined && patch.budgetDiario < 1)
+    throw new ErroHttp(400, 'budgetDiario deve ser ≥ 1')
+  if (patch.maxConversasAtivas !== undefined && patch.maxConversasAtivas < 1)
+    throw new ErroHttp(400, 'maxConversasAtivas deve ser ≥ 1')
+
+  return numerosRepo.atualizarConfig(id, patch)
+}
+
 export async function conectarNumero(id: string): Promise<QrCode> {
   const numero = await numerosRepo.buscar(id)
   if (!numero) throw new ErroHttp(404, 'Número não encontrado')

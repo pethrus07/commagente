@@ -26,4 +26,23 @@ export const numerosRepo = {
       data: { statusConexao },
     })
   },
+
+  atualizarConfig(
+    id: string,
+    data: {
+      janelaInicio?: string
+      janelaFim?: string
+      budgetDiario?: number
+      maxConversasAtivas?: number
+    },
+  ) {
+    return db.numeroWhatsapp.update({ where: { id }, data })
+  },
+
+  // quantas conversas o número tem ativas sob a IA (na fila + em conversa)
+  contarAtivas(numeroId: string) {
+    return db.missao.count({
+      where: { numeroId, estado: { in: ['na_fila', 'em_conversa'] } },
+    })
+  },
 }

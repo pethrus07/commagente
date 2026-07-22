@@ -33,6 +33,19 @@ export const api = {
       }),
     status: (id: string) =>
       req<{ status: Numero['statusConexao'] }>(`/numeros/${id}/status`),
+    editar: (
+      id: string,
+      patch: {
+        janelaInicio?: string
+        janelaFim?: string
+        budgetDiario?: number
+        maxConversasAtivas?: number
+      },
+    ) =>
+      req<Numero>(`/numeros/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(patch),
+      }),
   },
 
   escalados: () => req<Missao[]>('/escalados'),

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Plus, QrCode, Smartphone, X } from 'lucide-react'
+import { Plus, QrCode, SlidersHorizontal, Smartphone, X } from 'lucide-react'
 import { api } from '../lib/api'
 import { toast } from '../lib/toast'
 import type { Numero } from '../lib/types'
@@ -12,6 +12,81 @@ import {
   EmptyState,
   Spinner,
 } from '../lib/ui'
+
+function ConfigModal({ numero, onFechar }: { numero: Numero; onFechar: (salvou: boolean) => void }) {
+  const [form, setForm] = useState({
+    janelaInicio: numero.janelaInicio,
+    janelaFim: numero.janelaFim,
+    budgetDiario: String(numero.budgetDiario),
+    maxConversasAtivas: String(numero.maxConversasAtivas),
+  })
+  const [salvando, setSalvando] = useState(false)
+
+  const salvar = async () => {
+    const budget = Number(form.budgetDiario)
+    const cap = Number(form.maxConversasAtivas)
+    if (!Number.isInteger(budget) || budget < 1) return toast('Budget diário deve ser ≥ 1.', 'erro')
+    if (!Number.isInteger(cap) || cap < 1) return toast('Cap de conversas deve ser ≥ 1.', 'erro')
+    setSalvando(true)
+    try {
+      await api.numeros.editar(numero.id, {
+        janelaInicio: form.janelaInicio,
+        janelaFim: form.janelaFim,
+        budgetDiario: budget,
+        maxConversasAtivas: cap,
+      })
+      toast('Configuração salva.', 'ok')
+      onFechar(true)
+    } catch (e) {
+      toast((e as Error).message, 'erro')
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  const campo = 'w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:border-indigo-500/50 focus:outline-none'
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 backdrop-blur-sm">
+      <Card className="w-full max-w-md p-6">
+        <div className="mb-1 flex items-center justify-between">
+          <h3 className="font-semibold text-white">Anti-bloqueio · +{numero.telefone}</h3>
+          <button onClick={() => onFechar(false)} className="text-slate-500 hover:text-slate-200"><X className="h-5 w-5" /></button>
+        </div>
+        <p className="mb-5 text-xs text-slate-500">Ritmo humano do chip. Comece conservador em número novo.</p>
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1 block text-xs text-slate-400">Janela — início</label>
+              <input value={form.janelaInicio} onChange={(e) => setForm({ ...form, janelaInicio: e.target.value })} placeholder="08:00" className={campo} />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs text-slate-400">Janela — fim</label>
+              <input value={form.janelaFim} onChange={(e) => setForm({ ...form, janelaFim: e.target.value })} placeholder="20:00" className={campo} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1 block text-xs text-slate-400">Budget diário (envios)</label>
+              <input type="number" min={1} value={form.budgetDiario} onChange={(e) => setForm({ ...form, budgetDiario: e.target.value })} className={campo} />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs text-slate-400">Cap conversas ativas</label>
+              <input type="number" min={1} value={form.maxConversasAtivas} onChange={(e) => setForm({ ...form, maxConversasAtivas: e.target.value })} className={campo} />
+            </div>
+          </div>
+          <p className="text-[11px] leading-snug text-slate-500">
+            🛡️ Janela = horário permitido de envio · Budget = teto de mensagens/dia · Cap = máximo de conversas simultâneas que a IA inicia.
+          </p>
+        </div>
+        <div className="mt-5 flex justify-end gap-2">
+          <Button variant="ghost" onClick={() => onFechar(false)}>Cancelar</Button>
+          <Button onClick={salvar} loading={salvando}>Salvar</Button>
+        </div>
+      </Card>
+    </div>
+  )
+}
 
 function ConectarModal({ numero, onFechar }: { numero: Numero; onFechar: (conectou: boolean) => void }) {
   const [qr, setQr] = useState<string | null>(null)
@@ -82,6 +157,7 @@ export function Numeros() {
   const [novo, setNovo] = useState('')
   const [salvando, setSalvando] = useState(false)
   const [conectar, setConectar] = useState<Numero | null>(null)
+  const [configurar, setConfigurar] = useState<Numero | null>(null)
 
   const carregar = async () => {
     try {
@@ -168,10 +244,17 @@ export function Numeros() {
                   </div>
                 </div>
 
-                <div className="mt-4">
-                  <Button variant="ghost" className="w-full" onClick={() => setConectar(n)}>
+                <p className="mt-3 text-center text-[11px] text-slate-500">
+                  cap de <span className="font-medium text-slate-300">{n.maxConversasAtivas}</span> conversas ativas
+                </p>
+
+                <div className="mt-3 flex gap-2">
+                  <Button variant="ghost" className="flex-1" onClick={() => setConectar(n)}>
                     <QrCode className="h-4 w-4" />
                     {n.statusConexao === 'conectado' ? 'Reconectar' : 'Conectar via QR'}
+                  </Button>
+                  <Button variant="ghost" onClick={() => setConfigurar(n)} title="Anti-bloqueio">
+                    <SlidersHorizontal className="h-4 w-4" />
                   </Button>
                 </div>
               </Card>
@@ -186,6 +269,16 @@ export function Numeros() {
           onFechar={(conectou) => {
             setConectar(null)
             if (conectou) carregar()
+          }}
+        />
+      )}
+
+      {configurar && (
+        <ConfigModal
+          numero={configurar}
+          onFechar={(salvou) => {
+            setConfigurar(null)
+            if (salvou) carregar()
           }}
         />
       )}

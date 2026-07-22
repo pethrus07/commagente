@@ -20,6 +20,7 @@ export interface Numero {
   aquecimentoEstagio: number
   budgetDiario: number
   enviadosHoje: number
+  maxConversasAtivas: number
   janelaInicio: string
   janelaFim: string
   criadoEm: string

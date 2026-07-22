@@ -68,6 +68,7 @@ model NumeroWhatsapp {
   aquecimentoEstagio Int           @default(1) @map("aquecimento_estagio")
   budgetDiario       Int           @default(10) @map("budget_diario")
   enviadosHoje       Int           @default(0) @map("enviados_hoje")
+  maxConversasAtivas Int           @default(20) @map("max_conversas_ativas") // cap de conversas simultâneas conduzidas pela IA
   janelaInicio       String        @default("08:00") @map("janela_inicio") // HH:mm
   janelaFim          String        @default("20:00") @map("janela_fim")
   criadoEm           DateTime      @default(now()) @map("criado_em")
