@@ -4,6 +4,7 @@ import { Sidebar, type Page } from './components/Sidebar'
 import { auth, type TenantSel, type UsuarioSessao } from './lib/auth'
 import { useToasts } from './lib/toast'
 import { cn } from './lib/ui'
+import { Conhecimento } from './pages/Conhecimento'
 import { Contatos } from './pages/Contatos'
 import { Dashboard } from './pages/Dashboard'
 import { Escalados } from './pages/Escalados'
@@ -20,6 +21,7 @@ const TITULOS: Record<Page, { t: string; s: string }> = {
   missoes: { t: 'Missões', s: 'Conversas conduzidas pela IA' },
   escalados: { t: 'Escalados', s: 'Conversas que a IA entregou pra você' },
   contatos: { t: 'Contatos', s: 'Leads e clientes (CRM)' },
+  conhecimento: { t: 'Conhecimento', s: 'Memória coletiva — o que a IA aprende' },
   numeros: { t: 'Números', s: 'Chips conectados via Evolution' },
   tenants: { t: 'Tenants', s: 'Clientes da plataforma' },
 }
@@ -86,6 +88,7 @@ export default function App() {
               {rota.page === 'dashboard' && <Dashboard />}
               {rota.page === 'numeros' && <Numeros />}
               {rota.page === 'contatos' && <Contatos />}
+              {rota.page === 'conhecimento' && <Conhecimento />}
               {rota.page === 'escalados' && <Escalados onAbrir={(id) => setRota({ page: 'missao', id })} />}
               {rota.page === 'missoes' && <Missoes onAbrir={(id) => setRota({ page: 'missao', id })} />}
               {rota.page === 'missao' && <MissaoDetalhe id={rota.id} onVoltar={() => setRota({ page: 'missoes' })} />}

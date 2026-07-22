@@ -85,6 +85,17 @@ export interface QrResposta {
   codigo?: string
 }
 
+export type StatusConhecimento = 'sugerido' | 'aprovado' | 'rejeitado'
+
+export interface Conhecimento {
+  id: string
+  titulo: string
+  conteudo: string
+  status: StatusConhecimento
+  origem: string
+  criadoEm: string
+}
+
 export interface TenantResumo {
   id: string
   nome: string

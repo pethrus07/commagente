@@ -1,11 +1,13 @@
 import { auth, type UsuarioSessao } from './auth'
 import type {
+  Conhecimento,
   ContatoResumo,
   EstadoMissao,
   Missao,
   Numero,
   QrResposta,
   Stats,
+  StatusConhecimento,
   TenantResumo,
 } from './types'
 
@@ -16,7 +18,9 @@ async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
   const tenant = auth.tenantSel() // super-admin visualizando um tenant
   const res = await fetch(BASE + path, {
     headers: {
-      'content-type': 'application/json',
+      // só declara JSON quando há corpo — DELETE/GET sem body + content-type
+      // faz o Fastify recusar (400 "body cannot be empty")
+      ...(opts.body != null ? { 'content-type': 'application/json' } : {}),
       ...(token ? { authorization: `Bearer ${token}` } : {}),
       ...(tenant ? { 'x-tenant-id': tenant.id } : {}),
     },
@@ -85,6 +89,20 @@ export const api = {
   escalados: () => req<Missao[]>('/escalados'),
 
   contatos: () => req<ContatoResumo[]>('/contatos'),
+
+  conhecimento: {
+    listar: () => req<Conhecimento[]>('/conhecimento'),
+    criar: (data: { titulo: string; conteudo: string }) =>
+      req<Conhecimento>('/conhecimento', { method: 'POST', body: JSON.stringify(data) }),
+    status: (id: string, status: Extract<StatusConhecimento, 'aprovado' | 'rejeitado'>) =>
+      req<Conhecimento>(`/conhecimento/${id}/status`, {
+        method: 'POST',
+        body: JSON.stringify({ status }),
+      }),
+    editar: (id: string, patch: { titulo?: string; conteudo?: string }) =>
+      req<Conhecimento>(`/conhecimento/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+    excluir: (id: string) => req(`/conhecimento/${id}`, { method: 'DELETE' }),
+  },
 
   missoes: {
     listar: () => req<Missao[]>('/missoes'),

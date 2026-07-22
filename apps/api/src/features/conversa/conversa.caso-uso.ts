@@ -3,6 +3,7 @@
 import { db } from '../../core/db'
 import { ia } from '../../core/ia'
 import { SaidaIASchema, type SaidaIA } from '../../core/ia/porta-ia'
+import { conhecimentoRepo } from '../conhecimento/conhecimento.repo'
 import { jitterMs } from '../fila/fila.dominio'
 import { filaRepo } from '../fila/fila.repo'
 import { montarFicha } from '../memoria/memoria.montador'
@@ -33,8 +34,10 @@ async function executarTurno(missaoId: string) {
   // 0) guardrail de controle: se um humano assumiu (IA pausada), a IA não responde.
   if (missao.iaPausada) return { ok: true as const, pausada: true }
 
-  // 1) monta a ficha (contexto rico: persona + resumo + fatos + últimas N)
-  const ctx = montarFicha(missao)
+  // 1) monta a ficha: contexto individual (missão + contato) + memória COLETIVA (conhecimento aprovado)
+  const aprovados = await conhecimentoRepo.aprovados(missao.tenantId)
+  const conhecimento = aprovados.map((c) => `${c.titulo}: ${c.conteudo}`)
+  const ctx = montarFicha(missao, conhecimento)
 
   // 2) chama a IA e 3) VALIDA o contrato (guardrail — nunca confia cego no modelo).
   // Se a IA falhar (ex.: OpenAI 401/429), NÃO some em silêncio: registra o erro,
@@ -125,6 +128,20 @@ async function executarTurno(missaoId: string) {
       },
     },
   })
+
+  // 7b) memória COLETIVA: se a IA propôs um aprendizado geral, grava como SUGESTÃO
+  // (status 'sugerido' → aguarda aprovação humana antes de virar conhecimento ativo).
+  const sugestao = saida.aprendizado_sugerido?.trim()
+  if (sugestao && !(await conhecimentoRepo.existeConteudo(missao.tenantId, sugestao))) {
+    await conhecimentoRepo.criar({
+      tenantId: missao.tenantId,
+      titulo: 'Sugestão da IA',
+      conteudo: sugestao,
+      status: 'sugerido',
+      origem: 'ia',
+      missaoId,
+    })
+  }
 
   // 8) atualiza o resumo rolante (inclui a resposta recém-enviada).
   // Com IA real dá pra throttlar (a cada N turnos) pra economizar token.

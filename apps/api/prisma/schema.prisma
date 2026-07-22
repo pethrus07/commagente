@@ -34,6 +34,12 @@ enum Papel {
   operador // operador do tenant (atende, assume conversas)
 }
 
+enum StatusConhecimento {
+  sugerido // proposto pela IA — aguarda aprovação humana
+  aprovado // vale como conhecimento (a IA consulta)
+  rejeitado // descartado
+}
+
 enum StatusEnvio {
   pendente
   enviando
@@ -58,11 +64,29 @@ model Tenant {
   templates MissaoTemplate[]
   missoes   Missao[]
   mensagens Mensagem[]
-  fila      FilaEnvio[]
-  eventos   Evento[]
-  usuarios  Usuario[]
+  fila         FilaEnvio[]
+  eventos      Evento[]
+  usuarios     Usuario[]
+  conhecimento Conhecimento[]
 
   @@map("tenants")
+}
+
+// ─── Memória COLETIVA do tenant (conhecimento curado / aprendido) ──
+model Conhecimento {
+  id        String             @id @default(uuid()) @db.Uuid
+  tenantId  String             @map("tenant_id") @db.Uuid
+  titulo    String
+  conteudo  String
+  status    StatusConhecimento @default(aprovado)
+  origem    String             @default("manual") // manual | ia
+  missaoId  String?            @map("missao_id") @db.Uuid // proveniência (de onde a IA aprendeu)
+  criadoEm  DateTime           @default(now()) @map("criado_em")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, status])
+  @@map("conhecimento")
 }
 
 // ─── Usuários (login no painel; super-admin ou por tenant) ───

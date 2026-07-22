@@ -1,4 +1,5 @@
 import {
+  BookOpen,
   Building2,
   LayoutDashboard,
   LifeBuoy,
@@ -35,6 +36,7 @@ export type Page =
   | 'missoes'
   | 'escalados'
   | 'contatos'
+  | 'conhecimento'
   | 'tenants'
 
 const ITENS: Item[] = [
@@ -43,6 +45,7 @@ const ITENS: Item[] = [
   { id: 'missoes', label: 'Missões', icon: Target },
   { id: 'escalados', label: 'Escalados', icon: LifeBuoy },
   { id: 'contatos', label: 'Contatos', icon: Users },
+  { id: 'conhecimento', label: 'Conhecimento', icon: BookOpen },
   { id: 'numeros', label: 'Números', icon: Smartphone },
 ]
 

@@ -7,6 +7,7 @@ import { db } from './core/db'
 import { seedInicial } from './core/seed'
 import { adminRotas } from './features/admin/admin.rotas'
 import { authRotas } from './features/auth/auth.rotas'
+import { conhecimentoRotas } from './features/conhecimento/conhecimento.rotas'
 import { contatosRotas } from './features/contatos/contatos.rotas'
 import { envioRotas } from './features/envio/envio.rotas'
 import { iniciarWorker } from './features/fila/fila.worker'
@@ -55,6 +56,7 @@ app.register(envioRotas)
 app.register(missoesRotas)
 app.register(statsRotas)
 app.register(contatosRotas)
+app.register(conhecimentoRotas)
 
 app
   .listen({ port: config.porta, host: '0.0.0.0' })
