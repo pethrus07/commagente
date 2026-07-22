@@ -91,4 +91,17 @@ Fase **F0 (MVP)**. **Fatia 1 — Fundação: FEITA**.
 
 **Perguntas do Pedro (2026-07-22):** (a) **Áudio?** NÃO — o normalizador (`webhook.dominio.textoDaMensagem`) só lê texto + legendas; áudio/PTT cai em `ignorado`. Fatia futura: detectar `audioMessage` → baixar → transcrever (Whisper; local via faster-whisper OU API Whisper OpenAI ~US$0,006/min) → tratar como texto. (b) **Missão p/ vários contatos?** Resolvido na Fatia 11 (disparo em lote).
 
-**Próximo (F1+):** (4) **`git push`** (tudo local, `origin/main` atrás — aguarda OK do Pedro). Depois: throttle do resumo (−custo), custo real no painel, transcrição de áudio, **deploy na VPS**.
+**Correções de robustez (2026-07-22):** `288cd3a` **reset diário do budget** (`enviadosHoje` zera na virada do dia via `enviadosData`; antes travava vitalício); `30ae2be` **turno resiliente** — lock por missão (2 mensagens seguidas do lead não geram resposta dupla) + **falha da IA visível** (erro vira evento `erro_ia`, escala pra humano e cai no inbox de Escalados).
+
+**Revisão de arquitetura (2026-07-22, subagente):** camadas sólidas; achou P0s de segurança (sem auth, webhook aberto, `/envio` aberto) e anti-bloqueio (reset diário — corrigido; rajada em lote — pendente). Plano multi-tenant seguido abaixo.
+
+**Multi-tenant + super-admin: FEITO** (MT-1..MT-4b):
+- **MT-1** (`1039455`): `Usuario` + enum `Papel` (super_admin/admin_tenant/operador; tenantId nulo = super-admin); `@fastify/jwt` + `bcryptjs`; `POST /auth/login`, `GET /auth/eu`; hook `onRequest` exige token (exceto `/health` `/ready` `/auth/login` `/webhook`); seed de super-admin no boot; **login no painel** (token no localStorage, header Authorization, 401→login, logout).
+- **MT-2** (`da6e01f`): contexto por requisição via **AsyncLocalStorage**; `tenantAtual()` no lugar de `garantirTenantPadrao()`. ⚠️ o `enterWith` NÃO propagava — **corrigido em `c76b59a`** usando `als.run(store, done)` no hook (callback-style). Sempre usar esse padrão.
+- **MT-3** (`d3415c1`): isolamento — `conferirDono()` fecha IDOR nas operações por id (404 cross-tenant); create só no tenant do contexto. Worker/webhook seguem sem escopo (resolvem tenant por recurso).
+- **MT-4a** (`c76b59a`): rotas `/admin` (super-admin) `GET/POST /admin/tenants`; super-admin opera como tenant via header **`x-tenant-id`** (impersonação); seed do **1º tenant "Cliente Demo"** (login `demo@zapagente.local` / `demo123`).
+- **MT-4b** (`b0a810c`): painel de 2 níveis — seletor de tenant na sidebar + página **Tenants** (listar/criar) + nav por papel; api client envia `x-tenant-id`; trocar tenant remonta o conteúdo.
+- **Logins semeados:** super-admin `admin@zapagente.local` / `zapagente123`; tenant demo `demo@zapagente.local` / `demo123`. Envs: `JWT_SECRET`, `SUPER_ADMIN_EMAIL/SENHA` (defaults de dev em `config.ts`; documentados no `.env.example`).
+- ✅ Validado ponta a ponta (inclusive via proxy): sem token 401; papel errado em `/admin` 403; admin do demo vê 0 missões, super-admin impersonando Celiware vê 2 / Demo vê 0; IDOR cross-tenant → 404.
+
+**Próximo:** **polimento visual** ("ficar lindo", sobre a estrutura final — escolha do Pedro), depois **endurecimento anti-bloqueio p/ deploy** (espaçamento serial anti-rajada + retry/backoff da fila) e os P0 de deploy restantes (webhook com segredo+idempotência, `/envio` dono, helmet/rate-limit). **`git push`** segue pendente (tudo local, aguarda OK do Pedro). Radar: transcrição de áudio (Whisper); throttle do resumo; custo real no painel.
