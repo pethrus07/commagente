@@ -120,4 +120,13 @@ Fase **F0 (MVP)**. **Fatia 1 — Fundação: FEITA**.
 
 **Falta p/ deploy na VPS (P0 restantes):** **segredo no webhook** (token na URL + reconfigurar a Evolution — natural no deploy; hoje a API só é acessível localmente, então ainda não explorável) + **helmet/rate-limit/CORS explícito** + segredos de produção fortes (`JWT_SECRET`, Postgres, Evolution key) + ajustar janela/budget/cap dos números via painel.
 
-**Próximo:** deploy na VPS (com os P0 acima) **ou** polimento visual (páginas restantes p/ tema claro + identidade) — ordem a definir com o Pedro; funcional primeiro. **`git push`** pendente (tudo local, aguarda OK). Radar: transcrição de áudio (Whisper); throttle do resumo (−custo); custo real (tokens) no painel; recuperação semântica (embeddings) se a base de conhecimento crescer.
+**LEVANTAMENTO DE MERCADO (2026-07-22):** dossiê visual publicado (Artifact) — 6 frentes, ~50 players. Achado central: **ninguém combina os 5 atributos das "missões"** (proativo + missão variável por conversa + multi-conversa + escala humana + WhatsApp-BR/PME); "missão" é marca livre (setor usa Procedure/Topic/Goal); memória coletiva é gap do mercado (nosso fosso); anti-ban é sobrevivência (perfil = 15–30% ban/ano). Decisão do Pedro: **fazer TODOS os tiers do "tem que ter"**, começando pelo Tier 0.
+
+**Tier 0 — anti-ban (sobrevivência): FEITO (AB-1..4), tudo do levantamento.**
+- **AB-1 saúde do número + throttle (`02435be`):** `numeros.dominio.classificarSaude` (reply-rate 30d de missões iniciadas há +48h; status saudável/atenção/**risco**<15%). `iniciarMissao` **pausa novas iniciações (409)** quando em risco — ataca o gatilho 2026 de mensagens não-respondidas. Selo de saúde no painel Números. Opener agora termina com pergunta pra gerar resposta.
+- **AB-2 cap por contato (`70b6d3f`):** máx. 2 iniciações/contato/semana (409).
+- **AB-3 opt-out/opt-in (`68da75b`):** `Contato.optOut/optInEm`; ingestor detecta "PARAR" (sinais fortes) → bloqueia + não aciona IA; worker cancela envio a opted-out; `iniciarMissao` bloqueia; opt-in registrado (inbound/manual/lote) — LGPD.
+- **AB-4 teto por estágio (`70b6d3f`):** `tetoDiarioPorEstagio` (20/50/120/250/400); worker usa `min(budgetDiario, tetoEstágio)`.
+- ⚠️ Ainda no radar do Tier 0 (não feito): cap **horário** hard (<30/h — hoje mitigado pelo espaçamento serial), **progressão automática** de estágio, pool de chips rotativos, proxy residencial por chip.
+
+**Próximo (fazer todos os tiers):** **Tier 1** (missão com anatomia completa + objetivo variável cobrar/orçar · fechar o loop · placar por missão · resumo no handoff) · **Tier 2** (auto/co-pilot por missão — já temos MEM-1/MEM-2) · **Tier 3** (áudio/Whisper · builder visual de missões · escada p/ API oficial). Depois: **deploy VPS** (P0: segredo webhook + helmet/rate-limit + segredos de produção) e **polimento visual**. **`git push`** segue pendente (tudo local, aguarda OK do Pedro).
