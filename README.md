@@ -2,7 +2,7 @@
 
 Assistente autônomo de IA que opera **várias conversas de WhatsApp em paralelo, cada uma com uma "missão"** (vender, qualificar, pedir orçamento, cobrar, dar suporte…), conduzindo cada conversa ao longo do dia como uma secretária humana — no ritmo humano, para não tomar bloqueio.
 
-> Parceria **Pedro (Pethrus) × parceiro (Celiware)**. Single-tenant no início, `tenant_id`-ready para white-label depois.
+> Parceria **Pedro (Pethrus) × parceiro (Celiware)**. Plataforma **multi-tenant** (super-admin + tenants, white-label). Painel React + API Fastify; memória (individual + coletiva), anti-bloqueio, transcrição de áudio, campanhas e suporte reativo já construídos.
 
 ## Stack
 
@@ -21,7 +21,7 @@ Assistente autônomo de IA que opera **várias conversas de WhatsApp em paralelo
 - **[docs/SETUP.md](docs/SETUP.md)** — ambiente de desenvolvimento do zero (o que instalar + rodar). **Máquina nova começa aqui.**
 - **[docs/ROADMAP.md](docs/ROADMAP.md)** — divisão de funcionalidades e ordem de construção (comece por aqui).
 - **[docs/ARQUITETURA.md](docs/ARQUITETURA.md)** — o que usamos, por quê e as alternativas descartadas (decisões) + modelo em camadas + o harness do agente.
-- **[docs/MODELO-DADOS.md](docs/MODELO-DADOS.md)** — as 8 tabelas, ERD visual e o schema Prisma.
+- **[docs/MODELO-DADOS.md](docs/MODELO-DADOS.md)** — tabelas (11 models no schema atual), ERD visual e o schema Prisma (fonte da verdade).
 - **[docs/estudos/](docs/estudos/)** — pesquisa e decisões que fundamentam o projeto (arquitetura, memória/custo, anti-bloqueio, proposta).
 
 ## Rodar em desenvolvimento

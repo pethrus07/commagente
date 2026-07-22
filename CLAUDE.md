@@ -1,6 +1,6 @@
 # zapagente — contexto do projeto
 
-Assistente autônomo de IA no **WhatsApp** que opera várias conversas em paralelo, cada uma com uma **"missão"** (vender, qualificar, orçar, cobrar, suporte…). Parceria **Pedro (Pethrus) × parceiro (Celiware)**. Single-tenant hoje, `tenant_id`-ready para white-label.
+Assistente autônomo de IA no **WhatsApp** que opera várias conversas em paralelo, cada uma com uma **"missão"** (vender, qualificar, orçar, cobrar, suporte…). Parceria **Pedro (Pethrus) × parceiro (Celiware)**. **Multi-tenant** (super-admin + tenants, isolamento por `tenant_id` + impersonação via `x-tenant-id`) — plataforma white-label.
 
 ## Como rodar
 Máquina nova → siga **[docs/SETUP.md](docs/SETUP.md)** (winget: Git + Node LTS + Docker Desktop → `docker compose -f infra/docker-compose.yml up -d db` → `cd apps/api && npm install` → `cp .env.example .env` → `npx prisma migrate dev` → `npm run dev`). Checar: `/health` e `/ready`.
@@ -12,7 +12,7 @@ Node + **Fastify** + TS · **PostgreSQL** (via **Prisma**) · fila no Postgres +
 - **docs/SETUP.md** — ambiente do zero.
 - **docs/ROADMAP.md** — divisão de funcionalidades (8 grupos) + matriz por fase F0–F3.
 - **docs/ARQUITETURA.md** — decisões + alternativas; §1.1 camadas; §1.2 o harness do agente.
-- **docs/MODELO-DADOS.md** — ERD + as 8 tabelas (schema em `apps/api/prisma/schema.prisma`).
+- **docs/MODELO-DADOS.md** — ERD + tabelas (11 models: +Usuario, Conhecimento, Campanha além das 8 originais; schema em `apps/api/prisma/schema.prisma` é a fonte da verdade).
 - **docs/estudos/** — pesquisa que fundamenta tudo (não versionar dados reais/LGPD).
 - **docs/pesquisa-mercado.html** — dossiê de mercado (abrir no navegador): ~50 concorrentes, quem faz "missões", features pra roubar, anti-ban, preços, posicionamento/fosso e o "tem que ter".
 
