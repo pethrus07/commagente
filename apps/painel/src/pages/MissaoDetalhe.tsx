@@ -349,7 +349,7 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
                 {Object.entries(fatos).map(([k, v]) => (
                   <div key={k} className="flex justify-between gap-3 text-sm">
                     <span className="text-slate-500">{k}</span>
-                    <span className="text-right font-medium text-slate-200">{String(v)}</span>
+                    <span className="text-right font-medium text-slate-200">{typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v)}</span>
                   </div>
                 ))}
               </div>
@@ -369,7 +369,7 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
                 {Object.entries(memoriaContato).map(([k, v]) => (
                   <div key={k} className="flex justify-between gap-3 text-sm">
                     <span className="text-slate-500">{k}</span>
-                    <span className="text-right font-medium text-slate-200">{String(v)}</span>
+                    <span className="text-right font-medium text-slate-200">{typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v)}</span>
                   </div>
                 ))}
               </div>

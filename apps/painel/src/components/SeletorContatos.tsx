@@ -30,7 +30,11 @@ export function SeletorContatos({
   const filtrada = useMemo(() => {
     const q = busca.trim().toLowerCase()
     if (!q) return base
-    return base.filter((c) => (c.nome ?? '').toLowerCase().includes(q) || c.telefone.includes(q.replace(/\D/g, '')))
+    const digitos = q.replace(/\D/g, '')
+    // sem este guard, digitos='' e telefone.includes('') casa TODOS os contatos
+    return base.filter(
+      (c) => (c.nome ?? '').toLowerCase().includes(q) || (digitos.length > 0 && c.telefone.includes(digitos)),
+    )
   }, [base, busca])
 
   const combinados = useMemo(() => {

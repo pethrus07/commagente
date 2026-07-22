@@ -134,8 +134,10 @@ export function Contatos() {
   const visiveis = useMemo(() => {
     const q = busca.trim().toLowerCase()
     if (!q) return contatos ?? []
+    const digitos = q.replace(/\D/g, '')
+    // guard: sem ele, telefone.includes('') casa todos quando a busca é só texto
     return (contatos ?? []).filter(
-      (c) => (c.nome ?? '').toLowerCase().includes(q) || c.telefone.includes(q.replace(/\D/g, '')),
+      (c) => (c.nome ?? '').toLowerCase().includes(q) || (digitos.length > 0 && c.telefone.includes(digitos)),
     )
   }, [contatos, busca])
 
@@ -201,6 +203,9 @@ export function Contatos() {
               </tr>
             </thead>
             <tbody>
+              {visiveis.length === 0 && (
+                <tr><td colSpan={5} className="px-4 py-8 text-center text-sm text-slate-500">Nenhum contato encontrado para “{busca}”.</td></tr>
+              )}
               {visiveis.map((c) => (
                 <tr key={c.id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02]">
                   <td className="px-4 py-3">
