@@ -105,5 +105,9 @@ async function tick() {
 }
 
 export function iniciarWorker(intervaloMs = 3000) {
-  setInterval(() => void tick(), intervaloMs)
+  // .catch obrigatório: sem ele, um erro transitório de DB dentro do tick vira
+  // unhandled rejection e derruba o processo (Node ≥15). O worker deve ser resiliente.
+  setInterval(() => {
+    tick().catch((e) => console.error('[fila] tick falhou (ignorado):', e))
+  }, intervaloMs)
 }

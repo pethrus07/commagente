@@ -17,6 +17,8 @@ async function chat(
       authorization: `Bearer ${config.openaiKey}`,
     },
     body: JSON.stringify({ model: config.openaiModelo, messages, ...opts }),
+    // não pendura o turno (nem o lock da missão) indefinidamente se a OpenAI travar
+    signal: AbortSignal.timeout(30_000),
   })
   if (!res.ok) {
     throw new Error(`OpenAI ${res.status}: ${(await res.text()).slice(0, 300)}`)

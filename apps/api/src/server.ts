@@ -19,6 +19,11 @@ import { webhookRotas } from './features/webhook/webhook.rotas'
 
 const app = Fastify({ logger: true })
 
+// Rede de segurança: nunca deixe uma promise rejeitada/erro solto derrubar o processo
+// (o worker roda a cada 3s; um erro transitório não pode tirar o serviço do ar).
+process.on('unhandledRejection', (motivo) => app.log.error({ motivo }, 'unhandledRejection'))
+process.on('uncaughtException', (err) => app.log.error({ err }, 'uncaughtException'))
+
 // autenticação: JWT + hook global que exige token (menos rotas públicas)
 app.register(fastifyJwt, { secret: config.jwtSecret })
 app.addHook('onRequest', autenticar)

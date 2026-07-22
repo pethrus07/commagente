@@ -31,6 +31,7 @@ export const transcritorOpenai: TranscritorAudio = {
       method: 'POST',
       headers: { authorization: `Bearer ${config.openaiKey}` },
       body: form,
+      signal: AbortSignal.timeout(45_000),
     })
     if (!res.ok) {
       throw new Error(

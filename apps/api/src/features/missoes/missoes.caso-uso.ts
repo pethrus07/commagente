@@ -196,6 +196,12 @@ export async function iniciarMissao(id: string) {
   if (!missao) throw new ErroHttp(404, 'Missão não encontrada')
   await conferirDono(missao.tenantId)
 
+  // idempotência: só inicia uma vez. Sem isto, um 2º clique (estado já na_fila)
+  // pula os guardas e enfileira OUTRA abertura → o lead recebe 2 mensagens.
+  if (missao.estado !== 'configurada') {
+    throw new ErroHttp(409, 'Missão já iniciada.')
+  }
+
   // opt-out: respeita quem pediu pra não receber
   if (missao.contato.optOut) {
     throw new ErroHttp(409, 'Este contato pediu pra não receber mensagens (opt-out).')
