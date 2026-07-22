@@ -53,6 +53,16 @@ export function SeletorContatos({
       return n
     })
 
+  // "selecionar todos" opera sobre o que está VISÍVEL (respeita a busca)
+  const todosVisiveisSelecionados = filtrada.length > 0 && filtrada.every((c) => sel.has(c.id))
+  const alternarTodos = () =>
+    setSel((s) => {
+      const n = new Set(s)
+      if (todosVisiveisSelecionados) filtrada.forEach((c) => n.delete(c.id))
+      else filtrada.forEach((c) => n.add(c.id))
+      return n
+    })
+
   return (
     <div className="space-y-3">
       <div>
@@ -65,6 +75,16 @@ export function SeletorContatos({
           )}
         </label>
         <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar contato…" className={campo} />
+        {base.length > 0 && (
+          <div className="mt-1.5 flex items-center justify-between px-0.5">
+            <span className="text-[11px] text-slate-500">
+              {busca.trim() ? `${filtrada.length} no filtro` : `${base.length} na base`}
+            </span>
+            <button type="button" onClick={alternarTodos} className="text-[11px] font-medium text-indigo-300 hover:text-indigo-200">
+              {todosVisiveisSelecionados ? 'Limpar seleção' : `Selecionar todos${busca.trim() ? ' do filtro' : ''}`}
+            </button>
+          </div>
+        )}
         <div className="mt-1.5 max-h-40 divide-y divide-white/5 overflow-y-auto rounded-xl border border-white/10">
           {base.length === 0 ? (
             <p className="px-3 py-3 text-xs text-slate-600">Base vazia — importe na aba Contatos, ou cole abaixo.</p>
