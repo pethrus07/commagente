@@ -63,4 +63,12 @@ Fase **F0 (MVP)**. **Fatia 1 — Fundação: FEITA**.
 - **Painel:** campos de tom/informações no criar + **card de Configuração** e **modal de edição** no detalhe.
 - ✅ Validado com **OpenAI real** (sem WhatsApp): sem info → não inventa preço e escala; com preço autorizado → usa o valor real.
 
-**Próximo (F1+ antes do deploy):** (2) **escalada pra humano no painel** (fila/inbox de escalados + destravar `escalada→em_conversa`); (3) **cap de conversas ativas** + janela/budget de produção; (4) **`git push`**. Depois: throttle do resumo (−custo), custo real no painel, **deploy na VPS**. Melhoria pedida pelo Pedro: painel virar um **mini kanban-CRM** (missões/números/contatos organizados) — manter em mente ao evoluir o painel.
+**Fatia 9 — Escalada pra humano: FEITA** (branch `main`, commit `aa76a29`):
+- `Missao` ganhou **`iaPausada`** (humano no controle → a IA não responde) e **`motivoEscala`**.
+- **Harness:** `precisa_humano` agora **pausa a IA** (`iaPausada=true`) e grava o motivo; no topo do `processarTurno` há guarda `if (iaPausada) return` (IA nunca responde pausada).
+- **Ingestor:** só dispara `processarTurno` se `!iaPausada` (com humano no controle, a msg entra no histórico e o operador responde na mão).
+- **Rotas:** `GET /escalados` (inbox), `POST /missoes/:id/assumir` (escalada→em_conversa, mantém IA pausada — humano dirige), `POST /missoes/:id/devolver-ia` (religa a IA no próximo inbound).
+- **Painel:** página **Escalados** (inbox com motivo + última msg + "Assumir"), **badge** de contagem no menu, **banners** no detalhe (escalada→Assumir; pausada→Devolver pra IA).
+- ✅ Validado ponta a ponta (harness real, lead de teste, sem envio): preço sem info → escala+pausa; assumir sai do inbox; devolver religa.
+
+**Próximo (F1+ antes do deploy):** (3) **cap de conversas ativas** + janela/budget de produção (hoje dev: janela `00:00–23:59`, budget 30); (4) **`git push`** (tudo local, `origin/main` atrás). Depois: throttle do resumo (−custo), custo real no painel, **deploy na VPS**. Melhoria pedida pelo Pedro: painel virar um **mini kanban-CRM** (missões em board por estado + números/contatos organizados) — a página Escalados já é um passo; encaixar o board ao evoluir o painel.
