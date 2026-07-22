@@ -135,7 +135,7 @@ Fase **F0 (MVP)**. **Fatia 1 — Fundação: FEITA**.
 - **T1-2 fechar o loop + placar (`84f6622`):** `Missao.resultado`; a IA registra o desfecho ao concluir (`SaidaIA.resultado`); stats ganha `missoesPorTipo` + `placar` (cumpridas/perdidas/ativas + taxa de conclusão); Dashboard mostra o placar; detalhe mostra card de Resultado. ✅ validado ao vivo: cobrança com critério cumprido → `concluida` + resultado "pagamento confirmado".
 - **T1-3 resumo no handoff (`84f6622`):** ao escalar, atualiza o resumo (handoff fresco pro humano).
 
-**Tier 2 — memória/aprendizado:** MEM-1 (individual) e MEM-2 (coletiva) já feitos; falta só **auto-pilot vs co-pilot por missão** (evoluir o Modo A: "aprova o 1º disparo, depois solta").
+**Tier 2 — memória/aprendizado: FEITO.** MEM-1 (individual) + MEM-2 (coletiva) + **auto vs co-pilot (`704a9ab`)**: `Missao.modo` (auto|copilot) + `Missao.rascunho` + `Campanha.modo`. Em co-pilot a IA **rascunha** (não envia); painel mostra card do rascunho (editar/aprovar/descartar); `POST /missoes/:id/rascunho/aprovar|descartar`. Modo escolhível no criar/editar missão e criar campanha.
 
 **Contatos-CRM + Campanhas (pedido do Pedro, 2026-07-22): FEITO.**
 - **CRM-1 (`eb6a920`):** contatos viram base acionável — `POST /contatos` (novo), `/contatos/importar` (CSV parseado no painel), `/contatos/importar-whatsapp` (puxa a agenda via `evolutionClient.buscarContatos` → `/chat/findContacts`), `GET /contatos/exportar` (CSV). Painel: botões Novo/CSV/WhatsApp/Exportar + selo opt-out. Opt-in registrado na criação/import.
@@ -144,4 +144,4 @@ Fase **F0 (MVP)**. **Fatia 1 — Fundação: FEITA**.
 
 **Sistema roda LOCAL (2026-07-22):** Docker Desktop + `docker compose -f infra/docker-compose.yml up -d` (4 containers: `zapagente-db`, `zapagente-evolution` :8080, evolution-db, evolution-redis) → `cd apps/api && npm run dev` (:3000) → `cd apps/painel && npm run dev` (:5173). Logins: super-admin `admin@zapagente.local`/`zapagente123`, tenant demo `demo@zapagente.local`/`demo123`.
 
-**Próximo:** **Tier 2** (auto/co-pilot por missão) · **Tier 3** (áudio/Whisper · builder visual de missões · escada p/ API oficial). Depois: **deploy VPS** (P0: segredo webhook + helmet/rate-limit + segredos de produção) e **polimento visual** (páginas restantes p/ tema claro). **`git push`**: origin/main sincronizado até o dossiê; **CRM-1/2 + CAMP-1 ainda locais** (aguarda OK do Pedro).
+**Próximo:** **Tier 3** (áudio/Whisper · builder visual de missões · escada p/ API oficial). Depois: **deploy VPS** (P0: segredo webhook + helmet/rate-limit + segredos de produção) e **polimento visual** (páginas restantes p/ tema claro). **`git push`**: origin/main sincronizado até o dossiê; **CRM-1/2 + CAMP-1 + Tier 2 ainda locais** (aguarda OK do Pedro). Tiers 0, 1 e 2 do "tem que ter" = COMPLETOS.
