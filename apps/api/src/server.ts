@@ -5,6 +5,7 @@ import { autenticar } from './core/auth'
 import { config } from './core/config'
 import { db } from './core/db'
 import { seedInicial } from './core/seed'
+import { adminRotas } from './features/admin/admin.rotas'
 import { authRotas } from './features/auth/auth.rotas'
 import { contatosRotas } from './features/contatos/contatos.rotas'
 import { envioRotas } from './features/envio/envio.rotas'
@@ -47,6 +48,7 @@ app.get('/ready', async (_req, reply) => {
 
 // features
 app.register(authRotas)
+app.register(adminRotas)
 app.register(numerosRotas)
 app.register(webhookRotas)
 app.register(envioRotas)

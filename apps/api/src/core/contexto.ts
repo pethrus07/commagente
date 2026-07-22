@@ -14,9 +14,10 @@ export interface CtxRequisicao {
 const als = new AsyncLocalStorage<CtxRequisicao>()
 
 export const contexto = {
-  // chamado no hook de auth (onRequest) — vale para toda a cadeia async da requisição
-  definir(ctx: CtxRequisicao) {
-    als.enterWith(ctx)
+  // envolve o resto do ciclo da requisição no contexto (padrão confiável do Fastify:
+  // als.run(store, done) — a continuação herda o store por toda a cadeia async).
+  run(ctx: CtxRequisicao, cb: () => void) {
+    als.run(ctx, cb)
   },
   atual(): CtxRequisicao | undefined {
     return als.getStore()

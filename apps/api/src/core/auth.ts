@@ -21,21 +21,32 @@ declare module '@fastify/jwt' {
 // rotas liberadas (sem token). O webhook tem proteção própria (segredo) — F futura.
 const PUBLICAS = new Set(['/health', '/ready', '/auth/login', '/webhook'])
 
-// onRequest global: exige JWT válido em tudo, menos nas rotas públicas.
-export async function autenticar(req: FastifyRequest, reply: FastifyReply) {
+// onRequest global (callback-style): valida o JWT e envolve o resto do ciclo da
+// requisição no contexto de tenant (als.run(store, done)) — só assim o AsyncLocalStorage
+// propaga do hook até o handler. Rotas públicas passam direto.
+export function autenticar(
+  req: FastifyRequest,
+  reply: FastifyReply,
+  done: () => void,
+) {
   const rota = req.routeOptions?.url ?? req.url.split('?')[0]
-  if (PUBLICAS.has(rota)) return
-  try {
-    await req.jwtVerify()
-  } catch {
-    return reply.code(401).send({ ok: false, erro: 'nao_autenticado' })
-  }
-  // popula o contexto da requisição (tenant/papel) para os casos-de-uso
-  contexto.definir({
-    usuarioId: req.user.sub,
-    tenantId: req.user.tenantId,
-    papel: req.user.papel,
-  })
+  if (PUBLICAS.has(rota)) return done()
+
+  req
+    .jwtVerify()
+    .then(() => {
+      // super-admin pode "operar como" um tenant via header x-tenant-id (seletor do painel)
+      let tenantId = req.user.tenantId
+      if (req.user.papel === 'super_admin') {
+        const sel = req.headers['x-tenant-id']
+        if (typeof sel === 'string' && sel) tenantId = sel
+      }
+      contexto.run(
+        { usuarioId: req.user.sub, tenantId, papel: req.user.papel },
+        done,
+      )
+    })
+    .catch(() => reply.code(401).send({ ok: false, erro: 'nao_autenticado' }))
 }
 
 // exige um papel específico (ex.: super-admin nas rotas /admin)

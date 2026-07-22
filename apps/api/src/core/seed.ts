@@ -20,4 +20,20 @@ export async function seedInicial() {
     })
     console.log(`[seed] super-admin criado: ${email}`)
   }
+
+  // 1º tenant de exemplo (para a demo e para os testes) + admin próprio
+  const demoEmail = 'demo@zapagente.local'
+  const demoExiste = await db.usuario.findUnique({ where: { email: demoEmail } })
+  if (!demoExiste) {
+    const t = await db.tenant.create({ data: { nome: 'Cliente Demo' } })
+    await db.usuario.create({
+      data: {
+        tenantId: t.id,
+        email: demoEmail,
+        senhaHash: await senha.hash('demo123'),
+        papel: 'admin_tenant',
+      },
+    })
+    console.log(`[seed] tenant "Cliente Demo" criado (login ${demoEmail} / demo123)`)
+  }
 }
