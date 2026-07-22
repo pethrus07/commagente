@@ -31,6 +31,7 @@ export interface Contato {
   telefone: string
   nome: string | null
   origem: string | null
+  memoria?: Record<string, unknown> | null
 }
 
 export interface ContatoResumo {

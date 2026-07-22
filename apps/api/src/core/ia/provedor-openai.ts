@@ -43,7 +43,17 @@ export const provedorOpenai: ProvedorIA = {
   async gerar(ctx): Promise<SaidaIA> {
     const fatos =
       ctx.fatos && Object.keys(ctx.fatos).length > 0
-        ? `Fatos já conhecidos do lead: ${JSON.stringify(ctx.fatos)}.`
+        ? `Fatos desta conversa: ${JSON.stringify(ctx.fatos)}.`
+        : ''
+    // Memória INDIVIDUAL do contato (o que já sabemos dele de interações anteriores)
+    const memoria =
+      ctx.memoriaContato && Object.keys(ctx.memoriaContato).length > 0
+        ? `Memória deste contato (de conversas anteriores — use para personalizar): ${JSON.stringify(ctx.memoriaContato)}.`
+        : ''
+    // Memória COLETIVA do tenant (conhecimento aprendido/curado)
+    const conhecimento =
+      ctx.conhecimento && ctx.conhecimento.length > 0
+        ? `BASE DE CONHECIMENTO da empresa (aprendida com atendimentos anteriores — use quando ajudar; ainda vale o guardrail de não inventar preço fora das INFORMAÇÕES AUTORIZADAS):\n- ${ctx.conhecimento.join('\n- ')}`
         : ''
     // Bloco de informações AUTORIZADAS (guardrail): é o único que pode virar afirmação.
     const informacoes = ctx.informacoes?.trim()
@@ -54,6 +64,8 @@ export const provedorOpenai: ProvedorIA = {
       `Estado atual da missão: ${ctx.estadoAtual}.`,
       ctx.resumo ? `Resumo da conversa até aqui: ${ctx.resumo}.` : '',
       fatos,
+      memoria,
+      conhecimento,
       informacoes,
       'Responda SOMENTE em JSON válido, sem markdown, no formato exato:',
       `{"resposta": "texto curto e humano (1-3 frases, WhatsApp)", "novo_estado": "${ESTADOS_SAIDA}", "categoria": "string ou null", "fatos_novos": {objeto com o que você descobriu, ou {}}, "precisa_humano": true|false, "motivo_escala": "string ou null"}`,

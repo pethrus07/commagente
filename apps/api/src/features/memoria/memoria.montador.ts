@@ -40,10 +40,14 @@ type MissaoComMsgs = {
   estado: EstadoMissao
   resumo: string | null
   fatos: unknown
+  contato?: { memoria: unknown } | null
   mensagens: { direcao: Direcao; conteudo: string }[]
 }
 
-export function montarFicha(missao: MissaoComMsgs): ContextoIA {
+export function montarFicha(
+  missao: MissaoComMsgs,
+  conhecimento?: string[] | null,
+): ContextoIA {
   return {
     persona: montarPersona(missao.objetivo, missao.contexto, missao.tom),
     objetivo: missao.objetivo,
@@ -52,6 +56,9 @@ export function montarFicha(missao: MissaoComMsgs): ContextoIA {
     estadoAtual: missao.estado,
     resumo: missao.resumo,
     fatos: (missao.fatos as Record<string, unknown> | null) ?? {},
+    memoriaContato:
+      (missao.contato?.memoria as Record<string, unknown> | null) ?? null,
+    conhecimento: conhecimento ?? null,
     ultimasMensagens: missao.mensagens
       .slice(-ULTIMAS)
       .map((m) => ({ direcao: m.direcao, conteudo: m.conteudo })),

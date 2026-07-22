@@ -11,6 +11,7 @@ import {
   Send,
   ShieldCheck,
   Sparkles,
+  UserCircle,
   X,
 } from 'lucide-react'
 import { api } from '../lib/api'
@@ -61,6 +62,10 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
 
   const info = ESTADO_INFO[m.estado]
   const fatos = m.fatos && Object.keys(m.fatos).length > 0 ? m.fatos : null
+  const memoriaContato =
+    m.contato?.memoria && Object.keys(m.contato.memoria).length > 0
+      ? m.contato.memoria
+      : null
 
   const mudar = async (estado: EstadoMissao) => {
     try {
@@ -273,7 +278,7 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
           <Card className="p-4">
             <div className="mb-2 flex items-center gap-2">
               <Brain className="h-3.5 w-3.5 text-violet-400" />
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Fatos extraídos</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Fatos desta conversa</p>
             </div>
             {fatos ? (
               <div className="space-y-1.5">
@@ -286,6 +291,26 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
               </div>
             ) : (
               <p className="text-sm text-slate-600">Nenhum fato ainda.</p>
+            )}
+          </Card>
+
+          <Card className="p-4">
+            <div className="mb-1 flex items-center gap-2">
+              <UserCircle className="h-3.5 w-3.5 text-sky-400" />
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Memória do contato</p>
+            </div>
+            <p className="mb-2 text-[11px] text-slate-600">Persiste entre missões — o que a IA já sabe deste contato.</p>
+            {memoriaContato ? (
+              <div className="space-y-1.5">
+                {Object.entries(memoriaContato).map(([k, v]) => (
+                  <div key={k} className="flex justify-between gap-3 text-sm">
+                    <span className="text-slate-500">{k}</span>
+                    <span className="text-right font-medium text-slate-200">{String(v)}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-600">Ainda sem memória acumulada.</p>
             )}
           </Card>
 

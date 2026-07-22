@@ -110,6 +110,7 @@ model Contato {
   telefone String
   nome     String?
   dados    Json? // dados livres do lead
+  memoria  Json? // memória INDIVIDUAL: fatos consolidados do contato (persistem entre missões)
   origem   String? // manual | indicacao | lista
   criadoEm DateTime @default(now()) @map("criado_em")
 

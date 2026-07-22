@@ -15,4 +15,20 @@ export const conversaRepo = {
   salvarResumo(id: string, resumo: string) {
     return db.missao.update({ where: { id }, data: { resumo } })
   },
+
+  // memória INDIVIDUAL: mescla fatos novos no perfil do contato (persiste entre missões)
+  async mesclarMemoriaContato(
+    contatoId: string,
+    novos: Record<string, unknown>,
+  ) {
+    const contato = await db.contato.findUnique({
+      where: { id: contatoId },
+      select: { memoria: true },
+    })
+    const atual = (contato?.memoria as Record<string, unknown> | null) ?? {}
+    return db.contato.update({
+      where: { id: contatoId },
+      data: { memoria: { ...atual, ...novos } as Prisma.InputJsonValue },
+    })
+  },
 }

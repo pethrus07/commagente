@@ -60,12 +60,13 @@ async function executarTurno(missaoId: string) {
     return { ok: false as const, erro_ia: true }
   }
 
-  // 4) memória: mescla fatos novos
+  // 4) memória: mescla fatos novos na missão E no perfil do contato (individual, persiste)
   if (saida.fatos_novos && Object.keys(saida.fatos_novos).length > 0) {
     await conversaRepo.salvarFatos(missaoId, {
       ...(ctx.fatos ?? {}),
       ...saida.fatos_novos,
     })
+    await conversaRepo.mesclarMemoriaContato(missao.contatoId, saida.fatos_novos)
   }
 
   // 5) guardrail: precisa de humano → escala, PAUSA a IA e NÃO responde automático

@@ -18,6 +18,10 @@ export interface ContextoIA {
   /** resumo rolante da conversa (memória de longo prazo) */
   resumo?: string | null
   fatos?: Record<string, unknown> | null
+  /** memória INDIVIDUAL do contato — o que já sabemos dele de interações anteriores */
+  memoriaContato?: Record<string, unknown> | null
+  /** memória COLETIVA do tenant — conhecimento aprendido/curado (FAQ, objeções, políticas) */
+  conhecimento?: string[] | null
   ultimasMensagens: { direcao: 'in' | 'out'; conteudo: string }[]
 }
 
