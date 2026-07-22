@@ -23,6 +23,14 @@ export function temBudget(enviadosHoje: number, budgetDiario: number): boolean {
   return enviadosHoje < budgetDiario
 }
 
+// teto diário sugerido por estágio de aquecimento (chip novo → maduro).
+// Curva alinhada às boas práticas anti-ban: começa baixo e sobe gradual.
+const TETO_ESTAGIO = [20, 50, 120, 250, 400]
+export function tetoDiarioPorEstagio(estagio: number): number {
+  const i = Math.min(Math.max(estagio, 1), TETO_ESTAGIO.length) - 1
+  return TETO_ESTAGIO[i]
+}
+
 // atraso humano com jitter antes de enviar (evita ritmo de robô)
 // 'novo' contato ~6–11s · dentro de 'conversa' ~3–7s
 export function jitterMs(tipo: 'novo' | 'conversa'): number {

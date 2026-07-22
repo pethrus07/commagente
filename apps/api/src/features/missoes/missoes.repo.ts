@@ -59,6 +59,14 @@ export const missoesRepo = {
     return db.missao.update({ where: { id }, data: { estado, ...extra } })
   },
 
+  // quantas missões iniciadas (fora de 'configurada') o contato teve desde uma data
+  // (anti-spam: cap de iniciações por contato)
+  contarIniciadasPorContato(contatoId: string, desde: Date) {
+    return db.missao.count({
+      where: { contatoId, criadoEm: { gte: desde }, estado: { not: 'configurada' } },
+    })
+  },
+
   // missão "ativa" de um contato num número (pra ligar mensagens recebidas)
   acharAtivaPorContatoNumero(numeroId: string, contatoId: string) {
     return db.missao.findFirst({

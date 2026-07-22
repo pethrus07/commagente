@@ -1,7 +1,7 @@
 // ⚙️/🔌 O worker do motor anti-bloqueio: tira da fila e envia no ritmo humano.
 import { config } from '../../core/config'
 import { enviarTexto } from '../envio/envio.caso-uso'
-import { dentroDaJanela, intervaloEnvioMs, temBudget } from './fila.dominio'
+import { dentroDaJanela, intervaloEnvioMs, temBudget, tetoDiarioPorEstagio } from './fila.dominio'
 import { filaRepo } from './fila.repo'
 
 type Payload = {
@@ -58,7 +58,12 @@ async function tick() {
       if (!dentroDaJanela(agoraHHmm(), numero.janelaInicio, numero.janelaFim)) {
         continue
       }
-      if (!temBudget(numero.enviadosHoje, numero.budgetDiario)) continue
+      // budget efetivo = o menor entre o configurado e o teto do estágio de aquecimento
+      const tetoEfetivo = Math.min(
+        numero.budgetDiario,
+        tetoDiarioPorEstagio(numero.aquecimentoEstagio),
+      )
+      if (!temBudget(numero.enviadosHoje, tetoEfetivo)) continue
 
       // OPT-OUT: o contato pediu pra parar → cancela o envio (não retenta)
       if (await filaRepo.contatoOptOut(item.contatoId)) {

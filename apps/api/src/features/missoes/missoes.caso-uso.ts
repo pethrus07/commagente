@@ -197,6 +197,16 @@ export async function iniciarMissao(id: string) {
       )
     }
 
+    // anti-spam: no máx. 2 iniciações por contato por semana (evita parecer spam)
+    const semanaAtras = new Date(Date.now() - 7 * 86_400_000)
+    const iniciadasContato = await missoesRepo.contarIniciadasPorContato(missao.contatoId, semanaAtras)
+    if (iniciadasContato >= 2) {
+      throw new ErroHttp(
+        409,
+        'Limite de iniciações por contato atingido (2 por semana). Espaça o contato pra não parecer spam.',
+      )
+    }
+
     // saúde anti-ban (gatilho 2026): taxa de resposta em risco → pausa novas iniciações
     const { base, naoRespondidas } = await numerosRepo.saude(missao.numeroId)
     const saude = classificarSaude(base, naoRespondidas)
