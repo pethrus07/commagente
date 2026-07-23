@@ -224,19 +224,28 @@ async function executarTurno(missaoId: string) {
   }
 
   // 8) atualiza o resumo rolante (inclui a resposta recém-enviada).
-  // Best-effort: a resposta JÁ foi enfileirada (passo 7); um erro transitório do
-  // provedor aqui não pode virar 500 no painel (ex.: no caminho síncrono do iniciar).
-  try {
-    const resumo = await ia.resumir({
-      ...ctx,
-      ultimasMensagens: [
-        ...ctx.ultimasMensagens,
-        { direcao: 'out', conteudo: saida.resposta },
-      ],
-    })
-    await conversaRepo.salvarResumo(missaoId, resumo)
-  } catch (e) {
-    console.error('[conversa] resumir falhou (ignorado):', e)
+  // OTIMIZAÇÃO DE CUSTO (COST-2): o resumo NÃO precisa rodar todo turno — o harness
+  // já injeta as últimas 8 mensagens cruas, então nos primeiros turnos o resumo é
+  // redundante. Resumimos a cada N turnos (ou ao concluir), cortando ~1/3 do custo.
+  // (A escalada tem seu próprio resumo fresco no passo 5, pro handoff humano.)
+  const RESUMIR_CADA = 3
+  const turnoAtual = missao.mensagens.filter((mm) => mm.direcao === 'out').length + 1
+  const deveResumir = turnoAtual % RESUMIR_CADA === 0 || saida.novo_estado === 'concluida'
+  if (deveResumir) {
+    // Best-effort: a resposta JÁ foi enfileirada (passo 7); um erro transitório do
+    // provedor aqui não pode virar 500 no painel (ex.: no caminho síncrono do iniciar).
+    try {
+      const resumo = await ia.resumir({
+        ...ctx,
+        ultimasMensagens: [
+          ...ctx.ultimasMensagens,
+          { direcao: 'out', conteudo: saida.resposta },
+        ],
+      })
+      await conversaRepo.salvarResumo(missaoId, resumo)
+    } catch (e) {
+      console.error('[conversa] resumir falhou (ignorado):', e)
+    }
   }
 
   return {
