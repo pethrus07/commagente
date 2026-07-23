@@ -6,12 +6,18 @@ import {
   definirStatusConhecimento,
   editarConhecimento,
   excluirConhecimento,
+  importarDocumento,
   listarConhecimento,
 } from './conhecimento.caso-uso'
 
 const corpoCriar = z.object({
   titulo: z.string().min(1),
   conteudo: z.string().min(1),
+})
+const corpoDoc = z.object({
+  nomeArquivo: z.string().min(1),
+  mimetype: z.string().default('application/octet-stream'),
+  base64: z.string().min(1),
 })
 const corpoEditar = z.object({
   titulo: z.string().min(1).optional(),
@@ -28,6 +34,18 @@ export async function conhecimentoRotas(app: FastifyInstance) {
     reply.code(201)
     return criarConhecimento(dados)
   })
+
+  // ingestão de documento (PDF/DOCX/TXT em base64) → vira entrada de Conhecimento.
+  // bodyLimit maior: o base64 do arquivo passa do limite padrão de 1MB.
+  app.post(
+    '/conhecimento/importar-documento',
+    { bodyLimit: 25 * 1024 * 1024 },
+    async (req, reply) => {
+      const dados = corpoDoc.parse(req.body)
+      reply.code(201)
+      return importarDocumento(dados)
+    },
+  )
 
   // aprovar / rejeitar (curadoria das sugestões da IA)
   app.post('/conhecimento/:id/status', async (req) => {

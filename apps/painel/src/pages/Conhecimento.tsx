@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { BookOpen, Check, Pencil, Plus, Sparkles, Trash2, X } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { BookOpen, Check, FileUp, Pencil, Plus, Sparkles, Trash2, X } from 'lucide-react'
 import { api } from '../lib/api'
 import { toast } from '../lib/toast'
 import type { Conhecimento as Item } from '../lib/types'
@@ -7,6 +7,15 @@ import { Button, Card, EmptyState, Spinner, cn, tempoRelativo } from '../lib/ui'
 
 const campo =
   'w-full rounded-xl border border-line bg-surface2 px-4 py-2 text-sm text-content placeholder:text-subtle focus:border-indigo-500/50 focus:outline-none'
+
+// lê um arquivo e devolve só o base64 (sem o prefixo data:...;base64,)
+const lerBase64 = (file: File) =>
+  new Promise<string>((res, rej) => {
+    const r = new FileReader()
+    r.onload = () => res(String(r.result).split(',')[1] ?? '')
+    r.onerror = () => rej(new Error('Falha ao ler o arquivo'))
+    r.readAsDataURL(file)
+  })
 
 function ItemModal({
   inicial,
@@ -72,12 +81,35 @@ function ItemModal({
 export function Conhecimento() {
   const [itens, setItens] = useState<Item[] | null>(null)
   const [modal, setModal] = useState<{ inicial?: Item } | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [importando, setImportando] = useState(false)
 
   const carregar = () =>
     api.conhecimento.listar().then(setItens).catch((e) => toast((e as Error).message, 'erro'))
   useEffect(() => {
     carregar()
   }, [])
+
+  const onArquivo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // permite reimportar o mesmo arquivo
+    if (!file) return
+    setImportando(true)
+    try {
+      const base64 = await lerBase64(file)
+      const ent = await api.conhecimento.importarDocumento({
+        nomeArquivo: file.name,
+        mimetype: file.type || 'application/octet-stream',
+        base64,
+      })
+      toast(`Documento "${ent.titulo}" adicionado ao conhecimento.`, 'ok')
+      carregar()
+    } catch (err) {
+      toast((err as Error).message, 'erro')
+    } finally {
+      setImportando(false)
+    }
+  }
 
   const { sugeridos, aprovados } = useMemo(() => {
     const l = itens ?? []
@@ -114,8 +146,12 @@ export function Conhecimento() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted">O que a IA aprende com as conversas. Ela consulta os aprovados ao responder.</p>
-        <Button onClick={() => setModal({})}><Plus className="h-4 w-4" /> Novo</Button>
+        <p className="text-sm text-muted">O que a IA aprende com as conversas e com os seus documentos. Ela consulta os aprovados ao responder.</p>
+        <div className="flex gap-2">
+          <Button variant="ghost" onClick={() => fileRef.current?.click()} loading={importando}><FileUp className="h-4 w-4" /> Importar documento</Button>
+          <Button onClick={() => setModal({})}><Plus className="h-4 w-4" /> Novo</Button>
+          <input ref={fileRef} type="file" accept=".pdf,.docx,.txt,.md" onChange={onArquivo} className="hidden" />
+        </div>
       </div>
 
       {/* Sugestões da IA (aguardam curadoria) */}
@@ -156,7 +192,7 @@ export function Conhecimento() {
                   <p className="font-medium text-content">{i.titulo}</p>
                   <p className="mt-0.5 whitespace-pre-wrap text-sm text-muted">{i.conteudo}</p>
                   <p className="mt-1.5 text-[11px] text-subtle">
-                    {i.origem === 'ia' ? '🤖 aprendido pela IA' : '✍️ curado'} · {tempoRelativo(i.criadoEm)}
+                    {i.origem === 'ia' ? '🤖 aprendido pela IA' : i.origem === 'documento' ? '📄 de documento' : '✍️ curado'} · {tempoRelativo(i.criadoEm)}
                   </p>
                 </div>
                 <div className="flex shrink-0 gap-1">

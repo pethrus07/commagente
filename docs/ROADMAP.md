@@ -198,7 +198,7 @@ Itens levantados no teste ao vivo (ver [aprendizados-teste-costa-doce](aprendiza
 - **(b) A IA ENVIA o arquivo ao cliente** na hora certa (ex.: mandar o cardápio, o catálogo, o PDF da expedição) — como foi feito com o PDF da Costa Doce no teste.
 - Escopo por tenant (a biblioteca é do cliente); pastas/categorias (ex.: reaproveitar a taxonomia do Mini Drive: Expedições/Artes/Institucional).
 
-> **Já feito (base):** a IA **enviar arquivo/mídia** ao contato (`PortaWhatsApp.enviarDocumento` / `sendMedia`) foi implementado no teste. Falta a **ingestão** (upload → Conhecimento/RAG) e a **UI de biblioteca**.
+> **Já feito:** (1) a IA **enviar arquivo/mídia** ao contato (`enviarDocumento` / `sendMedia`); (2) **ingestão versão (a)** — subir PDF/DOCX/TXT no painel (aba Conhecimento → "Importar documento") → extrai o texto (`core/documentos/extrair-texto`, pdf-parse/mammoth) → vira uma entrada de **Conhecimento** do tenant (a IA já consulta em toda missão). **Falta:** versão (b) **RAG** (chunks + busca por relevância, em vez do texto inteiro no prompt) e a **UI de biblioteca por pastas/categorias** + suporte a imagem (OCR).
 
 ### 8.2 💸 Otimização de custo do LLM `F1`
 Custo hoje é baixíssimo (~R$0,06 numa conversa longa de 27 turnos), mas dá pra cortar:
