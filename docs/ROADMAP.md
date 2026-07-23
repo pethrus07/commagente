@@ -198,13 +198,13 @@ Itens levantados no teste ao vivo (ver [aprendizados-teste-costa-doce](aprendiza
 - **(b) A IA ENVIA o arquivo ao cliente** na hora certa (ex.: mandar o cardápio, o catálogo, o PDF da expedição) — como foi feito com o PDF da Costa Doce no teste.
 - Escopo por tenant (a biblioteca é do cliente); pastas/categorias (ex.: reaproveitar a taxonomia do Mini Drive: Expedições/Artes/Institucional).
 
-> **Já feito:** (1) a IA **enviar arquivo/mídia** ao contato (`enviarDocumento` / `sendMedia`); (2) **ingestão versão (a)** — subir PDF/DOCX/TXT no painel (aba Conhecimento → "Importar documento") → extrai o texto (`core/documentos/extrair-texto`, pdf-parse/mammoth) → vira uma entrada de **Conhecimento** do tenant (a IA já consulta em toda missão). **Falta:** versão (b) **RAG** (chunks + busca por relevância, em vez do texto inteiro no prompt) e a **UI de biblioteca por pastas/categorias** + suporte a imagem (OCR).
+> **Já feito:** (1) a IA **enviar arquivo/mídia** ao contato (`enviarDocumento` / `sendMedia`); (2) **ingestão versão (a)** — subir PDF/DOCX/TXT no painel (aba Conhecimento → "Importar documento") → extrai o texto (`core/documentos/extrair-texto`, pdf-parse/mammoth) → vira uma entrada de **Conhecimento** do tenant; (3) ✅ **versão (b) RAG** — `core/embeddings/` (text-embedding-3-small, cosseno em memória) + `ConhecimentoChunk`: cada item aprovado é fatiado e vetorizado; o harness injeta **só os trechos relevantes** (fallback p/ tudo quando embeddings off). **Falta:** a **UI de biblioteca por pastas/categorias** + suporte a imagem (OCR).
 
 ### 8.2 💸 Otimização de custo do LLM `F1`
 Custo hoje é baixíssimo (~R$0,06 numa conversa longa de 27 turnos), mas dá pra cortar:
-- **Throttle do resumo** — hoje `resumir` roda TODO turno (dobra as chamadas). Resumir a cada 3-4 turnos corta ~30-40%.
-- **RAG em vez de contexto fixo** — hoje as informações autorizadas inteiras (~450 tok) vão em toda chamada `gerar`; com RAG, envia-se só o trecho relevante → menos tokens por turno.
+- ✅ **Throttle do resumo (COST-2)** — `resumir` agora roda a cada 3 turnos (ou ao concluir), não todo turno. Corta ~1/3 das chamadas.
+- ✅ **RAG em vez de contexto fixo (RAG-1)** — o conhecimento vai por **trechos relevantes** (não a base inteira) em cada `gerar`; escala a base sem inflar o prompt.
 
 ### 8.3 📊 Instrumentação de custo & escala `F1`
-- Capturar o `usage` (tokens in/out) de cada chamada OpenAI **por missão/tenant** e exibir no painel (custo por conversa, por tenant, por dia).
+- ✅ **(COST-1)** — captura o `usage` (tokens in/out) de cada chamada OpenAI **por missão** (`Missao.tokensEntrada/tokensSaida`) e exibe no detalhe da missão (card "Custo de IA", **só super-admin**). **Falta (evolução):** agregado por tenant/dia num dashboard.
 - **Baseline medido:** ~US$0,01 (~R$0,06) por conversa longa → **~R$60 / 1.000 conversas**. A IA é barata; o custo real é infra + chip + trabalho. Serve pra precificar a revenda com margem clara.
