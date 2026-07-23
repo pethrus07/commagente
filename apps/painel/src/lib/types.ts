@@ -74,6 +74,17 @@ export interface Contato {
   memoria?: Record<string, unknown> | null
 }
 
+export interface Tag {
+  id: string
+  nome: string
+  cor: string | null
+}
+
+export interface TagResumo extends Tag {
+  total: number
+  criadoEm: string
+}
+
 export interface ContatoResumo {
   id: string
   nome: string | null
@@ -82,6 +93,7 @@ export interface ContatoResumo {
   optOut: boolean
   criadoEm: string
   totalMissoes: number
+  tags: Tag[]
 }
 
 export interface ImportResultado {

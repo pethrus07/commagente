@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Check } from 'lucide-react'
 import { api } from '../lib/api'
 import { parseContatos } from '../lib/contatos'
-import type { ContatoResumo } from '../lib/types'
+import type { ContatoResumo, TagResumo } from '../lib/types'
 import { cn } from '../lib/ui'
 
 const campo =
@@ -16,6 +16,8 @@ export function SeletorContatos({
   onChange: (contatos: { telefone: string; nome?: string }[]) => void
 }) {
   const [base, setBase] = useState<ContatoResumo[]>([])
+  const [tags, setTags] = useState<TagResumo[]>([])
+  const [filtroTag, setFiltroTag] = useState<string | null>(null)
   const [sel, setSel] = useState<Set<string>>(new Set())
   const [busca, setBusca] = useState('')
   const [colados, setColados] = useState('')
@@ -25,17 +27,20 @@ export function SeletorContatos({
       .listar()
       .then((cs) => setBase(cs.filter((c) => !c.optOut)))
       .catch(() => {})
+    api.tags.listar().then(setTags).catch(() => {})
   }, [])
 
   const filtrada = useMemo(() => {
     const q = busca.trim().toLowerCase()
-    if (!q) return base
     const digitos = q.replace(/\D/g, '')
-    // sem este guard, digitos='' e telefone.includes('') casa TODOS os contatos
-    return base.filter(
-      (c) => (c.nome ?? '').toLowerCase().includes(q) || (digitos.length > 0 && c.telefone.includes(digitos)),
-    )
-  }, [base, busca])
+    return base.filter((c) => {
+      // filtro por tag (ex.: disparar pra "todos da tag costa-doce")
+      if (filtroTag && !c.tags.some((t) => t.id === filtroTag)) return false
+      if (!q) return true
+      // sem este guard, digitos='' e telefone.includes('') casa TODOS os contatos
+      return (c.nome ?? '').toLowerCase().includes(q) || (digitos.length > 0 && c.telefone.includes(digitos))
+    })
+  }, [base, busca, filtroTag])
 
   const combinados = useMemo(() => {
     const daBase = base.filter((c) => sel.has(c.id)).map((c) => ({ telefone: c.telefone, nome: c.nome ?? undefined }))
@@ -79,13 +84,24 @@ export function SeletorContatos({
           )}
         </label>
         <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar contato…" className={campo} />
+        {tags.length > 0 && (
+          <div className="mt-1.5 flex flex-wrap items-center gap-1">
+            <span className="text-[11px] text-muted">Tag:</span>
+            <button type="button" onClick={() => setFiltroTag(null)} className={cn('rounded-full border px-2 py-0.5 text-[11px]', filtroTag === null ? 'border-indigo-500/50 bg-indigo-500/15 text-indigo-300' : 'border-line text-muted hover:text-content')}>todas</button>
+            {tags.map((t) => (
+              <button key={t.id} type="button" onClick={() => setFiltroTag(filtroTag === t.id ? null : t.id)} className={cn('rounded-full border px-2 py-0.5 text-[11px] font-medium', filtroTag === t.id ? 'border-indigo-500/50 bg-indigo-500/15 text-indigo-300' : 'border-line text-muted hover:text-content')}>
+                {t.nome} <span className="opacity-60">{t.total}</span>
+              </button>
+            ))}
+          </div>
+        )}
         {base.length > 0 && (
           <div className="mt-1.5 flex items-center justify-between px-0.5">
             <span className="text-[11px] text-muted">
-              {busca.trim() ? `${filtrada.length} no filtro` : `${base.length} na base`}
+              {filtroTag || busca.trim() ? `${filtrada.length} no filtro` : `${base.length} na base`}
             </span>
             <button type="button" onClick={alternarTodos} className="text-[11px] font-medium text-indigo-300 hover:text-indigo-200">
-              {todosVisiveisSelecionados ? 'Limpar seleção' : `Selecionar todos${busca.trim() ? ' do filtro' : ''}`}
+              {todosVisiveisSelecionados ? 'Limpar seleção' : `Selecionar todos${busca.trim() || filtroTag ? ' do filtro' : ''}`}
             </button>
           </div>
         )}

@@ -12,6 +12,8 @@ import type {
   QrResposta,
   Stats,
   StatusConhecimento,
+  Tag,
+  TagResumo,
   TenantResumo,
 } from './types'
 
@@ -169,6 +171,19 @@ export const api = {
       if (!res.ok) throw new Error('Falha ao exportar contatos.')
       return res.text()
     },
+    aplicarTag: (contatoId: string, tagId: string) =>
+      req(`/contatos/${contatoId}/tags`, { method: 'POST', body: JSON.stringify({ tagId }) }),
+    removerTag: (contatoId: string, tagId: string) =>
+      req(`/contatos/${contatoId}/tags/${tagId}`, { method: 'DELETE' }),
+  },
+
+  tags: {
+    listar: () => req<TagResumo[]>('/tags'),
+    criar: (data: { nome: string; cor?: string }) =>
+      req<Tag>('/tags', { method: 'POST', body: JSON.stringify(data) }),
+    remover: (id: string) => req(`/tags/${id}`, { method: 'DELETE' }),
+    aplicarEmLote: (id: string, contatoIds: string[]) =>
+      req<{ aplicados: number }>(`/tags/${id}/contatos`, { method: 'POST', body: JSON.stringify({ contatoIds }) }),
   },
 
   conhecimento: {
