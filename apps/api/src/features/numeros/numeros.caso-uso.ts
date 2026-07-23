@@ -5,6 +5,7 @@ import { ErroHttp } from '../../core/erros'
 import { whatsapp } from '../../core/evolution'
 import type { PortaWhatsApp, QrCode } from '../../core/evolution/porta-whatsapp'
 import { conferirDono, tenantAtual } from '../../core/contexto'
+import { tetoDiarioPorEstagio } from '../fila/fila.dominio'
 import { classificarSaude } from './numeros.dominio'
 import { numerosRepo } from './numeros.repo'
 
@@ -23,7 +24,9 @@ export async function listarNumeros() {
   return Promise.all(
     numeros.map(async (n) => {
       const { base, naoRespondidas } = await numerosRepo.saude(n.id)
-      return { ...n, saude: classificarSaude(base, naoRespondidas) }
+      // teto EFETIVO do dia = o menor entre o budget e o teto do estágio de aquecimento
+      const tetoEfetivo = Math.min(n.budgetDiario, tetoDiarioPorEstagio(n.aquecimentoEstagio))
+      return { ...n, tetoEfetivo, saude: classificarSaude(base, naoRespondidas) }
     }),
   )
 }

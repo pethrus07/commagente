@@ -51,6 +51,7 @@ export interface Numero {
   statusConexao: StatusConexao
   aquecimentoEstagio: number
   budgetDiario: number
+  tetoEfetivo: number
   enviadosHoje: number
   maxConversasAtivas: number
   janelaInicio: string

@@ -40,9 +40,14 @@ export async function enviarTexto(
 
   const contato = await envioRepo.upsertContato(numero.tenantId, telefone)
 
-  // sinaliza "digitando…" e espera esse tempo antes de mandar
+  // sinaliza "digitando…" e espera esse tempo antes de mandar.
+  // A presença é best-effort: a Evolution às vezes devolve 400 aqui — não pode abortar o texto.
   const ms = msDigitando(texto)
-  await wa.enviarPresenca(instancia, telefone, 'composing', ms)
+  try {
+    await wa.enviarPresenca(instancia, telefone, 'composing', ms)
+  } catch (e) {
+    console.error('[envio] presença falhou (ignorado):', (e as Error).message.slice(0, 120))
+  }
   await new Promise((r) => setTimeout(r, ms))
 
   const { providerMsgId } = await wa.enviarTexto(instancia, telefone, texto)

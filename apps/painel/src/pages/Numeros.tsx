@@ -267,9 +267,9 @@ export function Numeros() {
                 </div>
 
                 <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-                  <div className="rounded-lg bg-surface2 py-2">
-                    <p className="text-sm font-semibold text-content">{n.enviadosHoje}/{n.budgetDiario}</p>
-                    <p className="text-[11px] text-muted">hoje</p>
+                  <div className="rounded-lg bg-surface2 py-2" title={`Teto efetivo do dia = menor entre o budget (${n.budgetDiario}) e o teto do estágio ${n.aquecimentoEstagio}. Ao atingir, o anti-bloqueio pausa novos envios.`}>
+                    <p className="text-sm font-semibold text-content">{n.enviadosHoje}/{n.tetoEfetivo}</p>
+                    <p className="text-[11px] text-muted">hoje (teto)</p>
                   </div>
                   <div className="rounded-lg bg-surface2 py-2">
                     <p className="text-sm font-semibold text-content">nível {n.aquecimentoEstagio}</p>
