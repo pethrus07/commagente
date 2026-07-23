@@ -168,18 +168,18 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
   return (
     <div className="flex h-full flex-col">
       <div className="mb-4 flex items-center gap-3">
-        <button onClick={onVoltar} className="grid h-9 w-9 place-items-center rounded-xl bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white">
+        <button onClick={onVoltar} className="grid h-9 w-9 place-items-center rounded-xl bg-surface2 text-muted hover:bg-surface2 hover:text-content">
           <ArrowLeft className="h-4 w-4" />
         </button>
         <div className="min-w-0 flex-1">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-indigo-300/80">{TIPO_INFO[m.tipo]?.emoji} {TIPO_INFO[m.tipo]?.label ?? m.tipo}</p>
-          <p className="truncate font-semibold text-white">{m.objetivo}</p>
-          <p className="text-xs text-slate-500">{m.contato?.nome ? `${m.contato.nome} · ` : ''}+{m.contato?.telefone}</p>
+          <p className="truncate font-semibold text-content">{m.objetivo}</p>
+          <p className="text-xs text-muted">{m.contato?.nome ? `${m.contato.nome} · ` : ''}+{m.contato?.telefone}</p>
         </div>
         <Badge className={info.badge}><Dot className={info.dot} /> {info.label}</Badge>
         <button
           onClick={() => setEditando(true)}
-          className="grid h-9 w-9 place-items-center rounded-xl bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white"
+          className="grid h-9 w-9 place-items-center rounded-xl bg-surface2 text-muted hover:bg-surface2 hover:text-content"
           title="Editar missão"
         >
           <Pencil className="h-4 w-4" />
@@ -222,7 +222,7 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
             value={draft ?? ''}
             onChange={(e) => setDraft(e.target.value)}
             rows={3}
-            className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-indigo-500/50 focus:outline-none"
+            className="w-full resize-none rounded-xl border border-line bg-surface2 px-3 py-2 text-sm text-content focus:border-indigo-500/50 focus:outline-none"
           />
           <div className="mt-2 flex gap-2">
             <Button onClick={aprovarRasc} loading={rasc}><Send className="h-4 w-4" /> Aprovar e enviar</Button>
@@ -236,13 +236,13 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
         <Card className="flex min-h-[420px] flex-col overflow-hidden">
           <div className="flex-1 space-y-3 overflow-y-auto p-5">
             {(m.mensagens ?? []).length === 0 ? (
-              <p className="py-10 text-center text-sm text-slate-500">Sem mensagens ainda.</p>
+              <p className="py-10 text-center text-sm text-muted">Sem mensagens ainda.</p>
             ) : (
               (m.mensagens ?? []).map((msg) => (
                 <div key={msg.id} className={cn('flex', msg.direcao === 'out' ? 'justify-end' : 'justify-start')}>
-                  <div className={cn('max-w-[78%] rounded-2xl px-3.5 py-2 text-sm', msg.direcao === 'out' ? 'bg-indigo-500/90 text-white' : 'bg-white/8 text-slate-100')}>
+                  <div className={cn('max-w-[78%] rounded-2xl px-3.5 py-2 text-sm', msg.direcao === 'out' ? 'bg-indigo-500/90 text-white' : 'bg-surface2 text-content')}>
                     <p className="whitespace-pre-wrap break-words">{msg.conteudo}</p>
-                    <p className={cn('mt-1 text-[10px]', msg.direcao === 'out' ? 'text-indigo-100/70' : 'text-slate-500')}>
+                    <p className={cn('mt-1 text-[10px]', msg.direcao === 'out' ? 'text-indigo-100/70' : 'text-muted')}>
                       {hora(msg.criadaEm)}{msg.direcao === 'out' && msg.statusEnvio ? ` · ${msg.statusEnvio}` : ''}
                     </p>
                   </div>
@@ -251,13 +251,13 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
             )}
             <div ref={fimRef} />
           </div>
-          <div className="flex items-center gap-2 border-t border-white/8 p-3">
+          <div className="flex items-center gap-2 border-t border-line p-3">
             <input
               value={texto}
               onChange={(e) => setTexto(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && enviar()}
               placeholder="Responder manualmente…"
-              className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:border-indigo-500/50 focus:outline-none"
+              className="flex-1 rounded-xl border border-line bg-surface2 px-4 py-2 text-sm text-content placeholder:text-subtle focus:border-indigo-500/50 focus:outline-none"
             />
             <Button onClick={enviar} loading={enviando} disabled={!texto.trim()}><Send className="h-4 w-4" /></Button>
           </div>
@@ -268,8 +268,8 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
           {(m.estado === 'configurada' ||
             (m.estado === 'na_fila' && (m.mensagens ?? []).length === 0)) && (
             <Card className="border-indigo-500/30 bg-indigo-500/10 p-4">
-              <p className="text-sm font-medium text-white">Pronta para começar</p>
-              <p className="mb-3 mt-0.5 text-xs text-slate-400">
+              <p className="text-sm font-medium text-content">Pronta para começar</p>
+              <p className="mb-3 mt-0.5 text-xs text-muted">
                 A IA vai abrir a conversa com o lead e conduzir rumo ao objetivo.
               </p>
               <Button className="w-full" onClick={iniciar} loading={iniciando}>
@@ -279,10 +279,10 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
           )}
 
           <Card className="p-4">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Ações de estado</p>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Ações de estado</p>
             <div className="flex flex-wrap gap-2">
               {TRANSICOES[m.estado].length === 0 ? (
-                <span className="text-xs text-slate-500">Estado terminal.</span>
+                <span className="text-xs text-muted">Estado terminal.</span>
               ) : (
                 TRANSICOES[m.estado].map((e) => (
                   <button key={e} onClick={() => mudar(e)} className={cn('rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 ring-inset transition hover:brightness-125', ESTADO_INFO[e].badge)}>
@@ -297,7 +297,7 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
             <div className="mb-3 flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Configuração</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted">Configuração</p>
               </div>
               <button onClick={() => setEditando(true)} className="inline-flex items-center gap-1 text-xs font-medium text-indigo-400 hover:text-indigo-300">
                 <Pencil className="h-3 w-3" /> Editar
@@ -305,13 +305,13 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
             </div>
             <div className="space-y-3">
               <div>
-                <p className="mb-0.5 text-[11px] uppercase tracking-wide text-slate-500">Tom / humor</p>
-                <p className="text-sm text-slate-300">{m.tom || <span className="text-slate-600">Padrão (cordial e objetivo)</span>}</p>
+                <p className="mb-0.5 text-[11px] uppercase tracking-wide text-muted">Tom / humor</p>
+                <p className="text-sm text-content">{m.tom || <span className="text-subtle">Padrão (cordial e objetivo)</span>}</p>
               </div>
               <div>
-                <p className="mb-0.5 text-[11px] uppercase tracking-wide text-slate-500">Informações autorizadas</p>
+                <p className="mb-0.5 text-[11px] uppercase tracking-wide text-muted">Informações autorizadas</p>
                 {m.informacoes ? (
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-300">{m.informacoes}</p>
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-content">{m.informacoes}</p>
                 ) : (
                   <p className="text-sm text-amber-400/80">
                     ⚠️ Nenhuma. A IA não vai afirmar preço/prazo — vai confirmar ou escalar.
@@ -327,61 +327,61 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
                 <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
                 <p className="text-xs font-semibold uppercase tracking-wide text-emerald-300">Resultado</p>
               </div>
-              <p className="text-sm text-slate-100">{m.resultado}</p>
+              <p className="text-sm text-content">{m.resultado}</p>
             </Card>
           )}
 
           <Card className="p-4">
             <div className="mb-2 flex items-center gap-2">
               <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Resumo (memória)</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted">Resumo (memória)</p>
             </div>
-            <p className="text-sm leading-relaxed text-slate-300">{m.resumo || <span className="text-slate-600">Ainda sem resumo.</span>}</p>
+            <p className="text-sm leading-relaxed text-content">{m.resumo || <span className="text-subtle">Ainda sem resumo.</span>}</p>
           </Card>
 
           <Card className="p-4">
             <div className="mb-2 flex items-center gap-2">
               <Brain className="h-3.5 w-3.5 text-violet-400" />
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Fatos desta conversa</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted">Fatos desta conversa</p>
             </div>
             {fatos ? (
               <div className="space-y-1.5">
                 {Object.entries(fatos).map(([k, v]) => (
                   <div key={k} className="flex justify-between gap-3 text-sm">
-                    <span className="text-slate-500">{k}</span>
-                    <span className="text-right font-medium text-slate-200">{typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v)}</span>
+                    <span className="text-muted">{k}</span>
+                    <span className="text-right font-medium text-content">{typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v)}</span>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-slate-600">Nenhum fato ainda.</p>
+              <p className="text-sm text-subtle">Nenhum fato ainda.</p>
             )}
           </Card>
 
           <Card className="p-4">
             <div className="mb-1 flex items-center gap-2">
               <UserCircle className="h-3.5 w-3.5 text-sky-400" />
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Memória do contato</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted">Memória do contato</p>
             </div>
-            <p className="mb-2 text-[11px] text-slate-600">Persiste entre missões — o que a IA já sabe deste contato.</p>
+            <p className="mb-2 text-[11px] text-subtle">Persiste entre missões — o que a IA já sabe deste contato.</p>
             {memoriaContato ? (
               <div className="space-y-1.5">
                 {Object.entries(memoriaContato).map(([k, v]) => (
                   <div key={k} className="flex justify-between gap-3 text-sm">
-                    <span className="text-slate-500">{k}</span>
-                    <span className="text-right font-medium text-slate-200">{typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v)}</span>
+                    <span className="text-muted">{k}</span>
+                    <span className="text-right font-medium text-content">{typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v)}</span>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-slate-600">Ainda sem memória acumulada.</p>
+              <p className="text-sm text-subtle">Ainda sem memória acumulada.</p>
             )}
           </Card>
 
           <Card className="p-4">
             <div className="mb-2 flex items-center gap-2">
-              <Info className="h-3.5 w-3.5 text-slate-500" />
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Missão</p>
+              <Info className="h-3.5 w-3.5 text-muted" />
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted">Missão</p>
             </div>
             <dl className="space-y-1.5 text-sm">
               <Linha rotulo="Tipo" valor={TIPO_INFO[m.tipo]?.label ?? m.tipo} />
@@ -445,18 +445,18 @@ function EditarMissaoModal({ missao, onFechar }: { missao: Missao; onFechar: (sa
     }
   }
 
-  const campo = 'w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:border-indigo-500/50 focus:outline-none'
+  const campo = 'w-full rounded-xl border border-line bg-surface2 px-4 py-2 text-sm text-content placeholder:text-subtle focus:border-indigo-500/50 focus:outline-none'
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 backdrop-blur-sm">
       <Card className="max-h-[90vh] w-full max-w-lg overflow-y-auto p-6">
         <div className="mb-5 flex items-center justify-between">
-          <h3 className="font-semibold text-white">Editar missão</h3>
-          <button onClick={() => onFechar(false)} className="text-slate-500 hover:text-slate-200"><X className="h-5 w-5" /></button>
+          <h3 className="font-semibold text-content">Editar missão</h3>
+          <button onClick={() => onFechar(false)} className="text-muted hover:text-content"><X className="h-5 w-5" /></button>
         </div>
         <div className="space-y-3">
           <div>
-            <label className="mb-1 block text-xs text-slate-400">Tipo de missão</label>
+            <label className="mb-1 block text-xs text-muted">Tipo de missão</label>
             <div className="flex flex-wrap gap-1.5">
               {TIPOS_MISSAO.map((t) => (
                 <button
@@ -464,7 +464,7 @@ function EditarMissaoModal({ missao, onFechar }: { missao: Missao; onFechar: (sa
                   onClick={() => setForm({ ...form, tipo: t })}
                   className={cn(
                     'rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 ring-inset transition',
-                    form.tipo === t ? 'bg-indigo-500/20 text-indigo-200 ring-indigo-500/40' : 'text-slate-400 ring-white/10 hover:text-slate-200',
+                    form.tipo === t ? 'bg-indigo-500/20 text-indigo-200 ring-indigo-500/40' : 'text-muted ring-line hover:text-content',
                   )}
                 >
                   {TIPO_INFO[t].emoji} {TIPO_INFO[t].label}
@@ -473,39 +473,39 @@ function EditarMissaoModal({ missao, onFechar }: { missao: Missao; onFechar: (sa
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-xs text-slate-400">Modo</label>
+            <label className="mb-1 block text-xs text-muted">Modo</label>
             <div className="flex gap-1.5">
               {(['auto', 'copilot'] as const).map((md) => (
-                <button key={md} onClick={() => setForm({ ...form, modo: md })} className={cn('flex-1 rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 ring-inset transition', form.modo === md ? 'bg-indigo-500/20 text-indigo-200 ring-indigo-500/40' : 'text-slate-400 ring-white/10 hover:text-slate-200')}>
+                <button key={md} onClick={() => setForm({ ...form, modo: md })} className={cn('flex-1 rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 ring-inset transition', form.modo === md ? 'bg-indigo-500/20 text-indigo-200 ring-indigo-500/40' : 'text-muted ring-line hover:text-content')}>
                   {md === 'auto' ? '⚡ Auto (envia sozinha)' : '👁️ Co-pilot (você aprova)'}
                 </button>
               ))}
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-xs text-slate-400">Objetivo</label>
+            <label className="mb-1 block text-xs text-muted">Objetivo</label>
             <input value={form.objetivo} onChange={(e) => setForm({ ...form, objetivo: e.target.value })} className={campo} />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-slate-400">Critério de conclusão</label>
+            <label className="mb-1 block text-xs text-muted">Critério de conclusão</label>
             <input value={form.criterioConclusao} onChange={(e) => setForm({ ...form, criterioConclusao: e.target.value })} placeholder="Ex.: reunião agendada · pagamento confirmado" className={campo} />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-slate-400">Nome do contato</label>
+            <label className="mb-1 block text-xs text-muted">Nome do contato</label>
             <input value={form.nomeContato} onChange={(e) => setForm({ ...form, nomeContato: e.target.value })} placeholder="Fulano" className={campo} />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-slate-400">Contexto</label>
+            <label className="mb-1 block text-xs text-muted">Contexto</label>
             <textarea value={form.contexto} onChange={(e) => setForm({ ...form, contexto: e.target.value })} rows={2} placeholder="Ex.: empresa de automação industrial…" className={cn(campo, 'resize-none')} />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-slate-400">Tom / humor</label>
+            <label className="mb-1 block text-xs text-muted">Tom / humor</label>
             <input value={form.tom} onChange={(e) => setForm({ ...form, tom: e.target.value })} placeholder="Ex.: amigável e descontraído" className={campo} />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-slate-400">Informações autorizadas</label>
+            <label className="mb-1 block text-xs text-muted">Informações autorizadas</label>
             <textarea value={form.informacoes} onChange={(e) => setForm({ ...form, informacoes: e.target.value })} rows={4} placeholder="Preços, prazos e condições REAIS. Ex.: Plano Pro R$299/mês, entrega em 7 dias úteis." className={cn(campo, 'resize-none')} />
-            <p className="mt-1 text-[11px] leading-snug text-slate-500">
+            <p className="mt-1 text-[11px] leading-snug text-muted">
               🛡️ A IA só afirma o que estiver aqui. Fora disso, não inventa — confirma ou escala.
             </p>
           </div>
@@ -522,8 +522,8 @@ function EditarMissaoModal({ missao, onFechar }: { missao: Missao; onFechar: (sa
 function Linha({ rotulo, valor }: { rotulo: string; valor: string }) {
   return (
     <div className="flex justify-between gap-3">
-      <dt className="shrink-0 text-slate-500">{rotulo}</dt>
-      <dd className="text-right text-slate-300">{valor}</dd>
+      <dt className="shrink-0 text-muted">{rotulo}</dt>
+      <dd className="text-right text-content">{valor}</dd>
     </div>
   )
 }

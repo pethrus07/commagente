@@ -51,7 +51,7 @@ export function Escalados({ onAbrir }: { onAbrir: (id: string) => void }) {
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-slate-400">
+      <p className="text-sm text-muted">
         {itens.length} conversa{itens.length > 1 ? 's' : ''} aguardando você. A IA já pausou nelas.
       </p>
       {itens.map((m) => {
@@ -64,20 +64,20 @@ export function Escalados({ onAbrir }: { onAbrir: (id: string) => void }) {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <p className="truncate font-medium text-slate-100">
+                  <p className="truncate font-medium text-content">
                     {m.contato?.nome ?? `+${m.contato?.telefone ?? '—'}`}
                   </p>
-                  <span className="text-xs text-slate-500">· {tempoRelativo(m.criadoEm)}</span>
+                  <span className="text-xs text-muted">· {tempoRelativo(m.criadoEm)}</span>
                 </div>
-                <p className="mt-0.5 truncate text-xs text-slate-500">{m.objetivo}</p>
+                <p className="mt-0.5 truncate text-xs text-muted">{m.objetivo}</p>
                 {m.motivoEscala && (
                   <p className="mt-1.5 inline-block rounded-lg bg-rose-500/15 px-2 py-1 text-xs font-medium text-rose-200">
                     Motivo: {m.motivoEscala}
                   </p>
                 )}
                 {ultima && (
-                  <p className="mt-2 flex items-start gap-1.5 text-sm text-slate-300">
-                    <MessageSquare className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500" />
+                  <p className="mt-2 flex items-start gap-1.5 text-sm text-content">
+                    <MessageSquare className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted" />
                     <span className="line-clamp-2">{ultima.conteudo}</span>
                   </p>
                 )}
@@ -88,7 +88,7 @@ export function Escalados({ onAbrir }: { onAbrir: (id: string) => void }) {
                 </Button>
                 <button
                   onClick={() => onAbrir(m.id)}
-                  className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-slate-200"
+                  className="inline-flex items-center gap-1 text-xs text-muted hover:text-content"
                 >
                   Abrir <ChevronRight className="h-3 w-3" />
                 </button>

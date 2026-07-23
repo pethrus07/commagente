@@ -7,7 +7,7 @@ import type { Agendamento, Numero } from '../lib/types'
 import { Button, Card, EmptyState, Spinner, cn } from '../lib/ui'
 
 const campo =
-  'w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:border-indigo-500/50 focus:outline-none'
+  'w-full rounded-xl border border-line bg-surface2 px-4 py-2 text-sm text-content placeholder:text-subtle focus:border-indigo-500/50 focus:outline-none'
 
 // "telefone, nome, dia" por linha → contatos (dia é opcional; acha o nº 1-31 em qualquer coluna)
 function parseLinhas(txt: string): { telefone: string; nome?: string; dia?: number }[] {
@@ -121,15 +121,15 @@ function NovoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 backdrop-blur-sm">
       <Card className="max-h-[92vh] w-full max-w-lg overflow-y-auto p-6">
         <div className="mb-5 flex items-center justify-between">
-          <h3 className="font-semibold text-white">Novo agendamento</h3>
-          <button onClick={() => onFechar(false)} className="text-slate-500 hover:text-slate-200"><X className="h-5 w-5" /></button>
+          <h3 className="font-semibold text-content">Novo agendamento</h3>
+          <button onClick={() => onFechar(false)} className="text-muted hover:text-content"><X className="h-5 w-5" /></button>
         </div>
         <div className="space-y-3">
           <div>
-            <label className="mb-1 block text-xs text-slate-400">Recorrência</label>
+            <label className="mb-1 block text-xs text-muted">Recorrência</label>
             <div className="flex gap-1.5">
               {(['mensal', 'uma_vez'] as const).map((r) => (
-                <button key={r} onClick={() => setForm({ ...form, recorrencia: r })} className={cn('flex-1 rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 ring-inset transition', form.recorrencia === r ? 'bg-indigo-500/20 text-indigo-200 ring-indigo-500/40' : 'text-slate-400 ring-white/10 hover:text-slate-200')}>
+                <button key={r} onClick={() => setForm({ ...form, recorrencia: r })} className={cn('flex-1 rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 ring-inset transition', form.recorrencia === r ? 'bg-indigo-500/20 text-indigo-200 ring-indigo-500/40' : 'text-muted ring-line hover:text-content')}>
                   {r === 'mensal' ? '🔁 Todo mês' : '📅 Uma vez'}
                 </button>
               ))}
@@ -137,20 +137,20 @@ function NovoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
           </div>
           {form.recorrencia === 'mensal' ? (
             <div>
-              <label className="mb-1 block text-xs text-slate-400">Dia do mês (padrão) <span className="text-slate-600">— dá pra sobrescrever por linha</span></label>
+              <label className="mb-1 block text-xs text-muted">Dia do mês (padrão) <span className="text-subtle">— dá pra sobrescrever por linha</span></label>
               <input type="number" min={1} max={31} value={form.diaPadrao} onChange={(e) => setForm({ ...form, diaPadrao: e.target.value })} placeholder="Ex.: 27" className={campo} />
             </div>
           ) : (
             <div>
-              <label className="mb-1 block text-xs text-slate-400">Data do disparo</label>
+              <label className="mb-1 block text-xs text-muted">Data do disparo</label>
               <input type="date" value={form.dataUnica} onChange={(e) => setForm({ ...form, dataUnica: e.target.value })} className={campo} />
             </div>
           )}
           <div>
-            <label className="mb-1 block text-xs text-slate-400">No dia</label>
+            <label className="mb-1 block text-xs text-muted">No dia</label>
             <div className="flex gap-1.5">
               {(['ia', 'fixa'] as const).map((en) => (
-                <button key={en} onClick={() => setForm({ ...form, entrega: en })} className={cn('flex-1 rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 ring-inset transition', form.entrega === en ? 'bg-indigo-500/20 text-indigo-200 ring-indigo-500/40' : 'text-slate-400 ring-white/10 hover:text-slate-200')}>
+                <button key={en} onClick={() => setForm({ ...form, entrega: en })} className={cn('flex-1 rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 ring-inset transition', form.entrega === en ? 'bg-indigo-500/20 text-indigo-200 ring-indigo-500/40' : 'text-muted ring-line hover:text-content')}>
                   {en === 'ia' ? '🤖 IA conduz' : '✉️ Mensagem fixa'}
                 </button>
               ))}
@@ -159,54 +159,54 @@ function NovoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
           {form.entrega === 'ia' ? (
             <>
               <div>
-                <label className="mb-1 block text-xs text-slate-400">Tipo</label>
+                <label className="mb-1 block text-xs text-muted">Tipo</label>
                 <div className="flex flex-wrap gap-1.5">
                   {TIPOS_MISSAO.map((t) => (
-                    <button key={t} onClick={() => setForm({ ...form, tipo: t })} className={cn('rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 ring-inset transition', form.tipo === t ? 'bg-indigo-500/20 text-indigo-200 ring-indigo-500/40' : 'text-slate-400 ring-white/10 hover:text-slate-200')}>
+                    <button key={t} onClick={() => setForm({ ...form, tipo: t })} className={cn('rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 ring-inset transition', form.tipo === t ? 'bg-indigo-500/20 text-indigo-200 ring-indigo-500/40' : 'text-muted ring-line hover:text-content')}>
                       {TIPO_INFO[t].emoji} {TIPO_INFO[t].label}
                     </button>
                   ))}
                 </div>
               </div>
               <div>
-                <label className="mb-1 block text-xs text-slate-400">Objetivo</label>
+                <label className="mb-1 block text-xs text-muted">Objetivo</label>
                 <textarea value={form.objetivo} onChange={(e) => setForm({ ...form, objetivo: e.target.value })} rows={2} className={cn(campo, 'resize-none')} />
               </div>
               <div>
-                <label className="mb-1 block text-xs text-slate-400">Tom (opcional)</label>
+                <label className="mb-1 block text-xs text-muted">Tom (opcional)</label>
                 <input value={form.tom} onChange={(e) => setForm({ ...form, tom: e.target.value })} className={campo} />
               </div>
               <div>
-                <label className="mb-1 block text-xs text-slate-400">Informações autorizadas (opcional)</label>
+                <label className="mb-1 block text-xs text-muted">Informações autorizadas (opcional)</label>
                 <textarea value={form.informacoes} onChange={(e) => setForm({ ...form, informacoes: e.target.value })} rows={2} placeholder="Valor, vencimento, chave PIX… (a IA só afirma o que estiver aqui)" className={cn(campo, 'resize-none')} />
               </div>
             </>
           ) : (
             <div>
-              <label className="mb-1 block text-xs text-slate-400">Mensagem fixa (enviada no dia)</label>
+              <label className="mb-1 block text-xs text-muted">Mensagem fixa (enviada no dia)</label>
               <textarea value={form.mensagemFixa} onChange={(e) => setForm({ ...form, mensagemFixa: e.target.value })} rows={3} className={cn(campo, 'resize-none')} />
-              <p className="mt-1 text-[11px] leading-snug text-slate-500">Se o cliente responder, cai pra você (a IA fica de fora nesse modo).</p>
+              <p className="mt-1 text-[11px] leading-snug text-muted">Se o cliente responder, cai pra você (a IA fica de fora nesse modo).</p>
             </div>
           )}
           <div>
-            <label className="mb-1 block text-xs text-slate-400">Número (chip)</label>
+            <label className="mb-1 block text-xs text-muted">Número (chip)</label>
             <select value={form.numeroId} onChange={(e) => setForm({ ...form, numeroId: e.target.value })} className={campo}>
               {numeros.length === 0 && <option value="">— nenhum número —</option>}
               {numeros.map((n) => (<option key={n.id} value={n.id} className="bg-slate-900">+{n.telefone} ({n.statusConexao})</option>))}
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs text-slate-400">Rótulo (opcional)</label>
+            <label className="mb-1 block text-xs text-muted">Rótulo (opcional)</label>
             <input value={form.rotulo} onChange={(e) => setForm({ ...form, rotulo: e.target.value })} placeholder="Ex.: Mensalidade" className={campo} />
           </div>
           <div>
-            <label className="mb-1 flex items-center justify-between text-xs text-slate-400">
-              <span>Clientes <span className="text-slate-600">— telefone, nome, dia (um por linha)</span></span>
+            <label className="mb-1 flex items-center justify-between text-xs text-muted">
+              <span>Clientes <span className="text-subtle">— telefone, nome, dia (um por linha)</span></span>
               <button type="button" onClick={() => fileRef.current?.click()} className="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-300 hover:text-indigo-200"><Upload className="h-3 w-3" /> CSV</button>
             </label>
             <textarea value={form.contatos} onChange={(e) => setForm({ ...form, contatos: e.target.value })} rows={4} placeholder={'5583999998888, João, 27\n5511988887777, Maria, 05'} className={cn(campo, 'resize-none font-mono text-[13px]')} />
             <input ref={fileRef} type="file" accept=".csv,text/csv,text/plain" onChange={onCSV} className="hidden" />
-            <p className="mt-1 text-[11px] leading-snug text-slate-500">🚀 Cada cliente vira um agendamento. Na recorrência mensal, o "dia" da linha manda; sem ele, usa o dia padrão.</p>
+            <p className="mt-1 text-[11px] leading-snug text-muted">🚀 Cada cliente vira um agendamento. Na recorrência mensal, o "dia" da linha manda; sem ele, usa o dia padrão.</p>
           </div>
         </div>
         <div className="mt-5 flex justify-end gap-2">
@@ -241,18 +241,18 @@ function EditarModal({ ag, onFechar }: { ag: Agendamento; onFechar: (salvou: boo
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 backdrop-blur-sm">
       <Card className="w-full max-w-sm p-6">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="font-semibold text-white">Editar agendamento</h3>
-          <button onClick={() => onFechar(false)} className="text-slate-500 hover:text-slate-200"><X className="h-5 w-5" /></button>
+          <h3 className="font-semibold text-content">Editar agendamento</h3>
+          <button onClick={() => onFechar(false)} className="text-muted hover:text-content"><X className="h-5 w-5" /></button>
         </div>
         <div className="space-y-3">
           {ag.recorrencia === 'mensal' && (
             <div>
-              <label className="mb-1 block text-xs text-slate-400">Dia do mês</label>
+              <label className="mb-1 block text-xs text-muted">Dia do mês</label>
               <input type="number" min={1} max={31} value={dia} onChange={(e) => setDia(e.target.value)} className={campo} />
             </div>
           )}
           <div>
-            <label className="mb-1 block text-xs text-slate-400">Rótulo</label>
+            <label className="mb-1 block text-xs text-muted">Rótulo</label>
             <input value={rotulo} onChange={(e) => setRotulo(e.target.value)} className={campo} />
           </div>
         </div>
@@ -288,7 +288,7 @@ export function Programadas() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-400">Cobranças e lembretes que disparam sozinhos — cada cliente no seu dia (ou numa data única).</p>
+        <p className="text-sm text-muted">Cobranças e lembretes que disparam sozinhos — cada cliente no seu dia (ou numa data única).</p>
         <Button onClick={() => setModal(true)}><Plus className="h-4 w-4" /> Novo agendamento</Button>
       </div>
 
@@ -300,7 +300,7 @@ export function Programadas() {
         <Card className="overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-white/8 text-left text-xs uppercase tracking-wide text-slate-500">
+              <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-muted">
                 <th className="px-4 py-3 font-medium">Cliente</th>
                 <th className="px-4 py-3 font-medium">Quando</th>
                 <th className="px-4 py-3 font-medium">No dia</th>
@@ -312,22 +312,22 @@ export function Programadas() {
               {lista.map((a) => {
                 const puladoAgora = !!a.pularCicloRef && a.pularCicloRef === (a.recorrencia === 'mensal' ? mesAtual() : a.dataUnica?.slice(0, 10))
                 return (
-                  <tr key={a.id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02]">
+                  <tr key={a.id} className="border-b border-line last:border-0 hover:bg-surface2">
                     <td className="px-4 py-3">
-                      <span className="font-medium text-slate-100">{a.contato.nome ?? `+${a.contato.telefone}`}</span>
-                      {a.rotulo && <span className="ml-2 rounded bg-white/5 px-1.5 text-[10px] text-slate-400">{a.rotulo}</span>}
+                      <span className="font-medium text-content">{a.contato.nome ?? `+${a.contato.telefone}`}</span>
+                      {a.rotulo && <span className="ml-2 rounded bg-surface2 px-1.5 text-[10px] text-muted">{a.rotulo}</span>}
                       {a.contato.optOut && <span className="ml-2 rounded bg-rose-500/15 px-1.5 text-[10px] font-medium text-rose-300">opt-out</span>}
                     </td>
-                    <td className="px-4 py-3 text-slate-300">
+                    <td className="px-4 py-3 text-content">
                       {quandoLabel(a)}
-                      <span className="ml-1 text-[11px] text-slate-500">{a.recorrencia === 'mensal' ? '(mensal)' : '(uma vez)'}</span>
+                      <span className="ml-1 text-[11px] text-muted">{a.recorrencia === 'mensal' ? '(mensal)' : '(uma vez)'}</span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="rounded-md bg-white/5 px-2 py-0.5 text-xs text-slate-300">{a.entrega === 'ia' ? `🤖 ${TIPO_INFO[a.tipo as keyof typeof TIPO_INFO]?.label ?? a.tipo}` : '✉️ Msg fixa'}</span>
+                      <span className="rounded-md bg-surface2 px-2 py-0.5 text-xs text-content">{a.entrega === 'ia' ? `🤖 ${TIPO_INFO[a.tipo as keyof typeof TIPO_INFO]?.label ?? a.tipo}` : '✉️ Msg fixa'}</span>
                     </td>
                     <td className="px-4 py-3">
                       {!a.ativo ? (
-                        <span className="rounded-full bg-white/5 px-2 py-0.5 text-[11px] text-slate-400">pausado</span>
+                        <span className="rounded-full bg-surface2 px-2 py-0.5 text-[11px] text-muted">pausado</span>
                       ) : puladoAgora ? (
                         <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] text-amber-300">pulado este ciclo</span>
                       ) : (
@@ -337,11 +337,11 @@ export function Programadas() {
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1">
                         {a.ativo && a.recorrencia === 'mensal' && !puladoAgora && (
-                          <button title="Marcar como pago / pular este mês" onClick={() => acao(() => api.agendamentos.pular(a.id), 'Vai pular este ciclo.')} className="grid h-7 w-7 place-items-center rounded-lg text-slate-400 hover:bg-white/5 hover:text-emerald-300"><Wallet className="h-4 w-4" /></button>
+                          <button title="Marcar como pago / pular este mês" onClick={() => acao(() => api.agendamentos.pular(a.id), 'Vai pular este ciclo.')} className="grid h-7 w-7 place-items-center rounded-lg text-muted hover:bg-surface2 hover:text-emerald-300"><Wallet className="h-4 w-4" /></button>
                         )}
-                        <button title={a.ativo ? 'Pausar' : 'Ativar'} onClick={() => acao(() => api.agendamentos.editar(a.id, { ativo: !a.ativo }), a.ativo ? 'Pausado.' : 'Ativado.')} className="grid h-7 w-7 place-items-center rounded-lg text-slate-400 hover:bg-white/5 hover:text-slate-100">{a.ativo ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}</button>
-                        <button title="Editar" onClick={() => setEditar(a)} className="grid h-7 w-7 place-items-center rounded-lg text-slate-400 hover:bg-white/5 hover:text-slate-100"><Pencil className="h-4 w-4" /></button>
-                        <button title="Remover" onClick={() => { if (confirm('Remover este agendamento?')) acao(() => api.agendamentos.remover(a.id), 'Removido.') }} className="grid h-7 w-7 place-items-center rounded-lg text-slate-400 hover:bg-white/5 hover:text-rose-300"><Trash2 className="h-4 w-4" /></button>
+                        <button title={a.ativo ? 'Pausar' : 'Ativar'} onClick={() => acao(() => api.agendamentos.editar(a.id, { ativo: !a.ativo }), a.ativo ? 'Pausado.' : 'Ativado.')} className="grid h-7 w-7 place-items-center rounded-lg text-muted hover:bg-surface2 hover:text-content">{a.ativo ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}</button>
+                        <button title="Editar" onClick={() => setEditar(a)} className="grid h-7 w-7 place-items-center rounded-lg text-muted hover:bg-surface2 hover:text-content"><Pencil className="h-4 w-4" /></button>
+                        <button title="Remover" onClick={() => { if (confirm('Remover este agendamento?')) acao(() => api.agendamentos.remover(a.id), 'Removido.') }} className="grid h-7 w-7 place-items-center rounded-lg text-muted hover:bg-surface2 hover:text-rose-300"><Trash2 className="h-4 w-4" /></button>
                       </div>
                     </td>
                   </tr>

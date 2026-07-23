@@ -30,29 +30,29 @@ function NovoTenantModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
     }
   }
 
-  const campo = 'w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:border-indigo-500/50 focus:outline-none'
+  const campo = 'w-full rounded-xl border border-line bg-surface2 px-4 py-2 text-sm text-content placeholder:text-subtle focus:border-indigo-500/50 focus:outline-none'
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 backdrop-blur-sm">
       <Card className="w-full max-w-md p-6">
         <div className="mb-5 flex items-center justify-between">
-          <h3 className="font-semibold text-white">Novo tenant (cliente)</h3>
-          <button onClick={() => onFechar(false)} className="text-slate-500 hover:text-slate-200"><X className="h-5 w-5" /></button>
+          <h3 className="font-semibold text-content">Novo tenant (cliente)</h3>
+          <button onClick={() => onFechar(false)} className="text-muted hover:text-content"><X className="h-5 w-5" /></button>
         </div>
         <div className="space-y-3">
           <div>
-            <label className="mb-1 block text-xs text-slate-400">Nome do cliente</label>
+            <label className="mb-1 block text-xs text-muted">Nome do cliente</label>
             <input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} placeholder="Ex.: Retífica Granato" className={campo} />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-slate-400">E-mail do admin</label>
+            <label className="mb-1 block text-xs text-muted">E-mail do admin</label>
             <input value={form.adminEmail} onChange={(e) => setForm({ ...form, adminEmail: e.target.value })} placeholder="admin@cliente.com" className={campo} />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-slate-400">Senha do admin</label>
+            <label className="mb-1 block text-xs text-muted">Senha do admin</label>
             <input type="password" value={form.adminSenha} onChange={(e) => setForm({ ...form, adminSenha: e.target.value })} placeholder="mínimo 6 caracteres" className={campo} />
           </div>
-          <p className="text-[11px] leading-snug text-slate-500">
+          <p className="text-[11px] leading-snug text-muted">
             Cria o tenant + o usuário administrador dele. O cliente entra com esse login e vê só os dados dele.
           </p>
         </div>
@@ -78,7 +78,7 @@ export function Tenants({ onVerTenant }: { onVerTenant: (t: TenantSel) => void }
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-400">Cada tenant é um cliente com dados isolados.</p>
+        <p className="text-sm text-muted">Cada tenant é um cliente com dados isolados.</p>
         <Button onClick={() => setModal(true)}><Plus className="h-4 w-4" /> Novo tenant</Button>
       </div>
 
@@ -95,8 +95,8 @@ export function Tenants({ onVerTenant }: { onVerTenant: (t: TenantSel) => void }
                   <Building2 className="h-5 w-5" />
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate font-medium text-white">{t.nome}</p>
-                  <p className="text-xs text-slate-500">criado {tempoRelativo(t.criadoEm)}</p>
+                  <p className="truncate font-medium text-content">{t.nome}</p>
+                  <p className="text-xs text-muted">criado {tempoRelativo(t.criadoEm)}</p>
                 </div>
               </div>
               <div className="mt-4 grid grid-cols-3 gap-2 text-center">
@@ -104,7 +104,7 @@ export function Tenants({ onVerTenant }: { onVerTenant: (t: TenantSel) => void }
                 <Metric n={t.totalContatos} label="contatos" />
                 <Metric n={t.totalNumeros} label="números" />
               </div>
-              <div className="mt-3 flex items-center gap-1.5 text-xs text-slate-500">
+              <div className="mt-3 flex items-center gap-1.5 text-xs text-muted">
                 <Users className="h-3.5 w-3.5" /> {t.totalUsuarios} usuário{t.totalUsuarios === 1 ? '' : 's'}
               </div>
               <Button variant="ghost" className="mt-4 w-full" onClick={() => onVerTenant({ id: t.id, nome: t.nome })}>
@@ -129,9 +129,9 @@ export function Tenants({ onVerTenant }: { onVerTenant: (t: TenantSel) => void }
 
 function Metric({ n, label }: { n: number; label: string }) {
   return (
-    <div className={cn('rounded-lg bg-white/[0.03] py-2')}>
-      <p className="text-sm font-semibold text-slate-200">{n}</p>
-      <p className="text-[11px] text-slate-500">{label}</p>
+    <div className={cn('rounded-lg bg-surface2 py-2')}>
+      <p className="text-sm font-semibold text-content">{n}</p>
+      <p className="text-[11px] text-muted">{label}</p>
     </div>
   )
 }

@@ -65,7 +65,7 @@ export function Missoes({ onAbrir }: { onAbrir: (id: string) => void }) {
   return (
     <div className="flex h-full flex-col">
       <div className="mb-5 flex items-center justify-between gap-3">
-        <div className="inline-flex rounded-xl bg-white/5 p-1 ring-1 ring-inset ring-white/10">
+        <div className="inline-flex rounded-xl bg-surface2 p-1 ring-1 ring-inset ring-line">
           <VistaBtn ativo={vista === 'board'} onClick={() => setVista('board')} icon={<LayoutGrid className="h-4 w-4" />} label="Board" />
           <VistaBtn ativo={vista === 'lista'} onClick={() => setVista('lista')} icon={<List className="h-4 w-4" />} label="Lista" />
         </div>
@@ -92,14 +92,14 @@ export function Missoes({ onAbrir }: { onAbrir: (id: string) => void }) {
                   arrastando
                     ? soltavel
                       ? 'border-indigo-500/50 bg-indigo-500/[0.06]'
-                      : 'border-white/5 bg-transparent opacity-40'
-                    : 'border-white/8 bg-white/[0.02]',
+                      : 'border-line bg-transparent opacity-40'
+                    : 'border-line bg-surface2',
                 )}
               >
                 <div className="mb-2 flex items-center gap-2 px-2 py-1">
                   <Dot className={info.dot} />
-                  <span className="text-sm font-medium text-slate-200">{info.label}</span>
-                  <span className="ml-auto rounded-full bg-white/10 px-1.5 text-[11px] tabular-nums text-slate-400">{cards.length}</span>
+                  <span className="text-sm font-medium text-content">{info.label}</span>
+                  <span className="ml-auto rounded-full bg-surface2 px-1.5 text-[11px] tabular-nums text-muted">{cards.length}</span>
                 </div>
                 <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
                   {cards.map((m) => (
@@ -109,21 +109,21 @@ export function Missoes({ onAbrir }: { onAbrir: (id: string) => void }) {
                       onDragStart={() => setArrastando(m)}
                       onDragEnd={() => setArrastando(null)}
                       onClick={() => onAbrir(m.id)}
-                      className="group cursor-pointer rounded-xl border border-white/8 bg-white/[0.04] p-3 transition hover:border-white/20 hover:bg-white/[0.07] active:cursor-grabbing"
+                      className="group cursor-pointer rounded-xl border border-line bg-surface2 p-3 transition hover:border-line-strong hover:bg-surface2 active:cursor-grabbing"
                     >
                       <span className="mb-1 inline-block text-[10px] font-semibold uppercase tracking-wide text-indigo-300/80">
                         {TIPO_INFO[m.tipo]?.emoji} {TIPO_INFO[m.tipo]?.label ?? m.tipo}
                       </span>
-                      <p className="line-clamp-2 text-sm font-medium text-slate-100">{m.objetivo}</p>
-                      <p className="mt-1.5 flex items-center gap-1 truncate text-xs text-slate-500">
+                      <p className="line-clamp-2 text-sm font-medium text-content">{m.objetivo}</p>
+                      <p className="mt-1.5 flex items-center gap-1 truncate text-xs text-muted">
                         {m.contato?.nome ?? `+${m.contato?.telefone ?? '—'}`}
                         {m.iaPausada && <span className="ml-1 rounded bg-amber-500/20 px-1 text-[10px] text-amber-300">humano</span>}
                       </p>
-                      <p className="mt-1 text-[11px] text-slate-600">{tempoRelativo(m.criadoEm)}</p>
+                      <p className="mt-1 text-[11px] text-subtle">{tempoRelativo(m.criadoEm)}</p>
                     </div>
                   ))}
                   {cards.length === 0 && (
-                    <p className="px-2 py-6 text-center text-xs text-slate-600">—</p>
+                    <p className="px-2 py-6 text-center text-xs text-subtle">—</p>
                   )}
                 </div>
               </div>
@@ -147,19 +147,19 @@ export function Missoes({ onAbrir }: { onAbrir: (id: string) => void }) {
                 <button
                   key={m.id}
                   onClick={() => onAbrir(m.id)}
-                  className="group flex w-full items-center gap-4 rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-left transition hover:border-white/15 hover:bg-white/[0.05]"
+                  className="group flex w-full items-center gap-4 rounded-2xl border border-line bg-surface2 p-4 text-left transition hover:border-line-strong hover:bg-surface2"
                 >
                   <div className={cn('grid h-10 w-10 shrink-0 place-items-center rounded-xl', info.badge)}>
                     <Target className="h-5 w-5" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium text-slate-100">{m.objetivo}</p>
-                    <p className="truncate text-xs text-slate-500">
+                    <p className="truncate font-medium text-content">{m.objetivo}</p>
+                    <p className="truncate text-xs text-muted">
                       {m.contato?.nome ? `${m.contato.nome} · ` : ''}+{m.contato?.telefone ?? '—'} · {tempoRelativo(m.criadoEm)}
                     </p>
                   </div>
                   <Badge className={info.badge}><Dot className={info.dot} /> {info.label}</Badge>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-slate-600 group-hover:text-slate-300" />
+                  <ChevronRight className="h-4 w-4 shrink-0 text-subtle group-hover:text-content" />
                 </button>
               )
             })}
@@ -185,7 +185,7 @@ function VistaBtn({ ativo, onClick, icon, label }: { ativo: boolean; onClick: ()
       onClick={onClick}
       className={cn(
         'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition',
-        ativo ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-slate-200',
+        ativo ? 'bg-surface2 text-content' : 'text-muted hover:text-content',
       )}
     >
       {icon}
@@ -200,12 +200,12 @@ function Chip({ ativo, onClick, label, n, dot }: { ativo: boolean; onClick: () =
       onClick={onClick}
       className={cn(
         'inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium transition',
-        ativo ? 'bg-white/10 text-white ring-1 ring-inset ring-white/15' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200',
+        ativo ? 'bg-surface2 text-content ring-1 ring-inset ring-line' : 'text-muted hover:bg-surface2 hover:text-content',
       )}
     >
       {dot && <Dot className={dot} />}
       {label}
-      <span className="rounded-full bg-white/10 px-1.5 text-[10px] tabular-nums text-slate-300">{n}</span>
+      <span className="rounded-full bg-surface2 px-1.5 text-[10px] tabular-nums text-content">{n}</span>
     </button>
   )
 }

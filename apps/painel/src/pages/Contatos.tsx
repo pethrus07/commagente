@@ -6,7 +6,7 @@ import type { ContatoResumo, Numero } from '../lib/types'
 import { Button, Card, EmptyState, Spinner, tempoRelativo } from '../lib/ui'
 
 const campo =
-  'w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:border-indigo-500/50 focus:outline-none'
+  'w-full rounded-xl border border-line bg-surface2 px-4 py-2 text-sm text-content placeholder:text-subtle focus:border-indigo-500/50 focus:outline-none'
 
 // parser tolerante: cada linha vira {telefone, nome?}; pula cabeçalho (linha sem telefone)
 function parseCSV(txt: string): { nome?: string; telefone: string }[] {
@@ -47,16 +47,16 @@ function NovoContatoModal({ onFechar }: { onFechar: (criou: boolean) => void }) 
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 backdrop-blur-sm">
       <Card className="w-full max-w-sm p-6">
         <div className="mb-5 flex items-center justify-between">
-          <h3 className="font-semibold text-white">Novo contato</h3>
-          <button onClick={() => onFechar(false)} className="text-slate-500 hover:text-slate-200"><X className="h-5 w-5" /></button>
+          <h3 className="font-semibold text-content">Novo contato</h3>
+          <button onClick={() => onFechar(false)} className="text-muted hover:text-content"><X className="h-5 w-5" /></button>
         </div>
         <div className="space-y-3">
           <div>
-            <label className="mb-1 block text-xs text-slate-400">Nome (opcional)</label>
+            <label className="mb-1 block text-xs text-muted">Nome (opcional)</label>
             <input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} placeholder="Fulano" className={campo} />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-slate-400">Telefone</label>
+            <label className="mb-1 block text-xs text-muted">Telefone</label>
             <input value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} placeholder="5583999998888" className={campo} />
           </div>
         </div>
@@ -91,21 +91,21 @@ function ImportarWhatsAppModal({ onFechar }: { onFechar: (importou: boolean) => 
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 backdrop-blur-sm">
       <Card className="w-full max-w-md p-6">
         <div className="mb-1 flex items-center justify-between">
-          <h3 className="font-semibold text-white">Importar do WhatsApp</h3>
-          <button onClick={() => onFechar(false)} className="text-slate-500 hover:text-slate-200"><X className="h-5 w-5" /></button>
+          <h3 className="font-semibold text-content">Importar do WhatsApp</h3>
+          <button onClick={() => onFechar(false)} className="text-muted hover:text-content"><X className="h-5 w-5" /></button>
         </div>
-        <p className="mb-4 text-xs text-slate-500">Puxa a agenda do número conectado. Escolha o chip:</p>
+        <p className="mb-4 text-xs text-muted">Puxa a agenda do número conectado. Escolha o chip:</p>
         {numeros === null ? (
           <div className="grid place-items-center py-8"><Spinner className="h-5 w-5" /></div>
         ) : numeros.length === 0 ? (
-          <p className="py-6 text-center text-sm text-slate-500">Nenhum número cadastrado.</p>
+          <p className="py-6 text-center text-sm text-muted">Nenhum número cadastrado.</p>
         ) : (
           <div className="space-y-2">
             {numeros.map((n) => (
-              <div key={n.id} className="flex items-center justify-between rounded-xl border border-white/8 bg-white/[0.03] px-3 py-2.5">
+              <div key={n.id} className="flex items-center justify-between rounded-xl border border-line bg-surface2 px-3 py-2.5">
                 <div className="text-sm">
-                  <span className="text-slate-100">+{n.telefone}</span>
-                  <span className="ml-2 text-xs text-slate-500">{n.statusConexao}</span>
+                  <span className="text-content">+{n.telefone}</span>
+                  <span className="ml-2 text-xs text-muted">{n.statusConexao}</span>
                 </div>
                 <Button onClick={() => importar(n.id)} loading={importando === n.id} disabled={n.statusConexao !== 'conectado'}>
                   Importar
@@ -173,9 +173,9 @@ export function Contatos() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-1 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 min-w-[220px]">
-          <Search className="h-4 w-4 text-slate-500" />
-          <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar por nome ou telefone…" className="flex-1 bg-transparent text-sm text-white placeholder:text-slate-600 focus:outline-none" />
+        <div className="flex flex-1 items-center gap-2 rounded-xl border border-line bg-surface2 px-3 py-2 min-w-[220px]">
+          <Search className="h-4 w-4 text-muted" />
+          <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar por nome ou telefone…" className="flex-1 bg-transparent text-sm text-content placeholder:text-subtle focus:outline-none" />
         </div>
         <div className="flex flex-wrap gap-2">
           <Button onClick={() => setModal('novo')}><Plus className="h-4 w-4" /> Novo</Button>
@@ -194,7 +194,7 @@ export function Contatos() {
         <Card className="overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-white/8 text-left text-xs uppercase tracking-wide text-slate-500">
+              <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-muted">
                 <th className="px-4 py-3 font-medium">Contato</th>
                 <th className="px-4 py-3 font-medium">Telefone</th>
                 <th className="px-4 py-3 font-medium">Origem</th>
@@ -204,23 +204,23 @@ export function Contatos() {
             </thead>
             <tbody>
               {visiveis.length === 0 && (
-                <tr><td colSpan={5} className="px-4 py-8 text-center text-sm text-slate-500">Nenhum contato encontrado para “{busca}”.</td></tr>
+                <tr><td colSpan={5} className="px-4 py-8 text-center text-sm text-muted">Nenhum contato encontrado para “{busca}”.</td></tr>
               )}
               {visiveis.map((c) => (
-                <tr key={c.id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02]">
+                <tr key={c.id} className="border-b border-line last:border-0 hover:bg-surface2">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="grid h-8 w-8 place-items-center rounded-lg bg-white/5 text-xs font-semibold text-slate-300">
+                      <div className="grid h-8 w-8 place-items-center rounded-lg bg-surface2 text-xs font-semibold text-content">
                         {(c.nome ?? '#').slice(0, 2).toUpperCase()}
                       </div>
-                      <span className="font-medium text-slate-100">{c.nome ?? <span className="text-slate-500">sem nome</span>}</span>
+                      <span className="font-medium text-content">{c.nome ?? <span className="text-muted">sem nome</span>}</span>
                       {c.optOut && <span className="rounded bg-rose-500/15 px-1.5 text-[10px] font-medium text-rose-300">opt-out</span>}
                     </div>
                   </td>
-                  <td className="px-4 py-3 tabular-nums text-slate-300">+{c.telefone}</td>
-                  <td className="px-4 py-3"><span className="rounded-md bg-white/5 px-2 py-0.5 text-xs text-slate-400">{c.origem ?? '—'}</span></td>
-                  <td className="px-4 py-3 text-center tabular-nums text-slate-300">{c.totalMissoes}</td>
-                  <td className="px-4 py-3 text-right text-xs text-slate-500">{tempoRelativo(c.criadoEm)}</td>
+                  <td className="px-4 py-3 tabular-nums text-content">+{c.telefone}</td>
+                  <td className="px-4 py-3"><span className="rounded-md bg-surface2 px-2 py-0.5 text-xs text-muted">{c.origem ?? '—'}</span></td>
+                  <td className="px-4 py-3 text-center tabular-nums text-content">{c.totalMissoes}</td>
+                  <td className="px-4 py-3 text-right text-xs text-muted">{tempoRelativo(c.criadoEm)}</td>
                 </tr>
               ))}
             </tbody>

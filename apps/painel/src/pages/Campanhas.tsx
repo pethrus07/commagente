@@ -8,7 +8,7 @@ import type { CampanhaResumo, Numero } from '../lib/types'
 import { Button, Card, EmptyState, Spinner, cn, tempoRelativo } from '../lib/ui'
 
 const campo =
-  'w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:border-indigo-500/50 focus:outline-none'
+  'w-full rounded-xl border border-line bg-surface2 px-4 py-2 text-sm text-content placeholder:text-subtle focus:border-indigo-500/50 focus:outline-none'
 
 function NovaCampanhaModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
   const [numeros, setNumeros] = useState<Numero[]>([])
@@ -55,54 +55,54 @@ function NovaCampanhaModal({ onFechar }: { onFechar: (criou: boolean) => void })
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 backdrop-blur-sm">
       <Card className="max-h-[90vh] w-full max-w-lg overflow-y-auto p-6">
         <div className="mb-5 flex items-center justify-between">
-          <h3 className="font-semibold text-white">Nova campanha</h3>
-          <button onClick={() => onFechar(false)} className="text-slate-500 hover:text-slate-200"><X className="h-5 w-5" /></button>
+          <h3 className="font-semibold text-content">Nova campanha</h3>
+          <button onClick={() => onFechar(false)} className="text-muted hover:text-content"><X className="h-5 w-5" /></button>
         </div>
         <div className="space-y-3">
           <div>
-            <label className="mb-1 block text-xs text-slate-400">Nome da campanha</label>
+            <label className="mb-1 block text-xs text-muted">Nome da campanha</label>
             <input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} placeholder="Ex.: Cobrança julho · Prospecção fornecedores" className={campo} />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-slate-400">Tipo</label>
+            <label className="mb-1 block text-xs text-muted">Tipo</label>
             <div className="flex flex-wrap gap-1.5">
               {TIPOS_MISSAO.map((t) => (
-                <button key={t} onClick={() => setForm({ ...form, tipo: t })} className={cn('rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 ring-inset transition', form.tipo === t ? 'bg-indigo-500/20 text-indigo-200 ring-indigo-500/40' : 'text-slate-400 ring-white/10 hover:text-slate-200')}>
+                <button key={t} onClick={() => setForm({ ...form, tipo: t })} className={cn('rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 ring-inset transition', form.tipo === t ? 'bg-indigo-500/20 text-indigo-200 ring-indigo-500/40' : 'text-muted ring-line hover:text-content')}>
                   {TIPO_INFO[t].emoji} {TIPO_INFO[t].label}
                 </button>
               ))}
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-xs text-slate-400">Modo</label>
+            <label className="mb-1 block text-xs text-muted">Modo</label>
             <div className="flex gap-1.5">
               {(['auto', 'copilot'] as const).map((md) => (
-                <button key={md} onClick={() => setForm({ ...form, modo: md })} className={cn('flex-1 rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 ring-inset transition', form.modo === md ? 'bg-indigo-500/20 text-indigo-200 ring-indigo-500/40' : 'text-slate-400 ring-white/10 hover:text-slate-200')}>
+                <button key={md} onClick={() => setForm({ ...form, modo: md })} className={cn('flex-1 rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 ring-inset transition', form.modo === md ? 'bg-indigo-500/20 text-indigo-200 ring-indigo-500/40' : 'text-muted ring-line hover:text-content')}>
                   {md === 'auto' ? '⚡ Auto' : '👁️ Co-pilot'}
                 </button>
               ))}
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-xs text-slate-400">Número (chip)</label>
+            <label className="mb-1 block text-xs text-muted">Número (chip)</label>
             <select value={form.numeroId} onChange={(e) => setForm({ ...form, numeroId: e.target.value })} className={campo}>
               {numeros.length === 0 && <option value="">— nenhum número —</option>}
               {numeros.map((n) => (<option key={n.id} value={n.id} className="bg-slate-900">+{n.telefone} ({n.statusConexao})</option>))}
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs text-slate-400">Objetivo</label>
+            <label className="mb-1 block text-xs text-muted">Objetivo</label>
             <input value={form.objetivo} onChange={(e) => setForm({ ...form, objetivo: e.target.value })} placeholder="O que a IA deve fazer em cada conversa" className={campo} />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-slate-400">Critério de conclusão (opcional)</label>
+            <label className="mb-1 block text-xs text-muted">Critério de conclusão (opcional)</label>
             <input value={form.criterioConclusao} onChange={(e) => setForm({ ...form, criterioConclusao: e.target.value })} placeholder="Ex.: pagamento confirmado" className={campo} />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-slate-400">Informações autorizadas (opcional)</label>
+            <label className="mb-1 block text-xs text-muted">Informações autorizadas (opcional)</label>
             <textarea value={form.informacoes} onChange={(e) => setForm({ ...form, informacoes: e.target.value })} rows={2} placeholder="Preços/prazos REAIS que a IA pode afirmar" className={cn(campo, 'resize-none')} />
           </div>
-          <div className="border-t border-white/8 pt-3">
+          <div className="border-t border-line pt-3">
             <SeletorContatos onChange={setContatos} />
           </div>
         </div>
@@ -135,10 +135,10 @@ function AddContatosModal({ campanha, onFechar }: { campanha: CampanhaResumo; on
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 backdrop-blur-sm">
       <Card className="max-h-[90vh] w-full max-w-lg overflow-y-auto p-6">
         <div className="mb-1 flex items-center justify-between">
-          <h3 className="font-semibold text-white">Adicionar contatos</h3>
-          <button onClick={() => onFechar(false)} className="text-slate-500 hover:text-slate-200"><X className="h-5 w-5" /></button>
+          <h3 className="font-semibold text-content">Adicionar contatos</h3>
+          <button onClick={() => onFechar(false)} className="text-muted hover:text-content"><X className="h-5 w-5" /></button>
         </div>
-        <p className="mb-4 text-xs text-slate-500">à campanha <b className="text-slate-300">{campanha.nome}</b> — cada um vira uma nova conversa com a mesma definição.</p>
+        <p className="mb-4 text-xs text-muted">à campanha <b className="text-content">{campanha.nome}</b> — cada um vira uma nova conversa com a mesma definição.</p>
         <SeletorContatos onChange={setContatos} />
         <div className="mt-5 flex justify-end gap-2">
           <Button variant="ghost" onClick={() => onFechar(false)}>Cancelar</Button>
@@ -163,7 +163,7 @@ export function Campanhas() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-400">Uma definição de missão disparada pra vários contatos — dá pra adicionar mais a qualquer momento.</p>
+        <p className="text-sm text-muted">Uma definição de missão disparada pra vários contatos — dá pra adicionar mais a qualquer momento.</p>
         <Button onClick={() => setModal(true)}><Plus className="h-4 w-4" /> Nova campanha</Button>
       </div>
 
@@ -180,15 +180,15 @@ export function Campanhas() {
                 <div className="flex items-start gap-3">
                   <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-500/15 text-indigo-300"><Megaphone className="h-5 w-5" /></div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium text-white">{c.nome}</p>
-                    <p className="truncate text-xs text-slate-500">{TIPO_INFO[c.tipo]?.emoji} {TIPO_INFO[c.tipo]?.label} · {tempoRelativo(c.criadoEm)}</p>
+                    <p className="truncate font-medium text-content">{c.nome}</p>
+                    <p className="truncate text-xs text-muted">{TIPO_INFO[c.tipo]?.emoji} {TIPO_INFO[c.tipo]?.label} · {tempoRelativo(c.criadoEm)}</p>
                   </div>
                 </div>
-                <p className="mt-3 line-clamp-2 text-sm text-slate-300">{c.objetivo}</p>
+                <p className="mt-3 line-clamp-2 text-sm text-content">{c.objetivo}</p>
                 <div className="mt-4 flex items-center gap-4 text-sm">
-                  <span className="text-slate-200"><b className="tabular-nums">{c.total}</b> <span className="text-slate-500">conversas</span></span>
+                  <span className="text-content"><b className="tabular-nums">{c.total}</b> <span className="text-muted">conversas</span></span>
                   <span className="text-emerald-300"><b className="tabular-nums">{c.cumpridas}</b> <span className="text-emerald-300/60">cumpridas</span></span>
-                  <span className="ml-auto text-xs text-slate-500 tabular-nums">{taxa}%</span>
+                  <span className="ml-auto text-xs text-muted tabular-nums">{taxa}%</span>
                 </div>
                 <Button variant="ghost" className="mt-4 w-full" onClick={() => setAdd(c)}><UserPlus className="h-4 w-4" /> Adicionar contatos</Button>
               </Card>

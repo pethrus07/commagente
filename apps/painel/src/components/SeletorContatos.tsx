@@ -6,7 +6,7 @@ import type { ContatoResumo } from '../lib/types'
 import { cn } from '../lib/ui'
 
 const campo =
-  'w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-slate-600 focus:border-indigo-500/50 focus:outline-none'
+  'w-full rounded-xl border border-line bg-surface2 px-4 py-2 text-sm text-content placeholder:text-subtle focus:border-indigo-500/50 focus:outline-none'
 
 // Seletor reutilizável: escolher da base (busca + checkbox) + colar novos.
 // Emite pra fora a lista combinada (sem duplicar telefone) via onChange.
@@ -70,7 +70,7 @@ export function SeletorContatos({
   return (
     <div className="space-y-3">
       <div>
-        <label className="mb-1 flex items-center justify-between text-xs text-slate-400">
+        <label className="mb-1 flex items-center justify-between text-xs text-muted">
           <span>Escolher da base</span>
           {combinados.length > 0 && (
             <span className="rounded-full bg-indigo-500/20 px-2 py-0.5 text-[11px] font-medium text-indigo-300">
@@ -81,7 +81,7 @@ export function SeletorContatos({
         <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar contato…" className={campo} />
         {base.length > 0 && (
           <div className="mt-1.5 flex items-center justify-between px-0.5">
-            <span className="text-[11px] text-slate-500">
+            <span className="text-[11px] text-muted">
               {busca.trim() ? `${filtrada.length} no filtro` : `${base.length} na base`}
             </span>
             <button type="button" onClick={alternarTodos} className="text-[11px] font-medium text-indigo-300 hover:text-indigo-200">
@@ -89,26 +89,26 @@ export function SeletorContatos({
             </button>
           </div>
         )}
-        <div className="mt-1.5 max-h-40 divide-y divide-white/5 overflow-y-auto rounded-xl border border-white/10">
+        <div className="mt-1.5 max-h-40 divide-y divide-line overflow-y-auto rounded-xl border border-line">
           {base.length === 0 ? (
-            <p className="px-3 py-3 text-xs text-slate-600">Base vazia — importe na aba Contatos, ou cole abaixo.</p>
+            <p className="px-3 py-3 text-xs text-subtle">Base vazia — importe na aba Contatos, ou cole abaixo.</p>
           ) : filtrada.length === 0 ? (
-            <p className="px-3 py-3 text-xs text-slate-600">Nenhum contato encontrado.</p>
+            <p className="px-3 py-3 text-xs text-subtle">Nenhum contato encontrado.</p>
           ) : (
             filtrada.slice(0, 60).map((c) => (
-              <button key={c.id} type="button" onClick={() => alternar(c.id)} className="flex w-full items-center gap-2.5 px-3 py-2 text-left hover:bg-white/5">
-                <span className={cn('grid h-4 w-4 shrink-0 place-items-center rounded border', sel.has(c.id) ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-white/25')}>
+              <button key={c.id} type="button" onClick={() => alternar(c.id)} className="flex w-full items-center gap-2.5 px-3 py-2 text-left hover:bg-surface2">
+                <span className={cn('grid h-4 w-4 shrink-0 place-items-center rounded border', sel.has(c.id) ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-line-strong')}>
                   {sel.has(c.id) && <Check className="h-3 w-3" />}
                 </span>
-                <span className="truncate text-sm text-slate-200">{c.nome ?? `+${c.telefone}`}</span>
-                {c.nome && <span className="ml-auto shrink-0 text-[11px] tabular-nums text-slate-500">+{c.telefone}</span>}
+                <span className="truncate text-sm text-content">{c.nome ?? `+${c.telefone}`}</span>
+                {c.nome && <span className="ml-auto shrink-0 text-[11px] tabular-nums text-muted">+{c.telefone}</span>}
               </button>
             ))
           )}
         </div>
       </div>
       <div>
-        <label className="mb-1 block text-xs text-slate-400">Ou cole novos números <span className="text-slate-600">— telefone[, nome] por linha</span></label>
+        <label className="mb-1 block text-xs text-muted">Ou cole novos números <span className="text-subtle">— telefone[, nome] por linha</span></label>
         <textarea value={colados} onChange={(e) => setColados(e.target.value)} rows={2} placeholder={'5583999998888, Fornecedor A'} className={cn(campo, 'resize-none font-mono text-[13px]')} />
       </div>
     </div>
