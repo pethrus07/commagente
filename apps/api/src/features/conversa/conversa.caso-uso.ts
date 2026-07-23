@@ -90,6 +90,24 @@ async function executarTurno(missaoId: string) {
         dados: { motivo: saida.motivo_escala ?? null },
       },
     })
+    // NÃO deixa o cliente no vácuo: se a IA escreveu uma mensagem-ponte
+    // ("deixa eu confirmar e já retorno"), envia antes de pausar pro humano.
+    // Em co-pilot o humano trata a resposta, então não auto-envia.
+    const ponte = saida.resposta?.trim()
+    if (missao.modo !== 'copilot' && ponte) {
+      await filaRepo.enfileirar({
+        tenantId: missao.tenantId,
+        missaoId,
+        contatoId: missao.contatoId,
+        payload: {
+          numeroId: missao.numeroId,
+          telefone: missao.contato.telefone,
+          texto: ponte,
+          tipo: 'conversa',
+        },
+        agendadoPara: new Date(Date.now() + jitterMs('conversa')),
+      })
+    }
     // T1-3: resumo fresco pro humano que vai assumir (inclui a última mensagem do lead)
     try {
       await conversaRepo.salvarResumo(missaoId, await ia.resumir(ctx))
