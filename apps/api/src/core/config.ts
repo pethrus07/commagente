@@ -32,8 +32,15 @@ export const config = {
 
   // URL que a Evolution (no Docker) usa pra chamar nosso webhook.
   // Em dev a API roda no host → host.docker.internal alcança a :3000.
+  // Em PRODUÇÃO, inclua o segredo no caminho: .../webhook/<WEBHOOK_SECRET>
   webhookUrl:
     process.env.WEBHOOK_URL ?? 'http://host.docker.internal:3000/webhook',
+  // Segredo do webhook: se definido, só aceita POST /webhook/<segredo> (fecha o webhook aberto).
+  // Vazio em dev = sem checagem (a API só é acessível localmente).
+  webhookSecret: process.env.WEBHOOK_SECRET ?? '',
+  // CORS: origem(ns) do painel permitidas em produção (separadas por vírgula).
+  // Vazio = libera geral (dev usa proxy do Vite, mesma origem → não precisa).
+  corsOrigin: process.env.CORS_ORIGIN ?? '',
 
   // Autenticação (JWT). Em produção defina JWT_SECRET forte no .env.
   jwtSecret: process.env.JWT_SECRET ?? 'dev-secret-zapagente-troque-em-producao',

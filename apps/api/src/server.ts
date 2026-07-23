@@ -1,4 +1,7 @@
+import fastifyCors from '@fastify/cors'
+import fastifyHelmet from '@fastify/helmet'
 import fastifyJwt from '@fastify/jwt'
+import fastifyRateLimit from '@fastify/rate-limit'
 import Fastify, { type FastifyError } from 'fastify'
 import { ZodError } from 'zod'
 import { autenticar } from './core/auth'
@@ -26,6 +29,21 @@ const app = Fastify({ logger: true })
 // (o worker roda a cada 3s; um erro transitório não pode tirar o serviço do ar).
 process.on('unhandledRejection', (motivo) => app.log.error({ motivo }, 'unhandledRejection'))
 process.on('uncaughtException', (err) => app.log.error({ err }, 'uncaughtException'))
+
+// segurança HTTP (produção): cabeçalhos seguros, CORS explícito e rate-limit.
+// helmet: cabeçalhos seguros (API JSON — sem CSP de página).
+app.register(fastifyHelmet, { contentSecurityPolicy: false })
+// CORS: em prod libera só a(s) origem(ns) do painel (CORS_ORIGIN); vazio = libera geral
+// (dev usa o proxy do Vite, mesma origem, então não precisa).
+app.register(fastifyCors, {
+  origin: config.corsOrigin ? config.corsOrigin.split(',').map((o) => o.trim()) : true,
+})
+// rate-limit: trava abuso/força-bruta. Não conta rotas de saúde (o painel/monitor batem direto).
+app.register(fastifyRateLimit, {
+  max: 300,
+  timeWindow: '1 minute',
+  allowList: (req) => req.url === '/health' || req.url === '/ready',
+})
 
 // autenticação: JWT + hook global que exige token (menos rotas públicas)
 app.register(fastifyJwt, { secret: config.jwtSecret })

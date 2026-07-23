@@ -14,7 +14,10 @@ services:
       POSTGRES_PASSWORD: zapagente
       POSTGRES_DB: zapagente
     ports:
-      - "5432:5432"
+      # bind só no localhost do host: nem o Postgres nem a Evolution ficam expostos
+      # na internet (defesa em profundidade além do firewall). O host (API/psql) alcança
+      # via localhost; containers falam entre si pela rede do compose.
+      - "127.0.0.1:5432:5432"
     volumes:
       - zapagente_pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -35,7 +38,7 @@ services:
       evolution_redis:
         condition: service_started
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080" # NÃO expor a Evolution na internet (vetor direto pro WhatsApp)
     # host.docker.internal → alcança a API rodando no host (npm run dev na :3000)
     extra_hosts:
       - "host.docker.internal:host-gateway"

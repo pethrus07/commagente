@@ -1,0 +1,27 @@
+# Caddy — reverse proxy + HTTPS automático (Let's Encrypt) para o zapagente em produção.
+# Troque "painel.seudominio.com" pelo seu domínio (registro A apontando pro IP do server).
+# Uso: apt install caddy → coloque este arquivo em /etc/caddy/Caddyfile → systemctl reload caddy
+#
+# Serve o painel (build estático) e faz proxy de /api e /webhook para a API (:3000).
+# A Evolution (:8080) NÃO é exposta aqui — fica só na rede interna (127.0.0.1).
+
+painel.seudominio.com {
+	encode gzip
+
+	# API do zapagente
+	handle /api/* {
+		reverse_proxy localhost:3000
+	}
+
+	# webhook da Evolution (o segredo vai no caminho: /webhook/<WEBHOOK_SECRET>)
+	handle /webhook* {
+		reverse_proxy localhost:3000
+	}
+
+	# painel React (build estático) — SPA: cai no index.html
+	handle {
+		root * /root/zapagente/apps/painel/dist
+		try_files {path} /index.html
+		file_server
+	}
+}

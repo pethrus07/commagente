@@ -18,8 +18,8 @@ declare module '@fastify/jwt' {
   }
 }
 
-// rotas liberadas (sem token). O webhook tem proteção própria (segredo) — F futura.
-const PUBLICAS = new Set(['/health', '/ready', '/auth/login', '/webhook'])
+// rotas liberadas (sem token). O webhook tem proteção PRÓPRIA (segredo no caminho).
+const PUBLICAS = new Set(['/health', '/ready', '/auth/login'])
 
 // onRequest global (callback-style): valida o JWT e envolve o resto do ciclo da
 // requisição no contexto de tenant (als.run(store, done)) — só assim o AsyncLocalStorage
@@ -30,7 +30,8 @@ export function autenticar(
   done: () => void,
 ) {
   const rota = req.routeOptions?.url ?? req.url.split('?')[0]
-  if (PUBLICAS.has(rota)) return done()
+  // /webhook e /webhook/:segredo passam sem token (a validação do segredo é na própria rota)
+  if (PUBLICAS.has(rota) || rota.startsWith('/webhook')) return done()
 
   req
     .jwtVerify()
