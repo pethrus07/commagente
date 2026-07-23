@@ -206,5 +206,26 @@ Custo hoje é baixíssimo (~R$0,06 numa conversa longa de 27 turnos), mas dá pr
 - ✅ **RAG em vez de contexto fixo (RAG-1)** — o conhecimento vai por **trechos relevantes** (não a base inteira) em cada `gerar`; escala a base sem inflar o prompt.
 
 ### 8.3 📊 Instrumentação de custo & escala `F1`
-- ✅ **(COST-1)** — captura o `usage` (tokens in/out) de cada chamada OpenAI **por missão** (`Missao.tokensEntrada/tokensSaida`) e exibe no detalhe da missão (card "Custo de IA", **só super-admin**). **Falta (evolução):** agregado por tenant/dia num dashboard.
+- ✅ **(COST-1)** — captura o `usage` (tokens in/out) de cada chamada OpenAI **por missão** (`Missao.tokensEntrada/tokensSaida`) e exibe no detalhe da missão (card "Custo de IA", **só super-admin**, escondido no servidor p/ não-super). **Falta (evolução):** agregado por tenant/dia num dashboard.
 - **Baseline medido:** ~US$0,01 (~R$0,06) por conversa longa → **~R$60 / 1.000 conversas**. A IA é barata; o custo real é infra + chip + trabalho. Serve pra precificar a revenda com margem clara.
+
+### 8.4 🚀 Deploy "always-on desassistido" (bloqueadores de produção) `F1`
+> Levantado na revisão 360° (2026-07-23). "Deploy" não é só subir o código — é **sobreviver em produção sem babá**. Além dos P0 de segurança já conhecidos (segredo no webhook, helmet/rate-limit/CORS, segredos fortes, rodar `backfill-rag.mts` 1×), faltam:
+- **Observabilidade/alerta** — alertar quando `statusConexao != conectado` (chip caiu), `classificarSaude = risco`, e um heartbeat do worker. Hoje uma queda é silenciosa até o parceiro perceber que parou. Falha #1 esperada em produção.
+- **Backup do Postgres** — hoje **ZERO backup**. `pg_dump` em cron + cópia off-site. Um VPS único com dados multi-tenant (contatos, conversas, consentimento LGPD) sem backup = perda total numa falha de disco. Bloqueador antes de dado real de cliente.
+- **Teto de gasto da OpenAI** — a key é do parceiro, **única e compartilhada**. Setar limite hard + alerta na conta antes de rodar always-on (loop/abuso gasta sem freio).
+- **Proteger a Evolution API** (:8080) — sobe junto no compose; se exposta, é vetor direto pro WhatsApp. Só acessível na rede interna/localhost + key forte.
+
+### 8.5 💼 Camada comercial (pré-revenda) `F2`
+> Lacuna estratégica da revisão: o roadmap tratava "multi-tenant técnico" como sinônimo de "vendável". O **encanamento** existe (isolamento, super-admin, impersonação); a **camada comercial** não. Sem ela, revender é manual e arriscado:
+- **Estado + billing do tenant** — `Tenant` só tem `id/nome/criadoEm`. Falta `ativo` (cortar quem não paga) + `plano` + integração de cobrança BR (Asaas/Pagar.me/Stripe).
+- **Quotas por tenant (entitlements de plano)** — hoje os limites são por número (budget/cap/teto de estágio), não por tenant (nº de números, missões/mês, contatos, quais features). Base pra diferenciar planos e conter custo.
+- **Custo + teto por tenant** — COST-1 é por-missão; falta agregado por tenant e **corte automático** ao estourar (protege a key única do parceiro).
+- **Gestão de usuários por tenant + reset de senha** — hoje `criarTenant` cria 1 admin; o cliente não adiciona operadores nem reseta senha sem mexer no banco.
+- **Branding white-label** (logo/cor/domínio por tenant) e **hard-delete LGPD** (direito ao apagamento de contato+mensagens; hoje só opt-out).
+
+> ⚠️ **Riscos de produção** (revisão): dependência da API não-oficial + "Aguardando esta mensagem" (dessincronização Signal com status `ok`) → mitigação é a escada oficial, mas **sem gatilho definido**; **chip único sem pool de rotação** (ponto único de ban); key OpenAI única do parceiro; **capacidade** da VPS 2vCPU/4GB apertada com Postgres+Evolution+Redis+API (RAG por cosseno em memória cresce com a base → pgvector antes do que se imagina).
+
+---
+
+> **Nota (2026-07-23):** as seções §1–§7 (mapa/matriz/fases F0–F3) são o **plano pré-construção** e ficaram **desatualizadas** — na prática F1/F2 estão quase inteiros e parte do F3 (multi-tenant) foi feita. O **status real por fatia está no [CLAUDE.md](../CLAUDE.md)**; o backlog vivo é esta §8. Ao ler as fases abaixo, tratar como histórico de intenção, não como estado atual.
