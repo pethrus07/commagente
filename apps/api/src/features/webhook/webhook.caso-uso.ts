@@ -4,7 +4,7 @@
 import { db } from '../../core/db'
 import { whatsapp } from '../../core/evolution'
 import { transcritor } from '../../core/transcricao'
-import { processarTurno } from '../conversa/conversa.caso-uso'
+import { agendarTurno } from '../conversa/conversa.caso-uso'
 import { missoesRepo } from '../missoes/missoes.repo'
 import type { AudioRecebido } from './webhook.dominio'
 import { ehPedidoOptOut, mapearStatusEnvio, normalizarEvento } from './webhook.dominio'
@@ -134,14 +134,12 @@ export async function processarWebhook(payload: unknown) {
       })
     }
 
-    // Cérebro IA conduz a resposta (Fatia 4). Fire-and-forget: não segura o 200
-    // do webhook (o executor simula digitação ~6s). Fatia 6 troca por fila/worker.
-    // Fatia 9: se a missão está com a IA pausada (humano assumiu), NÃO responde —
-    // a mensagem entra no histórico e o operador responde na mão pelo painel.
+    // Cérebro IA conduz a resposta. AGENDA o turno (debounce): se o lead mandar várias
+    // mensagens seguidas, elas se acumulam e viram UM turno (anti-duplo-texto).
+    // Se a IA está pausada (humano assumiu), NÃO responde — a mensagem entra no
+    // histórico e o operador responde na mão pelo painel.
     if (missao && !missao.iaPausada) {
-      void processarTurno(missao.id).catch((err) =>
-        console.error('[conversa] processarTurno falhou:', err),
-      )
+      agendarTurno(missao.id)
     }
     return
   }

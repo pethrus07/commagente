@@ -29,6 +29,24 @@ export async function processarTurno(missaoId: string) {
   }
 }
 
+// Debounce anti-duplo-texto: o webhook agenda o turno em vez de disparar na hora.
+// Se o lead manda várias mensagens seguidas, elas se ACUMULAM (cada uma reinicia a
+// janela) e viram UM ÚNICO turno — a IA responde tudo de uma vez, sem duplicar.
+const turnosAgendados = new Map<string, ReturnType<typeof setTimeout>>()
+const DEBOUNCE_MS = 7000
+
+export function agendarTurno(missaoId: string, delayMs = DEBOUNCE_MS) {
+  const anterior = turnosAgendados.get(missaoId)
+  if (anterior) clearTimeout(anterior)
+  const t = setTimeout(() => {
+    turnosAgendados.delete(missaoId)
+    processarTurno(missaoId).catch((err) =>
+      console.error('[conversa] turno agendado falhou:', err),
+    )
+  }, delayMs)
+  turnosAgendados.set(missaoId, t)
+}
+
 async function executarTurno(missaoId: string) {
   const missao = await missoesRepo.buscar(missaoId)
   if (!missao) return { ok: false as const, motivo: 'missao_inexistente' }
