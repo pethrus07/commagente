@@ -57,3 +57,27 @@ export async function enviarTexto(
   })
   return { providerMsgId, telefone, digitou_ms: ms, missaoId: missaoId ?? null }
 }
+
+// Envia um documento (ex.: PDF do evento) e registra em `mensagens` (direção out).
+export async function enviarDocumento(
+  numeroId: string,
+  telefone: string,
+  doc: { base64: string; nomeArquivo: string; mimetype?: string; legenda?: string },
+  missaoId?: string,
+) {
+  const numero = await envioRepo.buscarNumero(numeroId)
+  if (!numero) throw new ErroHttp(404, 'Número não encontrado')
+  const contato = await envioRepo.upsertContato(numero.tenantId, telefone)
+
+  const { providerMsgId } = await wa.enviarDocumento(numero.instanciaEvolution, telefone, doc)
+
+  await envioRepo.gravarMensagemSaida({
+    tenantId: numero.tenantId,
+    missaoId: missaoId ?? null,
+    contatoId: contato.id,
+    conteudo: doc.legenda ? `📎 ${doc.nomeArquivo} — ${doc.legenda}` : `📎 ${doc.nomeArquivo}`,
+    providerMsgId,
+    statusEnvio: 'enviando',
+  })
+  return { providerMsgId }
+}

@@ -28,6 +28,8 @@ async function req<T>(
       apikey: config.evolution.apiKey,
     },
     body: corpo ? JSON.stringify(corpo) : undefined,
+    // sem timeout, um request pendurado congela o worker (lock `rodando`) e trava a fila
+    signal: AbortSignal.timeout(30_000),
   })
   const texto = await resp.text()
   if (!resp.ok) {
@@ -88,6 +90,23 @@ export const evolutionClient: PortaWhatsApp = {
       'POST',
       `/message/sendText/${instancia}`,
       { number: telefone, text: texto },
+    )
+    return { providerMsgId: r.key?.id ?? '' }
+  },
+
+  async enviarDocumento(instancia, telefone, doc) {
+    // v2: POST /message/sendMedia/{instance} com mediatype 'document' e media em base64.
+    const r = await req<{ key?: { id?: string } }>(
+      'POST',
+      `/message/sendMedia/${instancia}`,
+      {
+        number: telefone,
+        mediatype: 'document',
+        mimetype: doc.mimetype ?? 'application/pdf',
+        media: doc.base64,
+        fileName: doc.nomeArquivo,
+        caption: doc.legenda,
+      },
     )
     return { providerMsgId: r.key?.id ?? '' }
   },

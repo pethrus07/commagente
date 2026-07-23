@@ -1,6 +1,6 @@
 // ⚙️/🔌 O worker do motor anti-bloqueio: tira da fila e envia no ritmo humano.
 import { config } from '../../core/config'
-import { enviarTexto } from '../envio/envio.caso-uso'
+import { enviarDocumento, enviarTexto } from '../envio/envio.caso-uso'
 import { dentroDaJanela, intervaloEnvioMs, temBudget, tetoDiarioPorEstagio } from './fila.dominio'
 import { filaRepo } from './fila.repo'
 
@@ -9,6 +9,8 @@ type Payload = {
   telefone: string
   texto: string
   tipo?: 'novo' | 'conversa'
+  // quando presente, envia um documento (ex.: PDF) em vez de texto
+  documento?: { base64: string; nomeArquivo: string; mimetype?: string; legenda?: string }
 }
 
 // hora atual "HH:mm" no fuso configurado (ex.: America/Sao_Paulo)
@@ -34,10 +36,17 @@ function agoraData(): string {
 const MAX_TENTATIVAS = 5 // depois disso o item vira dead-letter (status 'erro')
 
 let rodando = false
+let inicioTick = 0
+const TICK_MAX_MS = 90_000 // watchdog: se um tick passar disso, considera travado e destrava
 
 async function tick() {
-  if (rodando) return // evita sobreposição (o envio simula digitação ~6s)
+  if (rodando) {
+    // watchdog anti-freeze: um tick pendurado (rede/Evolution) não pode congelar a fila pra sempre
+    if (Date.now() - inicioTick < TICK_MAX_MS) return
+    console.error('[fila] watchdog: tick anterior travado >90s, destravando')
+  }
   rodando = true
+  inicioTick = Date.now()
   try {
     const devidos = await filaRepo.pegarDevidos(new Date())
     for (const item of devidos) {
@@ -80,7 +89,11 @@ async function tick() {
 
       await filaRepo.marcar(item.id, 'enviando')
       try {
-        await enviarTexto(p.numeroId, p.telefone, p.texto, item.missaoId ?? undefined)
+        if (p.documento) {
+          await enviarDocumento(p.numeroId, p.telefone, p.documento, item.missaoId ?? undefined)
+        } else {
+          await enviarTexto(p.numeroId, p.telefone, p.texto, item.missaoId ?? undefined)
+        }
         await filaRepo.marcar(item.id, 'ok')
         await filaRepo.incrementarEnviados(p.numeroId)
         // agenda o próximo envio permitido deste número (espaça o gotejamento)

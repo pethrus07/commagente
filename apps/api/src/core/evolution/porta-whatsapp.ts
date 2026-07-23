@@ -35,6 +35,12 @@ export interface PortaWhatsApp {
     telefone: string,
     texto: string,
   ): Promise<{ providerMsgId: string }>
+  /** envia um documento/arquivo (ex.: PDF) em base64; legenda opcional */
+  enviarDocumento(
+    instancia: string,
+    telefone: string,
+    doc: { base64: string; nomeArquivo: string; mimetype?: string; legenda?: string },
+  ): Promise<{ providerMsgId: string }>
   /** sinaliza presença (ex.: "digitando…") por alguns ms — anti-bloqueio */
   enviarPresenca(
     instancia: string,
