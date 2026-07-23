@@ -49,7 +49,7 @@ const ESTADOS_SAIDA =
 export const provedorOpenai: ProvedorIA = {
   nome: 'openai',
 
-  async gerar(ctx): Promise<SaidaIA> {
+  async gerar(ctx): Promise<{ saida: SaidaIA; uso?: UsoIA }> {
     const fatos =
       ctx.fatos && Object.keys(ctx.fatos).length > 0
         ? `DADOS JÁ COLETADOS deste lead (NÃO peça de novo o que já está aqui — use e pergunte SÓ o que falta): ${JSON.stringify(ctx.fatos)}.`
@@ -96,27 +96,29 @@ export const provedorOpenai: ProvedorIA = {
       ],
       { response_format: { type: 'json_object' }, temperature: 0.7 },
     )
-    ctx.coletarUso?.(uso)
 
     try {
-      return SaidaIASchema.parse(JSON.parse(raw))
+      return { saida: SaidaIASchema.parse(JSON.parse(raw)), uso }
     } catch {
       // fallback resiliente: nunca trava o harness
       return {
-        resposta:
-          'Opa, deixa eu te entender melhor — pode me contar um pouco mais?',
-        novo_estado: 'em_conversa',
-        categoria: null,
-        fatos_novos: {},
-        precisa_humano: false,
-        motivo_escala: null,
-        aprendizado_sugerido: null,
-        resultado: null,
+        uso,
+        saida: {
+          resposta:
+            'Opa, deixa eu te entender melhor — pode me contar um pouco mais?',
+          novo_estado: 'em_conversa',
+          categoria: null,
+          fatos_novos: {},
+          precisa_humano: false,
+          motivo_escala: null,
+          aprendizado_sugerido: null,
+          resultado: null,
+        },
       }
     }
   },
 
-  async resumir(ctx): Promise<string> {
+  async resumir(ctx): Promise<{ texto: string; uso?: UsoIA }> {
     const { conteudo: raw, uso } = await chat(
       [
         {
@@ -133,7 +135,6 @@ export const provedorOpenai: ProvedorIA = {
       ],
       { temperature: 0.3 },
     )
-    ctx.coletarUso?.(uso)
-    return raw.trim()
+    return { texto: raw.trim(), uso }
   },
 }

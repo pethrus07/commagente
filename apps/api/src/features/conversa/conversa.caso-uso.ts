@@ -4,7 +4,7 @@ import { conferirDono } from '../../core/contexto'
 import { db } from '../../core/db'
 import { ErroHttp } from '../../core/erros'
 import { ia } from '../../core/ia'
-import { SaidaIASchema, type SaidaIA } from '../../core/ia/porta-ia'
+import { SaidaIASchema, type SaidaIA, type UsoIA } from '../../core/ia/porta-ia'
 import { conhecimentoRelevante } from '../conhecimento/conhecimento.caso-uso'
 import { conhecimentoRepo } from '../conhecimento/conhecimento.repo'
 import { jitterMs } from '../fila/fila.dominio'
@@ -20,6 +20,10 @@ const turnosAtivos = new Set<string>()
 // a mesma missão — ex.: o lead manda 2 mensagens seguidas — que gerariam resposta dupla.
 export async function processarTurno(missaoId: string) {
   if (turnosAtivos.has(missaoId)) {
+    // já há um turno rodando (ex.: IA lenta e o lead mandou outra mensagem). NÃO descarta:
+    // re-agenda pela janela de debounce — quando o turno atual terminar, o próximo roda e
+    // já lê a mensagem nova no histórico. Sem isso, a mensagem ficaria sem resposta.
+    agendarTurno(missaoId)
     return { ok: true as const, ignorado: 'turno_em_andamento' as const }
   }
   turnosAtivos.add(missaoId)
@@ -48,6 +52,22 @@ export function agendarTurno(missaoId: string, delayMs = DEBOUNCE_MS) {
   turnosAgendados.set(missaoId, t)
 }
 
+// Instrumentação de custo (só super-admin vê): acumula os tokens de uma chamada ao provedor
+// na missão, de forma atômica (increment) e best-effort — um erro de DB aqui não pode
+// derrubar o turno. O dublê não reporta uso (uso === undefined) → nada a fazer.
+function registrarUso(missaoId: string, uso?: UsoIA) {
+  if (!uso) return
+  void db.missao
+    .update({
+      where: { id: missaoId },
+      data: {
+        tokensEntrada: { increment: uso.entrada },
+        tokensSaida: { increment: uso.saida },
+      },
+    })
+    .catch((err) => console.error('[custo] incremento de tokens falhou:', err))
+}
+
 async function executarTurno(missaoId: string) {
   const missao = await missoesRepo.buscar(missaoId)
   if (!missao) return { ok: false as const, motivo: 'missao_inexistente' }
@@ -56,42 +76,25 @@ async function executarTurno(missaoId: string) {
   if (missao.iaPausada) return { ok: true as const, pausada: true }
 
   // 1) monta a ficha: contexto individual (missão + contato) + memória COLETIVA.
-  // RAG: recupera só os trechos RELEVANTES do conhecimento (as últimas mensagens do
-  // lead como consulta) — corta custo/escala. Se RAG indisponível (embeddings off ou
-  // base sem chunks), cai no fallback "todo o conhecimento aprovado".
+  // RAG: recupera só os trechos RELEVANTES do conhecimento (as últimas mensagens do lead
+  // como consulta) — corta custo/escala. conhecimentoRelevante NUNCA lança e SEMPRE devolve
+  // algo utilizável (degrada p/ todo o conhecimento aprovado se o RAG estiver indisponível).
   const consulta = missao.mensagens
     .filter((m) => m.direcao === 'in')
     .slice(-3)
     .map((m) => m.conteudo)
     .join(' ')
-  let conhecimento = await conhecimentoRelevante(missao.tenantId, consulta)
-  if (!conhecimento) {
-    const aprovados = await conhecimentoRepo.aprovados(missao.tenantId)
-    conhecimento = aprovados.map((c) => `${c.titulo}: ${c.conteudo}`)
-  }
+  const conhecimento = await conhecimentoRelevante(missao.tenantId, consulta)
   const ctx = montarFicha(missao, conhecimento)
-
-  // Instrumentação de custo (só super-admin vê no painel): cada chamada ao provedor
-  // real reporta tokens aqui; acumulamos na missão de forma atômica e best-effort
-  // (incremento no banco não pode derrubar o turno).
-  ctx.coletarUso = ({ entrada, saida }) => {
-    void db.missao
-      .update({
-        where: { id: missaoId },
-        data: {
-          tokensEntrada: { increment: entrada },
-          tokensSaida: { increment: saida },
-        },
-      })
-      .catch((err) => console.error('[custo] incremento de tokens falhou:', err))
-  }
 
   // 2) chama a IA e 3) VALIDA o contrato (guardrail — nunca confia cego no modelo).
   // Se a IA falhar (ex.: OpenAI 401/429), NÃO some em silêncio: registra o erro,
   // escala pra um humano (aparece no inbox de Escalados) e para.
   let saida: SaidaIA
   try {
-    saida = SaidaIASchema.parse(await ia.gerar(ctx))
+    const r = await ia.gerar(ctx)
+    saida = SaidaIASchema.parse(r.saida)
+    registrarUso(missaoId, r.uso)
   } catch (err) {
     await db.evento.create({
       data: {
@@ -155,7 +158,9 @@ async function executarTurno(missaoId: string) {
     }
     // T1-3: resumo fresco pro humano que vai assumir (inclui a última mensagem do lead)
     try {
-      await conversaRepo.salvarResumo(missaoId, await ia.resumir(ctx))
+      const { texto, uso } = await ia.resumir(ctx)
+      registrarUso(missaoId, uso)
+      await conversaRepo.salvarResumo(missaoId, texto)
     } catch {
       /* resumo é best-effort; não trava a escalada */
     }
@@ -247,14 +252,15 @@ async function executarTurno(missaoId: string) {
     // Best-effort: a resposta JÁ foi enfileirada (passo 7); um erro transitório do
     // provedor aqui não pode virar 500 no painel (ex.: no caminho síncrono do iniciar).
     try {
-      const resumo = await ia.resumir({
+      const { texto, uso } = await ia.resumir({
         ...ctx,
         ultimasMensagens: [
           ...ctx.ultimasMensagens,
           { direcao: 'out', conteudo: saida.resposta },
         ],
       })
-      await conversaRepo.salvarResumo(missaoId, resumo)
+      registrarUso(missaoId, uso)
+      await conversaRepo.salvarResumo(missaoId, texto)
     } catch (e) {
       console.error('[conversa] resumir falhou (ignorado):', e)
     }

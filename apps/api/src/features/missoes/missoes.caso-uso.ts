@@ -2,7 +2,7 @@
 import type { EstadoMissao, Prisma } from '@prisma/client'
 import { db } from '../../core/db'
 import { ErroHttp } from '../../core/erros'
-import { conferirDono, tenantAtual } from '../../core/contexto'
+import { conferirDono, contexto, tenantAtual } from '../../core/contexto'
 import { processarTurno } from '../conversa/conversa.caso-uso'
 import { classificarSaude } from '../numeros/numeros.dominio'
 import { numerosRepo } from '../numeros/numeros.repo'
@@ -90,9 +90,20 @@ export async function criarMissao(
   return missoes[0]
 }
 
+// COST-1: o custo (tokens) é visível SÓ para super-admin. O gate não pode ser só no
+// painel — sem isto os campos vazariam no JSON da API para admins do tenant (e, num
+// produto white-label, o custo é informação confidencial da plataforma).
+function ocultarCustoSeNaoSuper<T extends { tokensEntrada: number; tokensSaida: number }>(
+  m: T,
+): T {
+  if (contexto.atual()?.papel === 'super_admin') return m
+  return { ...m, tokensEntrada: 0, tokensSaida: 0 }
+}
+
 export async function listarMissoes() {
   const tenantId = await tenantAtual()
-  return missoesRepo.listar(tenantId)
+  const missoes = await missoesRepo.listar(tenantId)
+  return missoes.map(ocultarCustoSeNaoSuper)
 }
 
 // Inbox de escalados — missões que a IA entregou pra um humano.
@@ -137,7 +148,7 @@ export async function obterMissao(id: string) {
   const missao = await missoesRepo.buscar(id)
   if (!missao) throw new ErroHttp(404, 'Missão não encontrada')
   await conferirDono(missao.tenantId)
-  return missao
+  return ocultarCustoSeNaoSuper(missao)
 }
 
 // Edita a config da missão (objetivo/contexto/tom/informações) — reflete no próximo turno.

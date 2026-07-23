@@ -35,26 +35,47 @@ function reindexarBg(id: string) {
   reindexar(id).catch((e) => console.error('[conhecimento] reindex falhou:', e))
 }
 
-// RECUPERAÇÃO por relevância (RAG): dado o texto da conversa, devolve os trechos mais
-// próximos (cosseno). Retorna null quando NÃO dá pra usar RAG (embeddings não-semânticos
-// ou base ainda sem chunks) → o harness cai no fallback "todo o conhecimento aprovado".
+// RECUPERAÇÃO por relevância (RAG). SEMPRE devolve um string[] utilizável — NUNCA lança
+// e NUNCA retorna null (o harness chama isto no caminho crítico do turno; um erro de rede
+// aqui não pode derrubar/descartar a conversa). Combina:
+//  - RAG: top-k trechos mais próximos (cosseno) quando há embeddings semânticos + base indexada;
+//  - itens aprovados SEM chunk compatível (não-indexados, ou indexados com outra dimensão):
+//    entram INTEIROS, pra nunca sumirem da IA silenciosamente;
+//  - fallback total: se RAG indisponível/erro, devolve todo o conhecimento aprovado.
 export async function conhecimentoRelevante(
   tenantId: string,
   consulta: string,
   k = 6,
-): Promise<string[] | null> {
-  if (!embeddings.semantico) return null
+): Promise<string[]> {
+  const aprovados = await conhecimentoRepo.aprovados(tenantId)
+  const tudo = () => aprovados.map((c) => `${c.titulo}: ${c.conteudo}`)
   const texto = consulta.trim()
-  if (!texto) return null
-  const chunks = await conhecimentoRepo.chunksDoTenant(tenantId)
-  if (chunks.length === 0) return null
-  const [q] = await embeddings.gerar([texto])
-  if (!q) return null
-  return chunks
-    .map((c) => ({ conteudo: c.conteudo, s: similaridadeCosseno(q, c.embedding) }))
-    .sort((a, b) => b.s - a.s)
-    .slice(0, k)
-    .map((r) => r.conteudo)
+  if (!embeddings.semantico || !texto || aprovados.length === 0) return tudo()
+  try {
+    const chunks = await conhecimentoRepo.chunksDoTenant(tenantId)
+    if (chunks.length === 0) return tudo()
+    const [q] = await embeddings.gerar([texto])
+    if (!q) return tudo()
+    // GUARDA DE DIMENSÃO: só compara chunks do mesmo tamanho do vetor de consulta.
+    // (trocar o provider de embeddings muda a dimensão — ex.: dublê 64 vs OpenAI 1536;
+    // comparar dims diferentes daria ranking lixo. Chunks de outra dim = "não-indexados".)
+    const compat = chunks.filter((c) => c.embedding.length === q.length)
+    const indexados = new Set(compat.map((c) => c.conhecimentoId))
+    const relevantes = compat
+      .map((c) => ({ conteudo: c.conteudo, s: similaridadeCosseno(q, c.embedding) }))
+      .sort((a, b) => b.s - a.s)
+      .slice(0, k)
+      .map((r) => r.conteudo)
+    // itens aprovados que NÃO têm chunk compatível → inclui inteiros (não some da IA)
+    const naoIndexados = aprovados
+      .filter((c) => !indexados.has(c.id))
+      .map((c) => `${c.titulo}: ${c.conteudo}`)
+    const combinado = [...relevantes, ...naoIndexados]
+    return combinado.length ? combinado : tudo()
+  } catch (e) {
+    console.error('[rag] recuperação falhou (usando todo o conhecimento):', e)
+    return tudo()
+  }
 }
 
 export async function listarConhecimento() {

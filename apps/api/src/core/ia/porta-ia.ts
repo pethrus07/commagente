@@ -23,11 +23,6 @@ export interface ContextoIA {
   /** memória COLETIVA do tenant — conhecimento aprendido/curado (FAQ, objeções, políticas) */
   conhecimento?: string[] | null
   ultimasMensagens: { direcao: 'in' | 'out'; conteudo: string }[]
-  /**
-   * Coletor de uso de tokens (instrumentação de custo — só o provedor real preenche;
-   * o dublê ignora). O harness passa um callback pra acumular por missão.
-   */
-  coletarUso?: (uso: UsoIA) => void
 }
 
 /** Tokens consumidos numa chamada ao provedor (pra estimar custo). */
@@ -53,7 +48,8 @@ export type SaidaIA = z.infer<typeof SaidaIASchema>
 
 export interface ProvedorIA {
   readonly nome: string
-  gerar(ctx: ContextoIA): Promise<SaidaIA>
-  /** condensa a conversa num resumo rolante (memória de longo prazo) */
-  resumir(ctx: ContextoIA): Promise<string>
+  /** gera a resposta (structured) e, quando o provedor sabe, o uso de tokens da chamada. */
+  gerar(ctx: ContextoIA): Promise<{ saida: SaidaIA; uso?: UsoIA }>
+  /** condensa a conversa num resumo rolante (memória de longo prazo). */
+  resumir(ctx: ContextoIA): Promise<{ texto: string; uso?: UsoIA }>
 }

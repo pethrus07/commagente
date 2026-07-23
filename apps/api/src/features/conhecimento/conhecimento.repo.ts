@@ -71,10 +71,12 @@ export const conhecimentoRepo = {
     return db.conhecimentoChunk.deleteMany({ where: { conhecimentoId } })
   },
 
-  // todos os chunks do tenant (de itens aprovados) p/ a recuperação por relevância
+  // chunks do tenant de itens APROVADOS p/ a recuperação por relevância.
+  // O filtro por status é defesa-em-profundidade: mesmo que a limpeza de chunks de um
+  // item rejeitado/removido falhe, ele NÃO é servido à IA (a fonte da verdade é o status).
   chunksDoTenant(tenantId: string) {
     return db.conhecimentoChunk.findMany({
-      where: { tenantId },
+      where: { tenantId, conhecimento: { status: 'aprovado' } },
       select: { conteudo: true, embedding: true, conhecimentoId: true },
     })
   },

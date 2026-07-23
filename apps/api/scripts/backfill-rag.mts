@@ -1,7 +1,9 @@
-// Backfill do RAG: indexa (chunks + embeddings) todo o conhecimento APROVADO que
-// ainda não tem chunks. Rode UMA vez após ativar o RAG (ou em cada deploy novo):
+// Backfill do RAG: indexa (chunks + embeddings) o conhecimento APROVADO que ainda não
+// tem chunks OU cujos chunks estão numa dimensão diferente da do provider atual (ex.:
+// foram gerados sob o dublê/64-dim e agora o provider é OpenAI/1536-dim).
+// Rode UMA vez após ativar o RAG, em cada deploy novo, ou após trocar o provider:
 //   npx tsx scripts/backfill-rag.mts
-// Idempotente: só toca em itens sem chunks. Exige EMBEDDINGS_PROVIDER=openai (ou IA_PROVIDER=openai).
+// Idempotente: só toca no que precisa. Exige EMBEDDINGS_PROVIDER=openai (ou IA_PROVIDER=openai).
 import 'dotenv/config'
 import { db } from '../src/core/db'
 import { embeddings } from '../src/core/embeddings'
@@ -14,16 +16,30 @@ if (!embeddings.semantico) {
   process.exit(1)
 }
 
+// dimensão esperada pelo provider atual (uma chamada de sonda)
+const [sonda] = await embeddings.gerar(['dimensão'])
+const DIM = sonda?.length ?? 0
+console.log(`Provider "${embeddings.nome}" → dimensão ${DIM}`)
+
 const aprovados = await db.conhecimento.findMany({
   where: { status: 'aprovado' },
-  select: { id: true, titulo: true, _count: { select: { chunks: true } } },
+  select: { id: true, titulo: true },
 })
-const pendentes = aprovados.filter((c) => c._count.chunks === 0)
-console.log(`Aprovados: ${aprovados.length} | sem chunks: ${pendentes.length}`)
 
 let ok = 0
 let falhas = 0
-for (const c of pendentes) {
+let pulados = 0
+for (const c of aprovados) {
+  // decide se precisa reindexar: sem chunk, ou chunk numa dimensão diferente da atual
+  const amostra = await db.conhecimentoChunk.findFirst({
+    where: { conhecimentoId: c.id },
+    select: { embedding: true },
+  })
+  const precisa = !amostra || amostra.embedding.length !== DIM
+  if (!precisa) {
+    pulados++
+    continue
+  }
   try {
     await reindexar(c.id)
     const n = await db.conhecimentoChunk.count({ where: { conhecimentoId: c.id } })
@@ -34,5 +50,5 @@ for (const c of pendentes) {
     falhas++
   }
 }
-console.log(`Backfill concluído: ${ok} indexados, ${falhas} falhas.`)
+console.log(`Backfill: ${ok} indexados, ${pulados} já ok, ${falhas} falhas (de ${aprovados.length} aprovados).`)
 process.exit(falhas > 0 ? 1 : 0)
