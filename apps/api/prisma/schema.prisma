@@ -249,6 +249,8 @@ model Missao {
   resultado          String? // desfecho da missão ao concluir (ex.: "reunião agendada quinta 15h")
   resumo             String? // resumo rolante (memória)
   fatos              Json? // fatos extraídos (memória)
+  tokensEntrada      Int          @default(0) @map("tokens_entrada") // instrumentação de custo (acumulado; só super-admin vê)
+  tokensSaida        Int          @default(0) @map("tokens_saida")
   iniciadaEm         DateTime?    @map("iniciada_em")
   concluidaEm        DateTime?    @map("concluida_em")
   criadoEm           DateTime     @default(now()) @map("criado_em")

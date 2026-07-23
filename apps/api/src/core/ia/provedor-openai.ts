@@ -1,7 +1,7 @@
 // 🔌 Provedor de IA real — OpenAI (chat completions + JSON mode).
 // Implementa a mesma PortaIA do dublê; troca via IA_PROVIDER=openai.
 import { config } from '../config'
-import type { ContextoIA, ProvedorIA, SaidaIA } from './porta-ia'
+import type { ContextoIA, ProvedorIA, SaidaIA, UsoIA } from './porta-ia'
 import { SaidaIASchema } from './porta-ia'
 
 type Msg = { role: 'system' | 'user' | 'assistant'; content: string }
@@ -9,7 +9,7 @@ type Msg = { role: 'system' | 'user' | 'assistant'; content: string }
 async function chat(
   messages: Msg[],
   opts: Record<string, unknown> = {},
-): Promise<string> {
+): Promise<{ conteudo: string; uso: UsoIA }> {
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -25,8 +25,15 @@ async function chat(
   }
   const j = (await res.json()) as {
     choices?: { message?: { content?: string } }[]
+    usage?: { prompt_tokens?: number; completion_tokens?: number }
   }
-  return j.choices?.[0]?.message?.content ?? ''
+  return {
+    conteudo: j.choices?.[0]?.message?.content ?? '',
+    uso: {
+      entrada: j.usage?.prompt_tokens ?? 0,
+      saida: j.usage?.completion_tokens ?? 0,
+    },
+  }
 }
 
 // renderiza as últimas mensagens como diálogo
@@ -82,13 +89,14 @@ export const provedorOpenai: ProvedorIA = {
       historico(ctx) ||
       '(a conversa ainda não começou — escreva a PRIMEIRA mensagem para iniciar o contato de forma calorosa, curta e natural, e TERMINE com uma pergunta ou convite claro pra pessoa responder — isso aumenta a taxa de resposta e evita bloqueio)'
 
-    const raw = await chat(
+    const { conteudo: raw, uso } = await chat(
       [
         { role: 'system', content: sistema },
         { role: 'user', content: usuario },
       ],
       { response_format: { type: 'json_object' }, temperature: 0.7 },
     )
+    ctx.coletarUso?.(uso)
 
     try {
       return SaidaIASchema.parse(JSON.parse(raw))
@@ -109,7 +117,7 @@ export const provedorOpenai: ProvedorIA = {
   },
 
   async resumir(ctx): Promise<string> {
-    const raw = await chat(
+    const { conteudo: raw, uso } = await chat(
       [
         {
           role: 'system',
@@ -125,6 +133,7 @@ export const provedorOpenai: ProvedorIA = {
       ],
       { temperature: 0.3 },
     )
+    ctx.coletarUso?.(uso)
     return raw.trim()
   },
 }

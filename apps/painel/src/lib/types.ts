@@ -120,6 +120,8 @@ export interface Missao {
   resultado: string | null
   resumo: string | null
   fatos: Record<string, unknown> | null
+  tokensEntrada: number
+  tokensSaida: number
   iniciadaEm: string | null
   concluidaEm: string | null
   criadoEm: string

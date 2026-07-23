@@ -59,6 +59,21 @@ async function executarTurno(missaoId: string) {
   const conhecimento = aprovados.map((c) => `${c.titulo}: ${c.conteudo}`)
   const ctx = montarFicha(missao, conhecimento)
 
+  // Instrumentação de custo (só super-admin vê no painel): cada chamada ao provedor
+  // real reporta tokens aqui; acumulamos na missão de forma atômica e best-effort
+  // (incremento no banco não pode derrubar o turno).
+  ctx.coletarUso = ({ entrada, saida }) => {
+    void db.missao
+      .update({
+        where: { id: missaoId },
+        data: {
+          tokensEntrada: { increment: entrada },
+          tokensSaida: { increment: saida },
+        },
+      })
+      .catch((err) => console.error('[custo] incremento de tokens falhou:', err))
+  }
+
   // 2) chama a IA e 3) VALIDA o contrato (guardrail — nunca confia cego no modelo).
   // Se a IA falhar (ex.: OpenAI 401/429), NÃO some em silêncio: registra o erro,
   // escala pra um humano (aparece no inbox de Escalados) e para.

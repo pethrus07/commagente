@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   Brain,
   CheckCircle2,
+  Coins,
   Hand,
   Info,
   LifeBuoy,
@@ -16,6 +17,7 @@ import {
   X,
 } from 'lucide-react'
 import { api } from '../lib/api'
+import { auth } from '../lib/auth'
 import { TIPO_INFO, TIPOS_MISSAO, TRANSICOES } from '../lib/estados'
 import { toast } from '../lib/toast'
 import type { EstadoMissao, Missao } from '../lib/types'
@@ -74,6 +76,13 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
     m.contato?.memoria && Object.keys(m.contato.memoria).length > 0
       ? m.contato.memoria
       : null
+
+  // Instrumentação de custo — SÓ super-admin. Estimativa gpt-4o-mini:
+  // US$0,15 / 1M tokens de entrada + US$0,60 / 1M de saída.
+  const ehSuper = auth.usuario()?.papel === 'super_admin'
+  const tokens = (m.tokensEntrada ?? 0) + (m.tokensSaida ?? 0)
+  const custoUsd = (m.tokensEntrada ?? 0) * 0.15e-6 + (m.tokensSaida ?? 0) * 0.6e-6
+  const custoBrl = custoUsd * 5.4 // câmbio aproximado
 
   const mudar = async (estado: EstadoMissao) => {
     try {
@@ -377,6 +386,23 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
               <p className="text-sm text-subtle">Ainda sem memória acumulada.</p>
             )}
           </Card>
+
+          {ehSuper && (
+            <Card className="p-4">
+              <div className="mb-1 flex items-center gap-2">
+                <Coins className="h-3.5 w-3.5 text-amber-400" />
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted">Custo de IA</p>
+                <Badge className="ml-auto border-amber-500/30 bg-amber-500/10 text-amber-300">super-admin</Badge>
+              </div>
+              <p className="mb-2 text-[11px] text-subtle">Estimativa desta conversa (tokens OpenAI acumulados).</p>
+              <dl className="space-y-1.5 text-sm">
+                <Linha rotulo="Tokens (entrada)" valor={(m.tokensEntrada ?? 0).toLocaleString('pt-BR')} />
+                <Linha rotulo="Tokens (saída)" valor={(m.tokensSaida ?? 0).toLocaleString('pt-BR')} />
+                <Linha rotulo="Total" valor={tokens.toLocaleString('pt-BR')} />
+                <Linha rotulo="Custo estimado" valor={`US$ ${custoUsd.toFixed(4)} · R$ ${custoBrl.toFixed(4)}`} />
+              </dl>
+            </Card>
+          )}
 
           <Card className="p-4">
             <div className="mb-2 flex items-center gap-2">
