@@ -5,6 +5,7 @@ import { db } from '../../core/db'
 import { ErroHttp } from '../../core/erros'
 import { ia } from '../../core/ia'
 import { SaidaIASchema, type SaidaIA } from '../../core/ia/porta-ia'
+import { conhecimentoRelevante } from '../conhecimento/conhecimento.caso-uso'
 import { conhecimentoRepo } from '../conhecimento/conhecimento.repo'
 import { jitterMs } from '../fila/fila.dominio'
 import { filaRepo } from '../fila/fila.repo'
@@ -54,9 +55,20 @@ async function executarTurno(missaoId: string) {
   // 0) guardrail de controle: se um humano assumiu (IA pausada), a IA não responde.
   if (missao.iaPausada) return { ok: true as const, pausada: true }
 
-  // 1) monta a ficha: contexto individual (missão + contato) + memória COLETIVA (conhecimento aprovado)
-  const aprovados = await conhecimentoRepo.aprovados(missao.tenantId)
-  const conhecimento = aprovados.map((c) => `${c.titulo}: ${c.conteudo}`)
+  // 1) monta a ficha: contexto individual (missão + contato) + memória COLETIVA.
+  // RAG: recupera só os trechos RELEVANTES do conhecimento (as últimas mensagens do
+  // lead como consulta) — corta custo/escala. Se RAG indisponível (embeddings off ou
+  // base sem chunks), cai no fallback "todo o conhecimento aprovado".
+  const consulta = missao.mensagens
+    .filter((m) => m.direcao === 'in')
+    .slice(-3)
+    .map((m) => m.conteudo)
+    .join(' ')
+  let conhecimento = await conhecimentoRelevante(missao.tenantId, consulta)
+  if (!conhecimento) {
+    const aprovados = await conhecimentoRepo.aprovados(missao.tenantId)
+    conhecimento = aprovados.map((c) => `${c.titulo}: ${c.conteudo}`)
+  }
   const ctx = montarFicha(missao, conhecimento)
 
   // Instrumentação de custo (só super-admin vê no painel): cada chamada ao provedor

@@ -46,4 +46,36 @@ export const conhecimentoRepo = {
   existeConteudo(tenantId: string, conteudo: string) {
     return db.conhecimento.findFirst({ where: { tenantId, conteudo } })
   },
+
+  // ─── RAG: chunks vetorizados ───
+
+  // troca todos os chunks de um item (reindexação): apaga os antigos e grava os novos.
+  async substituirChunks(
+    conhecimentoId: string,
+    tenantId: string,
+    chunks: { ordem: number; conteudo: string; embedding: number[] }[],
+  ) {
+    await db.$transaction([
+      db.conhecimentoChunk.deleteMany({ where: { conhecimentoId } }),
+      ...(chunks.length
+        ? [
+            db.conhecimentoChunk.createMany({
+              data: chunks.map((c) => ({ ...c, conhecimentoId, tenantId })),
+            }),
+          ]
+        : []),
+    ])
+  },
+
+  limparChunks(conhecimentoId: string) {
+    return db.conhecimentoChunk.deleteMany({ where: { conhecimentoId } })
+  },
+
+  // todos os chunks do tenant (de itens aprovados) p/ a recuperação por relevância
+  chunksDoTenant(tenantId: string) {
+    return db.conhecimentoChunk.findMany({
+      where: { tenantId },
+      select: { conteudo: true, embedding: true, conhecimentoId: true },
+    })
+  },
 }

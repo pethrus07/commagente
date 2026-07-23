@@ -85,10 +85,29 @@ model Conhecimento {
   missaoId  String?            @map("missao_id") @db.Uuid // proveniência (de onde a IA aprendeu)
   criadoEm  DateTime           @default(now()) @map("criado_em")
 
-  tenant Tenant @relation(fields: [tenantId], references: [id])
+  tenant Tenant               @relation(fields: [tenantId], references: [id])
+  chunks ConhecimentoChunk[]
 
   @@index([tenantId, status])
   @@map("conhecimento")
+}
+
+// Pedaços vetorizados do conhecimento (RAG): cada item aprovado é fatiado em trechos
+// e cada trecho ganha um embedding. A recuperação por relevância (cosseno em memória)
+// injeta só os trechos mais próximos da conversa — corta custo e escala a base.
+model ConhecimentoChunk {
+  id             String   @id @default(uuid()) @db.Uuid
+  tenantId       String   @map("tenant_id") @db.Uuid
+  conhecimentoId String   @map("conhecimento_id") @db.Uuid
+  ordem          Int      @default(0)
+  conteudo       String
+  embedding      Float[] // vetor do trecho (dims do modelo de embeddings)
+  criadoEm       DateTime @default(now()) @map("criado_em")
+
+  conhecimento Conhecimento @relation(fields: [conhecimentoId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("conhecimento_chunks")
 }
 
 // ─── Usuários (login no painel; super-admin ou por tenant) ───

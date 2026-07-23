@@ -26,6 +26,10 @@ export const config = {
   transcritorModelo: process.env.TRANSCRITOR_MODELO ?? 'whisper-1',
   transcritorIdioma: process.env.TRANSCRITOR_IDIOMA ?? 'pt',
 
+  // Embeddings (RAG do conhecimento) — provider-agnostic (EMBEDDINGS_PROVIDER).
+  // text-embedding-3-small: 1536 dims, ~US$0,02/1M tokens (barato).
+  embeddingsModelo: process.env.EMBEDDINGS_MODEL ?? 'text-embedding-3-small',
+
   // URL que a Evolution (no Docker) usa pra chamar nosso webhook.
   // Em dev a API roda no host → host.docker.internal alcança a :3000.
   webhookUrl:
