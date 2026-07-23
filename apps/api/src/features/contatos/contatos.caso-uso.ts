@@ -13,7 +13,10 @@ export async function listarContatos() {
   const contatos = await db.contato.findMany({
     where: { tenantId },
     orderBy: { criadoEm: 'desc' },
-    include: { _count: { select: { missoes: true } } },
+    include: {
+      _count: { select: { missoes: true } },
+      tags: { include: { tag: { select: { id: true, nome: true, cor: true } } } },
+    },
   })
   return contatos.map((c) => ({
     id: c.id,
@@ -23,6 +26,7 @@ export async function listarContatos() {
     optOut: c.optOut,
     criadoEm: c.criadoEm,
     totalMissoes: c._count.missoes,
+    tags: c.tags.map((ct) => ct.tag),
   }))
 }
 
