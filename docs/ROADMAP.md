@@ -231,7 +231,12 @@ Custo hoje é baixíssimo (~R$0,06 numa conversa longa de 27 turnos), mas dá pr
 - **Marcar contatos com tags** (ex.: `lead-quente`, `costa-doce`, `inadimplente`, `cliente-2025`) — 1 contato pode ter N tags; gerenciar na página **Contatos** (adicionar/remover tag, filtrar a lista por tag).
 - **Criar missão/campanha mirando uma tag** → dispara pra **todos os números daquela tag** de uma vez (reusa `criarMissaoEmLote`). O `SeletorContatos` ganha um filtro/atalho "todos da tag X".
 - Atribuir tag **em lote** (na importação CSV/WhatsApp e via seleção múltipla). Respeita opt-out.
-- **Esboço técnico:** model `Tag` (tenant-scoped) + N:N `ContatoTag`; `GET /contatos?tag=`; a criação de campanha aceita `tagId` como fonte de contatos. Casa com Contatos-CRM + Campanhas já existentes.
+- **Esboço técnico:** model `Tag` (tenant-scoped) + N:N `ContatoTag`; `GET /contatos?tag=`; a criação de campanha aceita `tagId` como fonte de contatos. Casa com Contatos-CRM + Campanhas já existentes. **FEITO 2026-07-23 (TAG-1/2).**
+
+### 8.7 ✏️ Edição em massa + experiência campanha↔missão `F1`
+> Dúvida/pedido do Pedro (2026-07-24). Hoje cada missão é independente e editável 1 a 1 (objetivo/tom/informações/critério, reflete no próximo turno), mas NÃO há edição em lote nem visão unificada.
+- **Editar em massa** o tom/objetivo/informações de **todas as missões de uma campanha** (ou de uma **tag**) de uma vez — ex.: "lancei a campanha com tom agressivo e quero suavizar em todas". Hoje seria contato a contato. Cuidado: só faz sentido aplicar às missões ainda **em andamento** (não reescrever conversas concluídas).
+- **Unificar a EXPERIÊNCIA campanha↔missão** (UX, não arquitetura): manter a **missão como unidade atômica por baixo** (estado/memória próprios), mas apresentar numa tela "Conversas" com **toggle "agrupar por campanha"**; a campanha vira um **grupo + definição salva** (com placar). Mata a sensação de "por que tem duas telas?". Avaliar antes de investir — a separação atual (operar conversa × gerir lote) tem sua lógica.
 
 ---
 
