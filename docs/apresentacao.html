@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>zapagente — o que é e o que faz</title>
+<style>
+  :root{
+    --bg:#0b1020; --bg2:#0f1730; --card:#131c38; --line:#26325c;
+    --ink:#eaf0ff; --muted:#9fb0d8; --sub:#6f80ad;
+    --acc:#7c8cff; --acc2:#a78bfa; --ok:#34d399; --warn:#fbbf24; --amber:#f59e0b;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f6f8ff; --bg2:#eef2ff; --card:#ffffff; --line:#dfe6ff;
+      --ink:#141b34; --muted:#4a5680; --sub:#78859f; --acc:#5b6cff; --acc2:#7c3aed; }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:radial-gradient(1200px 600px at 80% -10%, rgba(124,140,255,.18), transparent 60%),
+      radial-gradient(900px 500px at 0% 0%, rgba(167,139,250,.14), transparent 55%), var(--bg);
+    color:var(--ink);
+    font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial,sans-serif;
+    padding:40px 20px 80px;
+  }
+  .wrap{max-width:1040px;margin:0 auto}
+  .brand{display:flex;align-items:center;gap:14px;margin-bottom:26px}
+  .logo{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;font-size:24px;box-shadow:0 8px 30px rgba(124,140,255,.4)}
+  .brand h1{font-size:22px;margin:0;letter-spacing:-.02em}
+  .brand p{margin:0;color:var(--sub);font-size:13px}
+  .hero{background:linear-gradient(180deg,var(--card),var(--bg2));border:1px solid var(--line);
+    border-radius:20px;padding:30px 32px;margin-bottom:22px}
+  .hero .eyebrow{color:var(--acc);font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase}
+  .hero h2{font-size:27px;line-height:1.25;margin:10px 0 0;letter-spacing:-.02em}
+  .hero h2 b{color:var(--acc2)}
+  .grid{display:grid;gap:16px}
+  @media(min-width:760px){ .g2{grid-template-columns:1fr 1fr} .g3{grid-template-columns:1fr 1fr 1fr} }
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px}
+  .card h3{margin:0 0 10px;font-size:15px;display:flex;align-items:center;gap:8px;letter-spacing:-.01em}
+  .card .ic{font-size:18px}
+  .card ul{margin:0;padding-left:18px;color:var(--muted);font-size:14px}
+  .card ul li{margin:5px 0}
+  .card ul li b{color:var(--ink);font-weight:600}
+  .sec-title{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--sub);
+    margin:30px 4px 12px}
+  .moat{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .chip{border:1px solid var(--line);background:var(--bg2);border-radius:999px;padding:6px 13px;font-size:13px;color:var(--muted)}
+  .chip b{color:var(--ink)}
+  .flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+  .flow .step{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:7px 12px}
+  .flow .step b{color:var(--ink)}
+  .flow .arrow{color:var(--acc)}
+  .kpis{display:grid;gap:14px;grid-template-columns:1fr}
+  @media(min-width:640px){ .kpis{grid-template-columns:1fr 1fr} }
+  .kpi{background:linear-gradient(180deg,var(--card),var(--bg2));border:1px solid var(--line);border-radius:16px;padding:20px 22px}
+  .kpi .n{font-size:26px;font-weight:800;letter-spacing:-.02em}
+  .kpi .n.ok{color:var(--ok)} .kpi .n.acc{color:var(--acc)}
+  .kpi .l{color:var(--muted);font-size:13px;margin-top:3px}
+  .status{display:flex;gap:10px;flex-wrap:wrap}
+  .pill{border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600;border:1px solid}
+  .pill.done{color:var(--ok);border-color:rgba(52,211,153,.35);background:rgba(52,211,153,.1)}
+  .pill.next{color:var(--warn);border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.1)}
+  .quote{margin-top:26px;background:linear-gradient(135deg,rgba(124,140,255,.14),rgba(167,139,250,.12));
+    border:1px solid var(--line);border-radius:18px;padding:24px 28px;font-size:18px;line-height:1.5}
+  .quote b{color:var(--acc2)}
+  .foot{margin-top:26px;color:var(--sub);font-size:12px;text-align:center}
+  @media print{ body{background:#fff;color:#000;padding:0} .hero,.card,.kpi,.quote{break-inside:avoid} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brand">
+    <div class="logo">⚡</div>
+    <div><h1>zapagente</h1><p>assistente de IA autônomo no WhatsApp</p></div>
+  </div>
+
+  <div class="hero">
+    <div class="eyebrow">A ideia em uma frase</div>
+    <h2>Um assistente de IA que opera <b>várias conversas de WhatsApp ao mesmo tempo</b>, cada uma com uma <b>missão</b> — inicia o contato sozinho, conduz até o objetivo e passa pra um humano quando precisa, sem bloquear o número.</h2>
+  </div>
+
+  <div class="sec-title">Por que é diferente — o fosso</div>
+  <div class="card">
+    <p style="margin:0 0 4px;color:var(--muted);font-size:14px">No mercado, cada ferramenta faz um pedaço. O zapagente junta os <b style="color:var(--ink)">5 atributos ao mesmo tempo</b>:</p>
+    <div class="moat">
+      <span class="chip"><b>1.</b> Proativo (inicia a conversa)</span>
+      <span class="chip"><b>2.</b> Missão variável por conversa</span>
+      <span class="chip"><b>3.</b> Multi-conversa em paralelo</span>
+      <span class="chip"><b>4.</b> Escala pra humano</span>
+      <span class="chip"><b>5.</b> WhatsApp BR, barato</span>
+    </div>
+    <p style="margin:12px 0 0;color:var(--muted);font-size:14px">E o pulo do gato: <b style="color:var(--acc2)">memória coletiva</b> — a IA <b style="color:var(--ink)">aprende com os atendimentos</b> e fica melhor com o tempo.</p>
+  </div>
+
+  <div class="sec-title">Como funciona</div>
+  <div class="card">
+    <div class="flow">
+      <span class="step"><b>Missão criada</b></span><span class="arrow">→</span>
+      <span class="step">IA <b>abre a conversa</b></span><span class="arrow">→</span>
+      <span class="step"><b>conduz</b> (responde, coleta, contorna objeções)</span><span class="arrow">→</span>
+      <span class="step">cumpre o objetivo <b>ou escala pra você</b></span><span class="arrow">→</span>
+      <span class="step"><b>aprende</b> pra próxima</span>
+    </div>
+  </div>
+
+  <div class="sec-title">Funcionalidades</div>
+  <div class="grid g3">
+    <div class="card"><h3><span class="ic">🎯</span> Conversas com IA</h3>
+      <ul>
+        <li><b>Tipos:</b> vender, qualificar, orçar, cobrar, suporte</li>
+        <li><b>Proativa</b> ou <b>reativa</b> (suporte 24/7)</li>
+        <li><b>Auto</b> ou <b>co-pilot</b> (você aprova)</li>
+        <li>Guardrail <b>anti-invenção</b></li>
+        <li>Entende <b>áudio</b> (nota de voz)</li>
+        <li>Criação em <b>3 passos</b> com modelos prontos</li>
+      </ul></div>
+    <div class="card"><h3><span class="ic">🛡️</span> Anti-bloqueio</h3>
+      <ul>
+        <li><b>Ritmo humano</b> (digitação, horário, espaçamento)</li>
+        <li><b>Aquecimento</b> por estágio</li>
+        <li><b>Saúde do número</b>: pausa se em risco</li>
+        <li><b>Opt-out/opt-in</b> (LGPD)</li>
+        <li>Limite por contato</li>
+      </ul></div>
+    <div class="card"><h3><span class="ic">🤝</span> Escala pra humano</h3>
+      <ul>
+        <li>IA pausa e cai no <b>inbox "Escalados"</b></li>
+        <li>Com <b>resumo pronto</b> da conversa</li>
+        <li>Você assume, responde e <b>devolve pra IA</b></li>
+      </ul></div>
+    <div class="card"><h3><span class="ic">🧠</span> Memória</h3>
+      <ul>
+        <li><b>Individual</b> (por contato)</li>
+        <li><b>Coletiva</b> (aprende, você cura)</li>
+        <li><b>Documentos</b> do cliente (PDF/cardápio)</li>
+        <li>Busca inteligente (<b>RAG</b>)</li>
+      </ul></div>
+    <div class="card"><h3><span class="ic">👥</span> CRM + Tags</h3>
+      <ul>
+        <li>Importar CSV / agenda do WhatsApp / exportar</li>
+        <li><b>Tags</b> pra segmentar</li>
+        <li>Disparar campanha <b>por tag</b></li>
+      </ul></div>
+    <div class="card"><h3><span class="ic">📣</span> Campanhas + Programadas</h3>
+      <ul>
+        <li>A <b>mesma missão</b> pra N contatos</li>
+        <li>Adicionar contatos depois</li>
+        <li><b>Recorrência</b>: cobrança mensal automática</li>
+      </ul></div>
+    <div class="card"><h3><span class="ic">🖥️</span> Painel de controle</h3>
+      <ul>
+        <li>Dashboard (KPIs, funil, placar)</li>
+        <li>Missões em <b>Kanban</b> ou lista</li>
+        <li>Conectar chip via <b>QR</b></li>
+        <li>Tema claro/escuro</li>
+      </ul></div>
+    <div class="card"><h3><span class="ic">🏢</span> Multi-tenant</h3>
+      <ul>
+        <li>Vários clientes <b>isolados</b> (revenda)</li>
+        <li>Super-admin gerencia todos</li>
+        <li><b>Custo por conversa</b> (pra precificar)</li>
+      </ul></div>
+    <div class="card"><h3><span class="ic">⚙️</span> Base técnica</h3>
+      <ul>
+        <li><b>Trocável</b>: IA e WhatsApp por baixo</li>
+        <li>Escada pra <b>API oficial</b> planejada</li>
+        <li>Segurança de <b>produção</b></li>
+      </ul></div>
+  </div>
+
+  <div class="sec-title">Números na ponta da língua</div>
+  <div class="kpis">
+    <div class="kpi"><div class="n ok">~R$0,06</div><div class="l">por conversa longa (~27 trocas) — ≈ <b>R$60 a cada 1.000 conversas</b>. A IA é barata.</div></div>
+    <div class="kpi"><div class="n acc">~R$45/mês</div><div class="l">servidor (Hetzner) pra rodar tudo <b>24/7</b>.</div></div>
+  </div>
+
+  <div class="sec-title">Onde estamos</div>
+  <div class="card">
+    <div class="status">
+      <span class="pill done">✓ Pronto e testado ao vivo — tudo acima</span>
+      <span class="pill done">✓ A IA já vendeu numa demo real</span>
+      <span class="pill next">→ Próximo: colocar no ar (deploy)</span>
+      <span class="pill next">→ Camada comercial (planos) pra revender</span>
+    </div>
+  </div>
+
+  <div class="quote">
+    "Não é um chatbot que responde. É um <b>vendedor/atendente de IA</b> que trabalha sozinho no WhatsApp, várias conversas ao mesmo tempo, sem bloquear o número, e chama você só quando precisa."
+  </div>
+
+  <div class="foot">zapagente · parceria Pedro × parceiro · documento de apresentação</div>
+</div>
+</body>
+</html>
