@@ -45,6 +45,9 @@ export function TermosModal({
           <p className="rounded-xl bg-surface2 p-3">
             <b className="text-content">2. Responsabilidade do número.</b> Você é responsável pelo número de WhatsApp conectado e pelo uso adequado dele. Enviar mensagens para números frios/sem consentimento pode levar ao <b className="text-content">bloqueio do número pela Meta</b> — o risco é seu. Respeite o opt-out e a legislação.
           </p>
+          <p className="rounded-xl bg-surface2 p-3">
+            <b className="text-content">3. Uso conforme.</b> Você concorda em usar a plataforma de acordo com os <b className="text-content">Termos de Serviço do WhatsApp/Meta</b> e a legislação aplicável. É proibido enviar spam, mensagens em massa não solicitadas ou conteúdo ilegal, enganoso ou abusivo. O descumprimento pode levar ao bloqueio do número e à suspensão da conta.
+          </p>
         </div>
         <label className="mt-4 flex cursor-pointer items-start gap-2 text-sm text-content">
           <input type="checkbox" checked={ok} onChange={(e) => setOk(e.target.checked)} className="mt-0.5 h-4 w-4 accent-indigo-500" />
