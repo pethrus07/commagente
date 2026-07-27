@@ -21,6 +21,7 @@ import { missoesRotas } from './features/missoes/missoes.rotas'
 import { numerosRotas } from './features/numeros/numeros.rotas'
 import { statsRotas } from './features/stats/stats.rotas'
 import { tagsRotas } from './features/tags/tags.rotas'
+import { tenantRotas } from './features/tenant/tenant.rotas'
 import { webhookRotas } from './features/webhook/webhook.rotas'
 
 const app = Fastify({ logger: true })
@@ -87,6 +88,7 @@ app.register(conhecimentoRotas)
 app.register(campanhasRotas)
 app.register(agendamentosRotas)
 app.register(tagsRotas)
+app.register(tenantRotas)
 
 app
   .listen({ port: config.porta, host: '0.0.0.0' })

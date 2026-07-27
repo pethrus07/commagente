@@ -213,3 +213,10 @@ export interface TenantResumo {
   totalContatos: number
   totalUsuarios: number
 }
+
+// configuração do tenant atual — hoje: persona/identidade da IA (voz da marca)
+export interface TenantConfig {
+  id: string
+  nome: string
+  persona: string | null
+}

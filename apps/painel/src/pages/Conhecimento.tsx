@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { BookOpen, Check, FileUp, Pencil, Plus, Sparkles, Trash2, X } from 'lucide-react'
+import { BookOpen, Bot, Check, FileUp, Pencil, Plus, Sparkles, Trash2, X } from 'lucide-react'
 import { api } from '../lib/api'
 import { toast } from '../lib/toast'
 import type { Conhecimento as Item } from '../lib/types'
@@ -78,6 +78,79 @@ function ItemModal({
   )
 }
 
+// sugestões rápidas que o usuário injeta na identidade (ideia: "fale informal" e a IA segue)
+const CHIPS_PERSONA = [
+  'Fale de forma informal e calorosa.',
+  'Trate o cliente por "você".',
+  'Use no máximo 1 emoji por mensagem.',
+  'Seja direto e objetivo.',
+  'Nunca seja insistente ou agressivo.',
+]
+
+// Card "Identidade da IA": a persona/voz da marca no nível do TENANT. Definida aqui uma vez,
+// entra SEMPRE no prompt de toda missão (o tom de cada missão ajusta pontualmente).
+function IdentidadeIA() {
+  const [texto, setTexto] = useState('')
+  const [carregando, setCarregando] = useState(true)
+  const [salvando, setSalvando] = useState(false)
+
+  useEffect(() => {
+    api.tenant
+      .obter()
+      .then((c) => setTexto(c.persona ?? ''))
+      .catch((e) => toast((e as Error).message, 'erro'))
+      .finally(() => setCarregando(false))
+  }, [])
+
+  const inserir = (frag: string) => setTexto((t) => (t.trim() ? `${t.trim()} ${frag}` : frag))
+
+  const salvar = async () => {
+    setSalvando(true)
+    try {
+      await api.tenant.salvarPersona(texto.trim() || null)
+      toast('Identidade da IA salva — vale já no próximo turno.', 'ok')
+    } catch (e) {
+      toast((e as Error).message, 'erro')
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  return (
+    <Card className="p-5">
+      <div className="mb-3 flex items-center gap-2.5">
+        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-indigo-500/15 text-indigo-300"><Bot className="h-4 w-4" /></div>
+        <div>
+          <h3 className="text-sm font-semibold text-content">Identidade da IA</h3>
+          <p className="text-[11px] text-muted">A voz da marca — vale pra <b>todas</b> as missões. O tom de cada missão ajusta pontualmente.</p>
+        </div>
+      </div>
+      {carregando ? (
+        <div className="grid place-items-center py-6"><Spinner className="h-5 w-5" /></div>
+      ) : (
+        <>
+          <textarea
+            value={texto}
+            onChange={(e) => setTexto(e.target.value)}
+            rows={4}
+            placeholder={'Ex.: Você é o atendente da [Empresa]. Fale de forma simpática e informal, trate por "você", use no máximo 1 emoji e seja direto. Nunca pressione o cliente.'}
+            className={cn(campo, 'resize-none')}
+          />
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {CHIPS_PERSONA.map((c) => (
+              <button key={c} type="button" onClick={() => inserir(c)} className="rounded-full border border-line px-2.5 py-1 text-[11px] text-muted transition hover:border-indigo-500/40 hover:text-content">+ {c}</button>
+            ))}
+          </div>
+          <div className="mt-3 flex items-center justify-between gap-3">
+            <p className="text-[11px] text-subtle">Curta e sem contradição funciona melhor. A regra anti-invenção de preço continua valendo.</p>
+            <Button onClick={salvar} loading={salvando}>Salvar identidade</Button>
+          </div>
+        </>
+      )}
+    </Card>
+  )
+}
+
 export function Conhecimento() {
   const [itens, setItens] = useState<Item[] | null>(null)
   const [modal, setModal] = useState<{ inicial?: Item } | null>(null)
@@ -145,6 +218,7 @@ export function Conhecimento() {
 
   return (
     <div className="space-y-6">
+      <IdentidadeIA />
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted">O que a IA aprende com as conversas e com os seus documentos. Ela consulta os aprovados ao responder.</p>
         <div className="flex gap-2">

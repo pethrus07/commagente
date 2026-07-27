@@ -30,9 +30,14 @@ function montarPersona(m: {
   contexto?: string | null
   tom?: string | null
   criterioConclusao?: string | null
+  personaTenant?: string | null // identidade/voz da marca (nível tenant), sempre no prompt
 }): string {
   const linhas = [
     'Você é um assistente que conduz conversas de WhatsApp em nome de uma empresa, no ritmo humano.',
+    // IDENTIDADE do tenant vem antes do resto — é a voz-base; o `tom` da missão dá nuance.
+    m.personaTenant?.trim()
+      ? `IDENTIDADE (siga SEMPRE — é a voz da empresa): ${m.personaTenant.trim()}`
+      : '',
     GUIA_TIPO[m.tipo] ?? '',
     `Objetivo desta conversa: ${m.objetivo}.`,
   ]
@@ -65,6 +70,7 @@ type MissaoComMsgs = {
   resumo: string | null
   fatos: unknown
   contato?: { memoria: unknown } | null
+  tenant?: { persona: string | null } | null // identidade da IA (voz da marca)
   mensagens: { direcao: Direcao; conteudo: string }[]
 }
 
@@ -79,6 +85,7 @@ export function montarFicha(
       contexto: missao.contexto,
       tom: missao.tom,
       criterioConclusao: missao.criterioConclusao,
+      personaTenant: missao.tenant?.persona,
     }),
     objetivo: missao.objetivo,
     contexto: missao.contexto,

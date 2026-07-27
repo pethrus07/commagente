@@ -15,6 +15,7 @@ import type {
   StatusConhecimento,
   Tag,
   TagResumo,
+  TenantConfig,
   TenantResumo,
 } from './types'
 
@@ -65,6 +66,13 @@ export const api = {
   stats: () => req<Stats>('/stats'),
   historico: (dias?: number) =>
     req<Historico>(`/stats/historico${dias ? `?dias=${dias}` : ''}`),
+
+  // configuração do tenant atual (persona/identidade da IA)
+  tenant: {
+    obter: () => req<TenantConfig>('/tenant'),
+    salvarPersona: (persona: string | null) =>
+      req<TenantConfig>('/tenant', { method: 'PATCH', body: JSON.stringify({ persona }) }),
+  },
 
   numeros: {
     listar: () => req<Numero[]>('/numeros'),
