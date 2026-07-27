@@ -238,6 +238,38 @@ Custo hoje é baixíssimo (~R$0,06 numa conversa longa de 27 turnos), mas dá pr
 - **Editar em massa** o tom/objetivo/informações de **todas as missões de uma campanha** (ou de uma **tag**) de uma vez — ex.: "lancei a campanha com tom agressivo e quero suavizar em todas". Hoje seria contato a contato. Cuidado: só faz sentido aplicar às missões ainda **em andamento** (não reescrever conversas concluídas).
 - **Unificar a EXPERIÊNCIA campanha↔missão** (UX, não arquitetura): manter a **missão como unidade atômica por baixo** (estado/memória próprios), mas apresentar numa tela "Conversas" com **toggle "agrupar por campanha"**; a campanha vira um **grupo + definição salva** (com placar). Mata a sensação de "por que tem duas telas?". Avaliar antes de investir — a separação atual (operar conversa × gerir lote) tem sua lógica.
 
+### 8.8 🧭 Alinhamento 26/07 (Pedro × parceiro) + auditoria de código — **fazer amanhã (27/07)** `F1`
+> Reunião de virada (ata `alinhamento 26.07`, ~88min) + **auditoria do código real** (2026-07-26). Contexto de negócio que fixa prazo: **ProAuto** (dono Lucas, autopeças/industrial ~R$40–50M) é o **cliente-âncora**; **teste numa vendedora**; **reunião QUARTA-FEIRA** pra integrar. Sociedade rumo a **50/50** + salário-ponte ~R$4k. **Rename do produto** (multicanal: WhatsApp+Insta+e-mail → fugir de "zap"; Hermes checado e **descartado** — domínio/nicho lotado).
+
+**Auditoria — o que a ata deu como "pronto" × o que o código faz de verdade:**
+
+| Ponto | Realidade | Veredito |
+|---|---|---|
+| Campanha "aperta e dispara pra todos" | `criarCampanha`/`criarMissaoEmLote` só **cria** missões em `configurada`; quem gera opener+enfileira é `iniciarMissao`, **1 a 1**. **Sem "iniciar em lote".** | ⚠️ **PARCIAL — GAP nº1** |
+| Tag → dispara pros números da tag | Marca/filtra OK; alvo por tag só resolve a lista **no navegador** (sem endpoint `tagId`) + herda o gap acima | ⚠️ PARCIAL |
+| Vigia por tenant (alerta "não falou com X") | **Não existe** (só throttle de saúde por número + watchdog anti-freeze do worker) | ❌ NÃO EXISTE |
+| Escalonamento no WhatsApp do vendedor | Só aparece no **inbox do painel** (Escalados). Mandar aviso pro próprio número = a confirmar se a API topa | ❌ (é melhoria) |
+| Campanha texto/imagem/áudio | Envio só faz **texto + PDF**; imagem/áudio de saída não existem | ⚠️ só texto/PDF |
+| Métricas pro dono (por vendedor/vendas) | Só volume/pipeline **agregado**; sem dimensão por-vendedor, sem "vendas via sistema", sem custo agregado | ⚠️ PARCIAL |
+| Tom/persona | Existe, mas **por missão** (`Missao.tom`); **não há persona por tenant**; `MissaoTemplate.personaPrompt` está **inerte** (montador não lê) | ✅ por missão |
+| Termos de uso 1º login | Não existe | ❌ NÃO EXISTE |
+| Cap ~30/dia | Existe e é aplicado no envio — mas **default é 10/dia** (30 é o chip de teste) | ✅ (nº difere) |
+| Escalonamento / memória ind.+coletiva / import CSV / programadas | Conferidos, funcionam | ✅ OK |
+
+**Backlog priorizado (amanhã):**
+1. **🥇 Disparo em lote de verdade** — botão "iniciar campanha/todas" que chama `processarTurno` pras missões `configurada`. É o buraco nº1 e o que o parceiro imagina como "campanha". **Seguro:** o worker anti-ban já espaça os envios (não sai rajada).
+2. **🥈 Persona no nível do tenant** (ver nota abaixo) — o "doc de persona" da ata. Alto valor, baixo custo. Quick win pra quarta.
+3. **🥉 Alvo por tag no backend** (`tagId` como fonte de contatos da missão/campanha) — fecha o fluxo "tag → dispara" junto do nº1.
+4. **Termos de uso no 1º login** (aceite de dados + responsabilidade do número) — prometido pra quarta; proteção LGPD real. Quick win.
+5. **Notificação de escalonamento fora do painel** (pro próprio número / e-mail) — depende de confirmar se a API manda pro próprio número.
+6. **Métricas por vendedor + relatório pro dono** — faz sentido, mas **depois da validação** (precisa de dimensão "operador" nas stats + parâmetros do dono; é o mais caro de IA → ideia do "relatório pago R$5–15").
+7. **Vigia por tenant** (alerta operacional) — médio, não bloqueia a quarta.
+8. **Mídia em campanha (imagem/áudio)** — só sob pedido; é o **maior risco de ban** (o próprio Pedro alertou). Baixa prioridade.
+
+> **🎭 Nota de design — persona (ideia do Pedro: "formulário de persona dentro de Conhecimento"):** a intuição está certa, mas **NÃO** pode ser um item da base de Conhecimento (RAG) — conhecimento é **fato recuperado por relevância** (pode não ser puxado) e persona precisa estar **SEMPRE** no system prompt. Desenho certo: campo **`Tenant.persona`** (ou mini-formulário: tratamento você/tu/sr · formalidade · emojis · tamanho · assinatura · instruções livres) **compilado numa frase** e injetado sempre no `montarPersona` como voz-base, com `Missao.tom` fazendo override pontual. **Pode viver na tela Conhecimento**, mas como **card separado "Identidade da IA"**, não na lista. Funciona (o mecanismo já roda hoje via `tom` por missão); só estamos elevando pra reutilizável por tenant. Ganho pro ProAuto: define a persona da vendedora **uma vez** → **toda missão herda**.
+
+> ⚠️ **Pra não queimar na quarta:** os 3 itens que a ata deu como "prontos" mas estão PARCIAL/inexistentes — **campanha que dispara sozinha**, **vigia**, **escalonamento no WhatsApp da vendedora** — não devem ser prometidos como prontos na demo ProAuto.
+
 ---
 
 > **Nota (2026-07-23):** as seções §1–§7 (mapa/matriz/fases F0–F3) são o **plano pré-construção** e ficaram **desatualizadas** — na prática F1/F2 estão quase inteiros e parte do F3 (multi-tenant) foi feita. O **status real por fatia está no [CLAUDE.md](../CLAUDE.md)**; o backlog vivo é esta §8. Ao ler as fases abaixo, tratar como histórico de intenção, não como estado atual.
