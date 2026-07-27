@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
   Activity,
+  AlertTriangle,
   CheckCircle2,
   LifeBuoy,
   MessageSquare,
@@ -171,6 +172,16 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
+      {stats.alertas?.length > 0 && (
+        <div className="space-y-2">
+          {stats.alertas.map((a, i) => (
+            <div key={i} className="flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-200">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{a.mensagem}</span>
+            </div>
+          ))}
+        </div>
+      )}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Kpi icon={Activity} cor="bg-indigo-500/15 text-indigo-400" label="Missões ativas" valor={ativas} sub={`${stats.totalMissoes} no total`} />
         <Kpi icon={Smartphone} cor="bg-emerald-500/15 text-emerald-400" label="Números conectados" valor={`${stats.numeros.conectados}/${stats.numeros.total}`} sub="chips ligados à Evolution" />

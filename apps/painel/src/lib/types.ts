@@ -155,6 +155,7 @@ export interface Stats {
   totalContatos: number
   numeros: { total: number; conectados: number }
   mensagensHoje: number
+  alertas: { tipo: string; mensagem: string }[] // vigia: saúde/silêncio dos números
 }
 
 export interface QrResposta {

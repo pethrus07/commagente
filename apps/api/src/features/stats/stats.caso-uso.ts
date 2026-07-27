@@ -2,6 +2,44 @@
 import { config } from '../../core/config'
 import { tenantAtual } from '../../core/contexto'
 import { db } from '../../core/db'
+import { classificarSaude } from '../numeros/numeros.dominio'
+import { numerosRepo } from '../numeros/numeros.repo'
+
+// VIGIA (enxuto, sem canal externo): calcula na leitura os alertas operacionais que o
+// dashboard mostra — número em risco de bloqueio e número parado (silêncio). É o "vigia
+// por tenant" da reunião, sem depender de e-mail/push.
+async function vigia(tenantId: string): Promise<{ tipo: string; mensagem: string }[]> {
+  const numeros = await db.numeroWhatsapp.findMany({
+    where: { tenantId },
+    select: { id: true, telefone: true, statusConexao: true, criadoEm: true },
+  })
+  const h24 = new Date(Date.now() - 24 * 3_600_000)
+  const alertas: { tipo: string; mensagem: string }[] = []
+  for (const n of numeros) {
+    // saúde: taxa de resposta baixa → risco de bloqueio (iniciações já ficam pausadas)
+    const { base, naoRespondidas } = await numerosRepo.saude(n.id)
+    const s = classificarSaude(base, naoRespondidas)
+    if (s.status === 'risco') {
+      alertas.push({
+        tipo: 'saude',
+        mensagem: `Número +${n.telefone} com taxa de resposta baixa (${Math.round((s.replyRate ?? 0) * 100)}%) — novas iniciações pausadas p/ evitar bloqueio.`,
+      })
+    }
+    // silêncio: conectado, criado há +24h, sem NENHUMA saída nas últimas 24h
+    if (n.statusConexao === 'conectado' && n.criadoEm < h24) {
+      const saidas = await db.mensagem.count({
+        where: { tenantId, direcao: 'out', criadaEm: { gte: h24 }, missao: { numeroId: n.id } },
+      })
+      if (saidas === 0) {
+        alertas.push({
+          tipo: 'silencio',
+          mensagem: `Número +${n.telefone} conectado, mas sem nenhuma mensagem enviada nas últimas 24h.`,
+        })
+      }
+    }
+  }
+  return alertas
+}
 
 export async function obterStats() {
   const tenantId = await tenantAtual()
@@ -63,6 +101,7 @@ export async function obterStats() {
     totalContatos,
     numeros: { total: totalNumeros, conectados },
     mensagensHoje,
+    alertas: await vigia(tenantId),
   }
 }
 
