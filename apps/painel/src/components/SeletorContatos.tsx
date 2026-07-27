@@ -12,15 +12,31 @@ const campo =
 // Emite pra fora a lista combinada (sem duplicar telefone) via onChange.
 export function SeletorContatos({
   onChange,
+  onAlvoTag,
 }: {
   onChange: (contatos: { telefone: string; nome?: string }[]) => void
+  // opcional: quando o usuário escolhe "toda a tag", emite o tagId (o servidor resolve
+  // TODOS os contatos do segmento) — null quando não está mirando uma tag inteira.
+  onAlvoTag?: (tagId: string | null) => void
 }) {
   const [base, setBase] = useState<ContatoResumo[]>([])
   const [tags, setTags] = useState<TagResumo[]>([])
   const [filtroTag, setFiltroTag] = useState<string | null>(null)
+  const [usarTagInteira, setUsarTagInteira] = useState(false)
   const [sel, setSel] = useState<Set<string>>(new Set())
   const [busca, setBusca] = useState('')
   const [colados, setColados] = useState('')
+
+  const tagAtiva = tags.find((t) => t.id === filtroTag)
+  // trocar/limpar a tag zera o "toda a tag"
+  useEffect(() => {
+    setUsarTagInteira(false)
+  }, [filtroTag])
+  // emite o alvo-tag pro pai (só quando há prop e uma tag inteira selecionada)
+  useEffect(() => {
+    onAlvoTag?.(usarTagInteira && filtroTag ? filtroTag : null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [usarTagInteira, filtroTag])
 
   useEffect(() => {
     api.contatos
@@ -94,6 +110,15 @@ export function SeletorContatos({
               </button>
             ))}
           </div>
+        )}
+        {onAlvoTag && filtroTag && (
+          <label className="mt-1.5 flex cursor-pointer items-center gap-2 rounded-lg bg-indigo-500/10 px-2.5 py-1.5 text-[11px] text-indigo-200">
+            <input type="checkbox" checked={usarTagInteira} onChange={(e) => setUsarTagInteira(e.target.checked)} className="h-3.5 w-3.5 accent-indigo-500" />
+            <span>Disparar pra <b>TODA</b> a tag {tagAtiva ? `«${tagAtiva.nome}»` : ''} <b className="tabular-nums">({tagAtiva?.total ?? 0})</b> — pega o segmento inteiro no servidor</span>
+          </label>
+        )}
+        {usarTagInteira && (
+          <p className="mt-1.5 rounded-lg bg-surface2 px-2.5 py-1.5 text-[11px] text-muted">Usando a tag inteira — a seleção individual abaixo é ignorada.</p>
         )}
         {base.length > 0 && (
           <div className="mt-1.5 flex items-center justify-between px-0.5">

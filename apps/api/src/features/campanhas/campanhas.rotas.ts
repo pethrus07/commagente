@@ -14,20 +14,28 @@ const contatos = z
   .array(z.object({ telefone: z.string().min(8), nome: z.string().optional() }))
   .min(1)
 
-const corpoCriar = z.object({
-  nome: z.string().min(1),
-  numeroId: z.string().uuid(),
-  tipo: tipoMissao.optional(),
-  modo: z.enum(['auto', 'copilot']).optional(),
-  objetivo: z.string().min(1),
-  contexto: z.string().optional(),
-  criterioConclusao: z.string().optional(),
-  tom: z.string().optional(),
-  informacoes: z.string().optional(),
-  contatos,
-})
+// alvo do disparo: contatos avulsos e/ou uma tag (pelo menos um dos dois)
+const alvo = { contatos: contatos.optional(), tagId: z.string().uuid().optional() }
+const temAlvo = (d: { contatos?: unknown[]; tagId?: string }) =>
+  (d.contatos?.length ?? 0) > 0 || !!d.tagId
+const msgAlvo = { message: 'Informe ao menos um contato ou uma tag.' }
 
-const corpoContatos = z.object({ contatos })
+const corpoCriar = z
+  .object({
+    nome: z.string().min(1),
+    numeroId: z.string().uuid(),
+    tipo: tipoMissao.optional(),
+    modo: z.enum(['auto', 'copilot']).optional(),
+    objetivo: z.string().min(1),
+    contexto: z.string().optional(),
+    criterioConclusao: z.string().optional(),
+    tom: z.string().optional(),
+    informacoes: z.string().optional(),
+    ...alvo,
+  })
+  .refine(temAlvo, msgAlvo)
+
+const corpoContatos = z.object(alvo).refine(temAlvo, msgAlvo)
 const paramsId = z.object({ id: z.string().uuid() })
 
 export async function campanhasRotas(app: FastifyInstance) {
@@ -44,11 +52,11 @@ export async function campanhasRotas(app: FastifyInstance) {
     return obterCampanha(id)
   })
 
-  // adiciona mais contatos a uma campanha em andamento
+  // adiciona mais contatos a uma campanha em andamento (contatos avulsos e/ou tag)
   app.post('/campanhas/:id/contatos', async (req) => {
     const { id } = paramsId.parse(req.params)
-    const { contatos } = corpoContatos.parse(req.body)
-    return adicionarContatosCampanha(id, contatos)
+    const alvo = corpoContatos.parse(req.body)
+    return adicionarContatosCampanha(id, alvo)
   })
 
   // DISPARA a campanha: inicia todas as missões ainda paradas ('configurada')

@@ -45,20 +45,26 @@ const corpoEditar = z.object({
   nomeContato: z.string().optional(),
 })
 
-// disparo em lote: a mesma missão → vários contatos
-const corpoLote = z.object({
-  numeroId: z.string().uuid(),
-  tipo: tipoMissao.optional(),
-  modo: modoMissao.optional(),
-  objetivo: z.string().min(1),
-  contexto: z.string().optional(),
-  criterioConclusao: z.string().optional(),
-  tom: z.string().optional(),
-  informacoes: z.string().optional(),
-  contatos: z
-    .array(z.object({ telefone: z.string().min(8), nome: z.string().optional() }))
-    .min(1),
-})
+// disparo em lote: a mesma missão → vários contatos (avulsos e/ou todos de uma tag)
+const corpoLote = z
+  .object({
+    numeroId: z.string().uuid(),
+    tipo: tipoMissao.optional(),
+    modo: modoMissao.optional(),
+    objetivo: z.string().min(1),
+    contexto: z.string().optional(),
+    criterioConclusao: z.string().optional(),
+    tom: z.string().optional(),
+    informacoes: z.string().optional(),
+    contatos: z
+      .array(z.object({ telefone: z.string().min(8), nome: z.string().optional() }))
+      .min(1)
+      .optional(),
+    tagId: z.string().uuid().optional(),
+  })
+  .refine((d) => (d.contatos?.length ?? 0) > 0 || !!d.tagId, {
+    message: 'Informe ao menos um contato ou uma tag.',
+  })
 
 const corpoEstado = z.object({ estado: z.nativeEnum(EstadoMissao) })
 

@@ -6,6 +6,7 @@ import { conferirDono, contexto, tenantAtual } from '../../core/contexto'
 import { processarTurno } from '../conversa/conversa.caso-uso'
 import { classificarSaude } from '../numeros/numeros.dominio'
 import { numerosRepo } from '../numeros/numeros.repo'
+import { resolverContatosDaTag } from '../tags/tags.caso-uso'
 import { validarTransicao } from './missao.dominio'
 import { missoesRepo } from './missoes.repo'
 
@@ -24,7 +25,10 @@ type DadosMissao = {
 // Disparo em LOTE: a MESMA definição de missão → N contatos. Cada contato vira
 // uma missão própria (conversa independente, com memória e estado próprios).
 export async function criarMissaoEmLote(
-  input: DadosMissao & { contatos: { telefone: string; nome?: string }[] },
+  input: DadosMissao & {
+    contatos?: { telefone: string; nome?: string }[]
+    tagId?: string // alvo por segmento: resolve TODOS os contatos da tag no servidor
+  },
   origem = 'lote',
 ) {
   const tenantId = await tenantAtual()
@@ -35,11 +39,21 @@ export async function criarMissaoEmLote(
   if (!numero || numero.tenantId !== tenantId) {
     throw new ErroHttp(404, 'Número não encontrado')
   }
-  if (!input.contatos.length)
-    throw new ErroHttp(400, 'Informe ao menos um contato')
+
+  // audiência = contatos avulsos + (se veio tagId) todos os contatos da tag; dedup por telefone
+  const daTag = input.tagId ? await resolverContatosDaTag(input.tagId) : []
+  const vistos = new Set<string>()
+  const alvo = [...(input.contatos ?? []), ...daTag].filter((c) => {
+    const t = c.telefone.replace(/\D/g, '')
+    if (t.length < 8 || vistos.has(t)) return false
+    vistos.add(t)
+    return true
+  })
+  if (!alvo.length)
+    throw new ErroHttp(400, 'Informe ao menos um contato (avulso ou por tag).')
 
   const missoes = []
-  for (const c of input.contatos) {
+  for (const c of alvo) {
     const telefone = c.telefone.replace(/\D/g, '')
     if (telefone.length < 8) continue // pula linhas inválidas do lote
 

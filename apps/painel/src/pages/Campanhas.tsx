@@ -14,6 +14,7 @@ function NovaCampanhaModal({ onFechar }: { onFechar: (criou: boolean) => void })
   const [numeros, setNumeros] = useState<Numero[]>([])
   const [form, setForm] = useState({ nome: '', numeroId: '', tipo: 'vender', modo: 'auto', objetivo: '', criterioConclusao: '', tom: '', informacoes: '' })
   const [contatos, setContatos] = useState<{ telefone: string; nome?: string }[]>([])
+  const [tagAlvo, setTagAlvo] = useState<string | null>(null)
   const [dispararAgora, setDispararAgora] = useState(true)
   const [salvando, setSalvando] = useState(false)
 
@@ -29,7 +30,7 @@ function NovaCampanhaModal({ onFechar }: { onFechar: (criou: boolean) => void })
     if (!form.nome.trim()) return toast('Dê um nome à campanha.', 'erro')
     if (!form.numeroId) return toast('Escolha um número.', 'erro')
     if (!form.objetivo.trim()) return toast('Descreva o objetivo.', 'erro')
-    if (contatos.length === 0) return toast('Escolha ao menos um contato.', 'erro')
+    if (contatos.length === 0 && !tagAlvo) return toast('Escolha ao menos um contato ou uma tag.', 'erro')
     setSalvando(true)
     try {
       const { criadas, campanha } = await api.campanhas.criar({
@@ -41,7 +42,7 @@ function NovaCampanhaModal({ onFechar }: { onFechar: (criou: boolean) => void })
         criterioConclusao: form.criterioConclusao.trim() || undefined,
         tom: form.tom.trim() || undefined,
         informacoes: form.informacoes.trim() || undefined,
-        contatos,
+        ...(tagAlvo ? { tagId: tagAlvo } : { contatos }),
       })
       if (dispararAgora) {
         const r = await api.campanhas.iniciar(campanha.id)
@@ -109,7 +110,7 @@ function NovaCampanhaModal({ onFechar }: { onFechar: (criou: boolean) => void })
             <textarea value={form.informacoes} onChange={(e) => setForm({ ...form, informacoes: e.target.value })} rows={2} placeholder="Preços/prazos REAIS que a IA pode afirmar" className={cn(campo, 'resize-none')} />
           </div>
           <div className="border-t border-line pt-3">
-            <SeletorContatos onChange={setContatos} />
+            <SeletorContatos onChange={setContatos} onAlvoTag={setTagAlvo} />
           </div>
           <label className="flex cursor-pointer items-start gap-2 rounded-xl bg-surface2 p-3 text-sm">
             <input type="checkbox" checked={dispararAgora} onChange={(e) => setDispararAgora(e.target.checked)} className="mt-0.5 h-4 w-4 accent-indigo-500" />
@@ -121,7 +122,7 @@ function NovaCampanhaModal({ onFechar }: { onFechar: (criou: boolean) => void })
         </div>
         <div className="mt-5 flex justify-end gap-2">
           <Button variant="ghost" onClick={() => onFechar(false)}>Cancelar</Button>
-          <Button onClick={criar} loading={salvando}>{dispararAgora ? `Criar e disparar${contatos.length ? ` (${contatos.length})` : ''}` : 'Criar campanha'}</Button>
+          <Button onClick={criar} loading={salvando}>{dispararAgora ? `Criar e disparar${tagAlvo ? ' (toda a tag)' : contatos.length ? ` (${contatos.length})` : ''}` : 'Criar campanha'}</Button>
         </div>
       </Card>
     </div>
@@ -130,12 +131,13 @@ function NovaCampanhaModal({ onFechar }: { onFechar: (criou: boolean) => void })
 
 function AddContatosModal({ campanha, onFechar }: { campanha: CampanhaResumo; onFechar: (add: boolean) => void }) {
   const [contatos, setContatos] = useState<{ telefone: string; nome?: string }[]>([])
+  const [tagAlvo, setTagAlvo] = useState<string | null>(null)
   const [salvando, setSalvando] = useState(false)
   const adicionar = async () => {
-    if (contatos.length === 0) return toast('Escolha ao menos um contato.', 'erro')
+    if (contatos.length === 0 && !tagAlvo) return toast('Escolha ao menos um contato ou uma tag.', 'erro')
     setSalvando(true)
     try {
-      const { criadas } = await api.campanhas.adicionarContatos(campanha.id, contatos)
+      const { criadas } = await api.campanhas.adicionarContatos(campanha.id, tagAlvo ? { tagId: tagAlvo } : { contatos })
       toast(`${criadas} contato${criadas === 1 ? '' : 's'} adicionado${criadas === 1 ? '' : 's'} à campanha.`, 'ok')
       onFechar(true)
     } catch (e) {
@@ -152,10 +154,10 @@ function AddContatosModal({ campanha, onFechar }: { campanha: CampanhaResumo; on
           <button onClick={() => onFechar(false)} className="text-muted hover:text-content"><X className="h-5 w-5" /></button>
         </div>
         <p className="mb-4 text-xs text-muted">à campanha <b className="text-content">{campanha.nome}</b> — cada um vira uma nova conversa com a mesma definição.</p>
-        <SeletorContatos onChange={setContatos} />
+        <SeletorContatos onChange={setContatos} onAlvoTag={setTagAlvo} />
         <div className="mt-5 flex justify-end gap-2">
           <Button variant="ghost" onClick={() => onFechar(false)}>Cancelar</Button>
-          <Button onClick={adicionar} loading={salvando}><UserPlus className="h-4 w-4" /> Adicionar {contatos.length > 0 ? `(${contatos.length})` : ''}</Button>
+          <Button onClick={adicionar} loading={salvando}><UserPlus className="h-4 w-4" /> Adicionar {tagAlvo ? '(toda a tag)' : contatos.length > 0 ? `(${contatos.length})` : ''}</Button>
         </div>
       </Card>
     </div>

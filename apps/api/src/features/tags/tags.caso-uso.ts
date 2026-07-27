@@ -71,6 +71,23 @@ export async function removerTagDoContato(contatoId: string, tagId: string) {
   return { ok: true }
 }
 
+// Resolve os contatos de uma tag (do tenant) no formato do disparo, EXCLUINDO opt-out.
+// Pega TODOS os contatos da tag (o seletor do painel exibe só uma parte) — é o que
+// permite "missão/campanha pra todos da tag X" pegar a base inteira do segmento.
+export async function resolverContatosDaTag(
+  tagId: string,
+): Promise<{ telefone: string; nome?: string }[]> {
+  const tag = await carregarTagDono(tagId)
+  const vinculos = await db.contatoTag.findMany({
+    where: { tagId, contato: { tenantId: tag.tenantId, optOut: false } },
+    select: { contato: { select: { telefone: true, nome: true } } },
+  })
+  return vinculos.map((v) => ({
+    telefone: v.contato.telefone,
+    nome: v.contato.nome ?? undefined,
+  }))
+}
+
 // aplica a MESMA tag a vários contatos de uma vez (ex.: seleção em massa / importação)
 export async function aplicarTagEmLote(tagId: string, contatoIds: string[]) {
   const tag = await carregarTagDono(tagId)

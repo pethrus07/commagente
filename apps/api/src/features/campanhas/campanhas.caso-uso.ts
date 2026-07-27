@@ -65,10 +65,10 @@ export async function iniciarCampanha(id: string) {
   return iniciarMissoesConfiguradas(pendentes.map((m) => m.id))
 }
 
+type Alvo = { contatos?: { telefone: string; nome?: string }[]; tagId?: string }
+
 // cria a campanha (definição) + dispara pros contatos (cada um vira uma missão)
-export async function criarCampanha(
-  input: DefCampanha & { contatos: { telefone: string; nome?: string }[] },
-) {
+export async function criarCampanha(input: DefCampanha & Alvo) {
   const tenantId = await tenantAtual()
   const numero = await db.numeroWhatsapp.findUnique({ where: { id: input.numeroId } })
   if (!numero || numero.tenantId !== tenantId) throw new ErroHttp(404, 'Número não encontrado')
@@ -87,7 +87,7 @@ export async function criarCampanha(
       informacoes: input.informacoes,
     },
   })
-  const { criadas } = await dispararDaCampanha(campanha, input.contatos)
+  const { criadas } = await dispararDaCampanha(campanha, { contatos: input.contatos, tagId: input.tagId })
   return { campanha, criadas }
 }
 
@@ -102,17 +102,14 @@ export async function obterCampanha(id: string) {
 }
 
 // adiciona mais contatos a uma campanha em andamento (mesma definição → novas missões)
-export async function adicionarContatosCampanha(
-  id: string,
-  contatos: { telefone: string; nome?: string }[],
-) {
+export async function adicionarContatosCampanha(id: string, alvo: Alvo) {
   const campanha = await db.campanha.findUnique({ where: { id } })
   if (!campanha) throw new ErroHttp(404, 'Campanha não encontrada')
   await conferirDono(campanha.tenantId)
-  return dispararDaCampanha(campanha, contatos)
+  return dispararDaCampanha(campanha, alvo)
 }
 
-// helper: cria as missões a partir da definição da campanha
+// helper: cria as missões a partir da definição da campanha (contatos avulsos e/ou tag)
 function dispararDaCampanha(
   campanha: {
     id: string
@@ -125,7 +122,7 @@ function dispararDaCampanha(
     tom: string | null
     informacoes: string | null
   },
-  contatos: { telefone: string; nome?: string }[],
+  alvo: Alvo,
 ) {
   return criarMissaoEmLote({
     numeroId: campanha.numeroId,
@@ -137,6 +134,7 @@ function dispararDaCampanha(
     tom: campanha.tom ?? undefined,
     informacoes: campanha.informacoes ?? undefined,
     campanhaId: campanha.id,
-    contatos,
+    contatos: alvo.contatos,
+    tagId: alvo.tagId,
   })
 }

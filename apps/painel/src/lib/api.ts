@@ -115,10 +115,13 @@ export const api = {
       criterioConclusao?: string
       tom?: string
       informacoes?: string
-      contatos: { telefone: string; nome?: string }[]
+      contatos?: { telefone: string; nome?: string }[]
+      tagId?: string // dispara pra TODOS os contatos da tag (resolvido no servidor)
     }) => req<{ campanha: { id: string }; criadas: number }>('/campanhas', { method: 'POST', body: JSON.stringify(data) }),
-    adicionarContatos: (id: string, contatos: { telefone: string; nome?: string }[]) =>
-      req<{ criadas: number }>(`/campanhas/${id}/contatos`, { method: 'POST', body: JSON.stringify({ contatos }) }),
+    adicionarContatos: (
+      id: string,
+      alvo: { contatos?: { telefone: string; nome?: string }[]; tagId?: string },
+    ) => req<{ criadas: number }>(`/campanhas/${id}/contatos`, { method: 'POST', body: JSON.stringify(alvo) }),
     iniciar: (id: string) =>
       req<ResultadoDisparo>(`/campanhas/${id}/iniciar`, { method: 'POST', body: '{}' }),
   },
@@ -233,7 +236,8 @@ export const api = {
       criterioConclusao?: string
       tom?: string
       informacoes?: string
-      contatos: { telefone: string; nome?: string }[]
+      contatos?: { telefone: string; nome?: string }[]
+      tagId?: string
     }) =>
       req<{ criadas: number; missoes: Missao[] }>('/missoes/lote', {
         method: 'POST',
