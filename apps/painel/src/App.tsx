@@ -1,6 +1,7 @@
 import { CheckCircle2, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Sidebar, type Page } from './components/Sidebar'
+import { TermosModal } from './components/TermosModal'
 import { auth, type TenantSel, type UsuarioSessao } from './lib/auth'
 import { useToasts } from './lib/toast'
 import { cn } from './lib/ui'
@@ -63,7 +64,12 @@ export default function App() {
       {!usuario ? (
         <Login onEntrar={setUsuario} />
       ) : (
-        <div className="flex h-screen">
+        <>
+          {/* aceite de termos obrigatório no 1º acesso (não vale p/ o super-admin/plataforma) */}
+          {usuario.papel !== 'super_admin' && !usuario.aceitouTermos && (
+            <TermosModal onAceitar={setUsuario} onSair={sair} />
+          )}
+          <div className="flex h-screen">
           <Sidebar
             atual={pageAtual}
             onNavegar={(p) => setRota({ page: p })}
@@ -100,7 +106,8 @@ export default function App() {
               {rota.page === 'missao' && <MissaoDetalhe id={rota.id} onVoltar={() => setRota({ page: 'missoes' })} />}
             </main>
           </div>
-        </div>
+          </div>
+        </>
       )}
 
       {/* toaster (sempre montado, inclusive no login) */}

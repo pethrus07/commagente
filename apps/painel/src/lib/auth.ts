@@ -6,6 +6,7 @@ export interface UsuarioSessao {
   email: string
   papel: Papel
   tenantId: string | null
+  aceitouTermos?: boolean // aceite dos termos (LGPD/responsabilidade do número)
 }
 
 const KEY = 'zap_token'
@@ -27,6 +28,14 @@ export const auth = {
   entrar: (token: string, usuario: UsuarioSessao) => {
     localStorage.setItem(KEY, token)
     localStorage.setItem(UKEY, JSON.stringify(usuario))
+  },
+  // marca os termos como aceitos na sessão local (backend já registrou o timestamp)
+  marcarTermosAceitos: (): UsuarioSessao | null => {
+    const s = localStorage.getItem(UKEY)
+    if (!s) return null
+    const u = { ...(JSON.parse(s) as UsuarioSessao), aceitouTermos: true }
+    localStorage.setItem(UKEY, JSON.stringify(u))
+    return u
   },
   sair: () => {
     localStorage.removeItem(KEY)

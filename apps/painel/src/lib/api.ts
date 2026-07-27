@@ -54,6 +54,12 @@ export const api = {
       body: JSON.stringify({ email, senha }),
     }),
 
+  aceitarTermos: () =>
+    req<{ ok: true; aceitouTermos: true }>('/auth/aceitar-termos', {
+      method: 'POST',
+      body: '{}',
+    }),
+
   admin: {
     tenants: () => req<TenantResumo[]>('/admin/tenants'),
     criarTenant: (data: { nome: string; adminEmail: string; adminSenha: string }) =>
