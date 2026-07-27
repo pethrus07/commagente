@@ -8,7 +8,17 @@ import { numerosRepo } from '../numeros/numeros.repo'
 // VIGIA (enxuto, sem canal externo): calcula na leitura os alertas operacionais que o
 // dashboard mostra — número em risco de bloqueio e número parado (silêncio). É o "vigia
 // por tenant" da reunião, sem depender de e-mail/push.
+// CACHE (perf): o dashboard faz poll a cada 8s e o vigia roda ~3 queries/número sobre as
+// tabelas grandes (missoes/mensagens). Cacheamos por tenant com TTL curto — os alertas
+// mudam devagar, então servir do cache por 1min corta a maior parte da carga.
+const vigiaCache = new Map<string, { at: number; alertas: { tipo: string; mensagem: string }[] }>()
+const VIGIA_TTL_MS = 60_000
+
 async function vigia(tenantId: string): Promise<{ tipo: string; mensagem: string }[]> {
+  const agora = Date.now()
+  const cache = vigiaCache.get(tenantId)
+  if (cache && agora - cache.at < VIGIA_TTL_MS) return cache.alertas
+
   const numeros = await db.numeroWhatsapp.findMany({
     where: { tenantId },
     select: { id: true, telefone: true, statusConexao: true, criadoEm: true },
@@ -38,6 +48,7 @@ async function vigia(tenantId: string): Promise<{ tipo: string; mensagem: string
       }
     }
   }
+  vigiaCache.set(tenantId, { at: agora, alertas })
   return alertas
 }
 

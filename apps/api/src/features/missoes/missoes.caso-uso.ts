@@ -291,7 +291,13 @@ export async function iniciarMissoesConfiguradas(ids: string[]) {
         pula('inexistente')
         continue
       }
-      await conferirDono(missao.tenantId)
+      // cross-tenant cai no MESMO balde de "inexistente" (não revela IDs de outro tenant)
+      try {
+        await conferirDono(missao.tenantId)
+      } catch {
+        pula('inexistente')
+        continue
+      }
       if (missao.estado !== 'configurada') {
         pula('ja_iniciada')
         continue
@@ -328,10 +334,18 @@ export async function iniciarMissoesConfiguradas(ids: string[]) {
         continue
       }
 
-      // inicia: move p/ na_fila e gera o opener (o worker envia no ritmo anti-ban)
+      // inicia: move p/ na_fila e consome a vaga JÁ (antes do turno), pra o cap não furar.
+      // Se o turno falhar, reverte pra 'configurada' (não deixa missão órfã em na_fila
+      // sem opener) e devolve a vaga.
       await missoesRepo.atualizarEstado(id, 'na_fila')
-      await processarTurno(id)
       vagas.set(missao.numeroId, (vagas.get(missao.numeroId) ?? 1) - 1)
+      try {
+        await processarTurno(id) // gera opener via IA + enfileira; worker envia
+      } catch (e) {
+        await missoesRepo.atualizarEstado(id, 'configurada').catch(() => {})
+        vagas.set(missao.numeroId, (vagas.get(missao.numeroId) ?? 0) + 1)
+        throw e // cai no catch externo → conta como 'erro'
+      }
       iniciadas++
     } catch (e) {
       console.error('[iniciar-lote] falhou a missão', id, e)

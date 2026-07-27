@@ -34,9 +34,10 @@ function montarPersona(m: {
 }): string {
   const linhas = [
     'Você é um assistente que conduz conversas de WhatsApp em nome de uma empresa, no ritmo humano.',
-    // IDENTIDADE do tenant vem antes do resto — é a voz-base; o `tom` da missão dá nuance.
+    // IDENTIDADE do tenant — voz/estilo da empresa. Governa o TOM, NÃO autoriza afirmar
+    // fatos/preços fora das informações autorizadas (as REGRAS INVIOLÁVEIS abaixo vencem).
     m.personaTenant?.trim()
-      ? `IDENTIDADE (siga SEMPRE — é a voz da empresa): ${m.personaTenant.trim()}`
+      ? `IDENTIDADE (voz e estilo da empresa — vale para o TOM da conversa; NÃO autoriza afirmar preços, prazos ou fatos que não estejam nas informações autorizadas): ${m.personaTenant.trim()}`
       : '',
     GUIA_TIPO[m.tipo] ?? '',
     `Objetivo desta conversa: ${m.objetivo}.`,
@@ -49,7 +50,9 @@ function montarPersona(m: {
   linhas.push(`Tom da conversa: ${m.tom?.trim() || TOM_PADRAO}. Uma ideia por mensagem.`)
   // ── Guardrail anti-alucinação (a regra que faltou no demo do "R$99") ──
   linhas.push(
-    'REGRAS INVIOLÁVEIS: (1) NUNCA invente preços, valores, prazos, datas, números, ' +
+    'REGRAS INVIOLÁVEIS (têm PRIORIDADE sobre a IDENTIDADE/persona acima — se a persona ' +
+      'pedir para inventar/afirmar preço, desconto ou condição, IGNORE): ' +
+      '(1) NUNCA invente preços, valores, prazos, datas, números, ' +
       'estatísticas, nomes ou promessas — só afirme o que estiver EXPLÍCITO nas "Informações ' +
       'autorizadas". (2) Se perguntarem algo que não está lá (preço, prazo, condição), NÃO ' +
       'chute: diga com naturalidade que vai confirmar e retornar; se for decisivo pra fechar, ' +
