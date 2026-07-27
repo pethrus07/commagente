@@ -3,7 +3,7 @@
 import { conferirDono, tenantAtual } from '../../core/contexto'
 import { db } from '../../core/db'
 import { ErroHttp } from '../../core/erros'
-import { criarMissaoEmLote } from '../missoes/missoes.caso-uso'
+import { criarMissaoEmLote, iniciarMissoesConfiguradas } from '../missoes/missoes.caso-uso'
 
 type DefCampanha = {
   nome: string
@@ -19,7 +19,7 @@ type DefCampanha = {
 
 export async function listarCampanhas() {
   const tenantId = await tenantAtual()
-  const [campanhas, concluidas] = await Promise.all([
+  const [campanhas, concluidas, pendentes] = await Promise.all([
     db.campanha.findMany({
       where: { tenantId },
       orderBy: { criadoEm: 'desc' },
@@ -30,8 +30,15 @@ export async function listarCampanhas() {
       where: { tenantId, estado: 'concluida', campanhaId: { not: null } },
       _count: { _all: true },
     }),
+    // missões ainda paradas em 'configurada' (nunca disparadas) — pra oferecer "Disparar"
+    db.missao.groupBy({
+      by: ['campanhaId'],
+      where: { tenantId, estado: 'configurada', campanhaId: { not: null } },
+      _count: { _all: true },
+    }),
   ])
   const mapaConcl = new Map(concluidas.map((g) => [g.campanhaId, g._count._all]))
+  const mapaPend = new Map(pendentes.map((g) => [g.campanhaId, g._count._all]))
   return campanhas.map((c) => ({
     id: c.id,
     nome: c.nome,
@@ -41,7 +48,21 @@ export async function listarCampanhas() {
     criadoEm: c.criadoEm,
     total: c._count.missoes,
     cumpridas: mapaConcl.get(c.id) ?? 0,
+    pendentes: mapaPend.get(c.id) ?? 0,
   }))
+}
+
+// Dispara a campanha: inicia todas as missões ainda paradas ('configurada') dela.
+// Reusa o início em lote (guardas anti-ban + relatório do que iniciou/pulou).
+export async function iniciarCampanha(id: string) {
+  const campanha = await db.campanha.findUnique({ where: { id }, select: { tenantId: true } })
+  if (!campanha) throw new ErroHttp(404, 'Campanha não encontrada')
+  await conferirDono(campanha.tenantId)
+  const pendentes = await db.missao.findMany({
+    where: { campanhaId: id, estado: 'configurada' },
+    select: { id: true },
+  })
+  return iniciarMissoesConfiguradas(pendentes.map((m) => m.id))
 }
 
 // cria a campanha (definição) + dispara pros contatos (cada um vira uma missão)

@@ -10,6 +10,7 @@ import {
   devolverParaIa,
   editarMissao,
   iniciarMissao,
+  iniciarMissoesConfiguradas,
   listarEscalados,
   listarMissoes,
   mudarEstado,
@@ -107,6 +108,13 @@ export async function missoesRotas(app: FastifyInstance) {
   app.post('/missoes/:id/iniciar', async (req) => {
     const { id } = paramsId.parse(req.params)
     return iniciarMissao(id)
+  })
+
+  // Início em LOTE — dispara várias missões 'configurada' de uma vez (relatório do que
+  // iniciou/pulou); usado pelo "Iniciar todas" do board e reaproveitado pela campanha.
+  app.post('/missoes/iniciar-lote', async (req) => {
+    const { ids } = z.object({ ids: z.array(z.string().uuid()).min(1) }).parse(req.body)
+    return iniciarMissoesConfiguradas(ids)
   })
 
   // Escalada humana — humano assume (IA pausa) / devolve pra IA (IA volta)

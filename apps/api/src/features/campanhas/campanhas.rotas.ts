@@ -4,6 +4,7 @@ import { z } from 'zod'
 import {
   adicionarContatosCampanha,
   criarCampanha,
+  iniciarCampanha,
   listarCampanhas,
   obterCampanha,
 } from './campanhas.caso-uso'
@@ -48,5 +49,11 @@ export async function campanhasRotas(app: FastifyInstance) {
     const { id } = paramsId.parse(req.params)
     const { contatos } = corpoContatos.parse(req.body)
     return adicionarContatosCampanha(id, contatos)
+  })
+
+  // DISPARA a campanha: inicia todas as missões ainda paradas ('configurada')
+  app.post('/campanhas/:id/iniciar', async (req) => {
+    const { id } = paramsId.parse(req.params)
+    return iniciarCampanha(id)
   })
 }

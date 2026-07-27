@@ -255,6 +255,78 @@ export async function iniciarMissao(id: string) {
   return { ok: true, iniciada: true }
 }
 
+// Início em LOTE (o "Disparar campanha / iniciar todas"): inicia todas as missões
+// `configurada` informadas, PULANDO (sem falhar o lote) as que esbarram nos guardas
+// anti-bloqueio, e devolve um relatório do que iniciou e do que ficou de fora e por quê.
+// Cada início gera só o opener na fila — o worker anti-ban espaça os envios (não sai rajada).
+export async function iniciarMissoesConfiguradas(ids: string[]) {
+  const puladas: Record<string, number> = {}
+  const pula = (motivo: string) => {
+    puladas[motivo] = (puladas[motivo] ?? 0) + 1
+  }
+  let iniciadas = 0
+
+  // caches por número — evita N queries de saúde/cap num lote grande
+  const emRisco = new Map<string, boolean>()
+  const vagas = new Map<string, number>() // cap de conversas ativas restante no número
+
+  for (const id of ids) {
+    try {
+      const missao = await missoesRepo.buscar(id)
+      if (!missao) {
+        pula('inexistente')
+        continue
+      }
+      await conferirDono(missao.tenantId)
+      if (missao.estado !== 'configurada') {
+        pula('ja_iniciada')
+        continue
+      }
+      if (missao.contato.optOut) {
+        pula('opt_out')
+        continue
+      }
+
+      // saúde do número (cache): em risco → pausa novas iniciações (gatilho anti-ban)
+      if (!emRisco.has(missao.numeroId)) {
+        const { base, naoRespondidas } = await numerosRepo.saude(missao.numeroId)
+        emRisco.set(missao.numeroId, classificarSaude(base, naoRespondidas).status === 'risco')
+      }
+      if (emRisco.get(missao.numeroId)) {
+        pula('saude_risco')
+        continue
+      }
+
+      // cap de conversas ativas do número (cache decrementado a cada início)
+      if (!vagas.has(missao.numeroId)) {
+        const ativas = await numerosRepo.contarAtivas(missao.numeroId)
+        vagas.set(missao.numeroId, Math.max(0, missao.numero.maxConversasAtivas - ativas))
+      }
+      if ((vagas.get(missao.numeroId) ?? 0) <= 0) {
+        pula('cap_ativas')
+        continue
+      }
+
+      // anti-spam: no máx. 2 iniciações por contato por semana
+      const semana = new Date(Date.now() - 7 * 86_400_000)
+      if ((await missoesRepo.contarIniciadasPorContato(missao.contatoId, semana)) >= 2) {
+        pula('cap_contato')
+        continue
+      }
+
+      // inicia: move p/ na_fila e gera o opener (o worker envia no ritmo anti-ban)
+      await missoesRepo.atualizarEstado(id, 'na_fila')
+      await processarTurno(id)
+      vagas.set(missao.numeroId, (vagas.get(missao.numeroId) ?? 1) - 1)
+      iniciadas++
+    } catch (e) {
+      console.error('[iniciar-lote] falhou a missão', id, e)
+      pula('erro')
+    }
+  }
+  return { iniciadas, total: ids.length, puladas }
+}
+
 export async function mudarEstado(id: string, novoEstado: EstadoMissao) {
   const missao = await missoesRepo.buscar(id)
   if (!missao) throw new ErroHttp(404, 'Missão não encontrada')

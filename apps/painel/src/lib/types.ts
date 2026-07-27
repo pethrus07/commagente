@@ -194,6 +194,14 @@ export interface CampanhaResumo {
   criadoEm: string
   total: number
   cumpridas: number
+  pendentes: number // missões ainda paradas em 'configurada' (nunca disparadas)
+}
+
+// Resultado de um disparo em lote (iniciar campanha / iniciar todas as configuradas)
+export interface ResultadoDisparo {
+  iniciadas: number
+  total: number
+  puladas: Record<string, number>
 }
 
 export interface TenantResumo {

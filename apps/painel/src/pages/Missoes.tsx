@@ -1,8 +1,8 @@
 import { type ReactNode, useEffect, useMemo, useState } from 'react'
-import { ChevronRight, LayoutGrid, List, Plus, Target } from 'lucide-react'
+import { ChevronRight, LayoutGrid, List, Plus, Send, Target } from 'lucide-react'
 import { AssistenteMissao } from '../components/AssistenteMissao'
 import { api } from '../lib/api'
-import { COLUNAS, TIPO_INFO, podeTransicionar } from '../lib/estados'
+import { COLUNAS, TIPO_INFO, descreverDisparo, podeTransicionar } from '../lib/estados'
 import { toast } from '../lib/toast'
 import type { EstadoMissao, Missao } from '../lib/types'
 import {
@@ -22,6 +22,7 @@ export function Missoes({ onAbrir }: { onAbrir: (id: string) => void }) {
   const [filtro, setFiltro] = useState<EstadoMissao | 'todas'>('todas')
   const [modal, setModal] = useState(false)
   const [arrastando, setArrastando] = useState<Missao | null>(null)
+  const [iniciandoLote, setIniciandoLote] = useState(false)
 
   const carregar = async () => {
     try {
@@ -35,6 +36,22 @@ export function Missoes({ onAbrir }: { onAbrir: (id: string) => void }) {
     const t = setInterval(carregar, 6000)
     return () => clearInterval(t)
   }, [])
+
+  const configuradas = (missoes ?? []).filter((m) => m.estado === 'configurada')
+  const iniciarConfiguradas = async () => {
+    const ids = configuradas.map((m) => m.id)
+    if (!ids.length) return
+    setIniciandoLote(true)
+    try {
+      const r = await api.missoes.iniciarLote(ids)
+      toast(`Disparo — ${descreverDisparo(r)}.`, 'ok')
+      await carregar()
+    } catch (e) {
+      toast((e as Error).message, 'erro')
+    } finally {
+      setIniciandoLote(false)
+    }
+  }
 
   const filtros = useMemo(() => {
     const contagem = new Map<string, number>()
@@ -69,7 +86,14 @@ export function Missoes({ onAbrir }: { onAbrir: (id: string) => void }) {
           <VistaBtn ativo={vista === 'board'} onClick={() => setVista('board')} icon={<LayoutGrid className="h-4 w-4" />} label="Board" />
           <VistaBtn ativo={vista === 'lista'} onClick={() => setVista('lista')} icon={<List className="h-4 w-4" />} label="Lista" />
         </div>
-        <Button onClick={() => setModal(true)}><Plus className="h-4 w-4" /> Nova missão</Button>
+        <div className="flex items-center gap-2">
+          {configuradas.length > 0 && (
+            <Button variant="ghost" onClick={iniciarConfiguradas} loading={iniciandoLote}>
+              <Send className="h-4 w-4" /> Iniciar {configuradas.length} configurada{configuradas.length === 1 ? '' : 's'}
+            </Button>
+          )}
+          <Button onClick={() => setModal(true)}><Plus className="h-4 w-4" /> Nova missão</Button>
+        </div>
       </div>
 
       {missoes === null ? (

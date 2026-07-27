@@ -10,6 +10,7 @@ import type {
   Missao,
   Numero,
   QrResposta,
+  ResultadoDisparo,
   Stats,
   StatusConhecimento,
   Tag,
@@ -118,6 +119,8 @@ export const api = {
     }) => req<{ campanha: { id: string }; criadas: number }>('/campanhas', { method: 'POST', body: JSON.stringify(data) }),
     adicionarContatos: (id: string, contatos: { telefone: string; nome?: string }[]) =>
       req<{ criadas: number }>(`/campanhas/${id}/contatos`, { method: 'POST', body: JSON.stringify({ contatos }) }),
+    iniciar: (id: string) =>
+      req<ResultadoDisparo>(`/campanhas/${id}/iniciar`, { method: 'POST', body: '{}' }),
   },
 
   agendamentos: {
@@ -267,6 +270,11 @@ export const api = {
       }),
     iniciar: (id: string) =>
       req(`/missoes/${id}/iniciar`, { method: 'POST', body: '{}' }),
+    iniciarLote: (ids: string[]) =>
+      req<ResultadoDisparo>('/missoes/iniciar-lote', {
+        method: 'POST',
+        body: JSON.stringify({ ids }),
+      }),
   },
 
   envio: (data: {

@@ -38,3 +38,23 @@ export const COLUNAS: EstadoMissao[] = [
 export function podeTransicionar(de: EstadoMissao, para: EstadoMissao): boolean {
   return TRANSICOES[de].includes(para)
 }
+
+// rótulos amigáveis dos motivos de "pulo" no disparo em lote
+const MOTIVO_DISPARO: Record<string, string> = {
+  ja_iniciada: 'já iniciadas',
+  opt_out: 'em opt-out',
+  saude_risco: 'seguradas (número em risco de bloqueio)',
+  cap_ativas: 'acima do limite de conversas ativas do número',
+  cap_contato: 'contato já abordado 2×/semana',
+  inexistente: 'não encontradas',
+  erro: 'com erro',
+}
+
+// transforma o relatório do disparo num texto curto pro toast
+export function descreverDisparo(r: { iniciadas: number; puladas: Record<string, number> }): string {
+  const partes = [`${r.iniciadas} iniciada${r.iniciadas === 1 ? '' : 's'}`]
+  for (const [k, n] of Object.entries(r.puladas)) {
+    if (n > 0) partes.push(`${n} ${MOTIVO_DISPARO[k] ?? k}`)
+  }
+  return partes.join(' · ')
+}

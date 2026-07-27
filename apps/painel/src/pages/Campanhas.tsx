@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Megaphone, Plus, UserPlus, X } from 'lucide-react'
+import { Megaphone, Plus, Send, UserPlus, X } from 'lucide-react'
 import { SeletorContatos } from '../components/SeletorContatos'
 import { api } from '../lib/api'
-import { TIPO_INFO, TIPOS_MISSAO } from '../lib/estados'
+import { TIPO_INFO, TIPOS_MISSAO, descreverDisparo } from '../lib/estados'
 import { toast } from '../lib/toast'
 import type { CampanhaResumo, Numero } from '../lib/types'
 import { Button, Card, EmptyState, Spinner, cn, tempoRelativo } from '../lib/ui'
@@ -14,6 +14,7 @@ function NovaCampanhaModal({ onFechar }: { onFechar: (criou: boolean) => void })
   const [numeros, setNumeros] = useState<Numero[]>([])
   const [form, setForm] = useState({ nome: '', numeroId: '', tipo: 'vender', modo: 'auto', objetivo: '', criterioConclusao: '', tom: '', informacoes: '' })
   const [contatos, setContatos] = useState<{ telefone: string; nome?: string }[]>([])
+  const [dispararAgora, setDispararAgora] = useState(true)
   const [salvando, setSalvando] = useState(false)
 
   useEffect(() => {
@@ -31,7 +32,7 @@ function NovaCampanhaModal({ onFechar }: { onFechar: (criou: boolean) => void })
     if (contatos.length === 0) return toast('Escolha ao menos um contato.', 'erro')
     setSalvando(true)
     try {
-      const { criadas } = await api.campanhas.criar({
+      const { criadas, campanha } = await api.campanhas.criar({
         nome: form.nome.trim(),
         numeroId: form.numeroId,
         tipo: form.tipo,
@@ -42,7 +43,12 @@ function NovaCampanhaModal({ onFechar }: { onFechar: (criou: boolean) => void })
         informacoes: form.informacoes.trim() || undefined,
         contatos,
       })
-      toast(`Campanha criada — ${criadas} conversa${criadas === 1 ? '' : 's'}.`, 'ok')
+      if (dispararAgora) {
+        const r = await api.campanhas.iniciar(campanha.id)
+        toast(`Campanha criada e disparada — ${descreverDisparo(r)}.`, 'ok')
+      } else {
+        toast(`Campanha criada — ${criadas} conversa${criadas === 1 ? '' : 's'} (aguardando disparo).`, 'ok')
+      }
       onFechar(true)
     } catch (e) {
       toast((e as Error).message, 'erro')
@@ -105,10 +111,17 @@ function NovaCampanhaModal({ onFechar }: { onFechar: (criou: boolean) => void })
           <div className="border-t border-line pt-3">
             <SeletorContatos onChange={setContatos} />
           </div>
+          <label className="flex cursor-pointer items-start gap-2 rounded-xl bg-surface2 p-3 text-sm">
+            <input type="checkbox" checked={dispararAgora} onChange={(e) => setDispararAgora(e.target.checked)} className="mt-0.5 h-4 w-4 accent-indigo-500" />
+            <span>
+              <span className="font-medium text-content">Disparar agora</span>
+              <span className="block text-xs text-muted">A IA já abre as conversas (no ritmo anti-bloqueio). Desmarque para só montar a campanha e disparar depois.</span>
+            </span>
+          </label>
         </div>
         <div className="mt-5 flex justify-end gap-2">
           <Button variant="ghost" onClick={() => onFechar(false)}>Cancelar</Button>
-          <Button onClick={criar} loading={salvando}>{contatos.length > 1 ? `Disparar (${contatos.length})` : 'Criar campanha'}</Button>
+          <Button onClick={criar} loading={salvando}>{dispararAgora ? `Criar e disparar${contatos.length ? ` (${contatos.length})` : ''}` : 'Criar campanha'}</Button>
         </div>
       </Card>
     </div>
@@ -154,11 +167,26 @@ export function Campanhas() {
   const [modal, setModal] = useState(false)
   const [add, setAdd] = useState<CampanhaResumo | null>(null)
 
+  const [disparando, setDisparando] = useState<string | null>(null)
+
   const carregar = () =>
     api.campanhas.listar().then(setCampanhas).catch((e) => toast((e as Error).message, 'erro'))
   useEffect(() => {
     carregar()
   }, [])
+
+  const disparar = async (c: CampanhaResumo) => {
+    setDisparando(c.id)
+    try {
+      const r = await api.campanhas.iniciar(c.id)
+      toast(`Disparo — ${descreverDisparo(r)}.`, 'ok')
+      carregar()
+    } catch (e) {
+      toast((e as Error).message, 'erro')
+    } finally {
+      setDisparando(null)
+    }
+  }
 
   return (
     <div className="space-y-5">
@@ -190,7 +218,13 @@ export function Campanhas() {
                   <span className="text-emerald-300"><b className="tabular-nums">{c.cumpridas}</b> <span className="text-emerald-300/60">cumpridas</span></span>
                   <span className="ml-auto text-xs text-muted tabular-nums">{taxa}%</span>
                 </div>
-                <Button variant="ghost" className="mt-4 w-full" onClick={() => setAdd(c)}><UserPlus className="h-4 w-4" /> Adicionar contatos</Button>
+                {c.pendentes > 0 && (
+                  <div className="mt-3 flex items-center gap-2 rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
+                    <span className="flex-1"><b className="tabular-nums">{c.pendentes}</b> aguardando disparo</span>
+                    <Button onClick={() => disparar(c)} loading={disparando === c.id} className="!py-1 !text-xs"><Send className="h-3.5 w-3.5" /> Disparar</Button>
+                  </div>
+                )}
+                <Button variant="ghost" className="mt-3 w-full" onClick={() => setAdd(c)}><UserPlus className="h-4 w-4" /> Adicionar contatos</Button>
               </Card>
             )
           })}
