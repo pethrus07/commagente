@@ -34,7 +34,8 @@ test('contatos + campanha com selecionar-todos', async ({ page, erros }) => {
   await expect(page.getByText('QA Contato Dois')).toBeVisible()
   await page.getByRole('button', { name: 'Selecionar todos do filtro' }).click()
   await expect(page.getByText('2 no total')).toBeVisible()
-  await page.getByRole('button', { name: /Disparar \(2\)/ }).click()
+  // botão agora reflete o "Disparar agora" (default ligado): "Criar e disparar (2)"
+  await page.getByRole('button', { name: /Criar e disparar/ }).click()
 
   await expect(page.getByText(/Campanha criada/)).toBeVisible()
   await expect(page.getByText('QA Campanha E2E')).toBeVisible()

@@ -18,6 +18,14 @@ test.describe('Autenticação', () => {
     await page.getByPlaceholder('voce@empresa.com').fill('demo@zapagente.local')
     await page.getByPlaceholder('••••••••').fill('demo123')
     await page.getByRole('button', { name: 'Entrar' }).click()
+    // 1º acesso (UX nova): aceite de termos bloqueia até aceitar — só aparece até aceitar
+    const btnAceitar = page.getByRole('button', { name: 'Aceitar e continuar' })
+    await btnAceitar.or(page.getByRole('heading', { name: 'Dashboard', level: 1 })).first().waitFor()
+    if (await btnAceitar.isVisible()) {
+      await expect(page.getByRole('heading', { name: /termos de uso/i })).toBeVisible()
+      await page.getByRole('checkbox').check()
+      await btnAceitar.click()
+    }
     await expect(page.getByRole('heading', { name: 'Dashboard', level: 1 })).toBeVisible()
     await expect(page.locator('aside').getByRole('button', { name: 'Tenants' })).toHaveCount(0)
     // logout volta pro login
