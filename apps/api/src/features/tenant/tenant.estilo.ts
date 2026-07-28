@@ -47,7 +47,12 @@ export function regrasDeEstilo(e: EstiloConversa): string {
     r.push('NUNCA use travessão (—) nem meia-risca (–): é a maior marca de texto de robô. No lugar, use vírgula, dois-pontos, reticências (...) ou simplesmente comece outra frase.')
 
   if (e.bolhas)
-    r.push('FORMATO DA RESPOSTA: quebre em 2 ou 3 mensagens curtas, uma ideia por linha, SEPARADAS POR QUEBRA DE LINHA (dê Enter entre cada uma). Cada linha vira uma mensagem separada no WhatsApp — é assim que uma pessoa digita. Nada de um parágrafo único e longo.')
+    r.push(
+      'FORMATO DA RESPOSTA (REGRA OBRIGATÓRIA, vale MAIS que qualquer "1-3 frases"): NÃO escreva um parágrafo único. ' +
+        'Quebre a resposta em 2 ou 3 mensagens BEM curtas e, no campo "resposta", separe CADA uma com uma quebra de linha real (o caractere \\n). ' +
+        'Cada linha vira uma mensagem separada no WhatsApp — é assim que uma pessoa digita de verdade. ' +
+        'Exemplo EXATO do valor de "resposta": "opa, tudo bem?\\ntô aqui pra te ajudar com o atendimento\\nposso te mostrar rapidinho como funciona?"',
+    )
   else
     r.push('Responda em uma única mensagem curta (1 a 3 frases).')
 

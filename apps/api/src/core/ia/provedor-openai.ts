@@ -78,7 +78,7 @@ export const provedorOpenai: ProvedorIA = {
       informacoes,
       'REGRA CRÍTICA (anti-alucinação): só afirme informações que estejam EXPLICITAMENTE nas INFORMAÇÕES AUTORIZADAS ou na BASE DE CONHECIMENTO acima. Para QUALQUER detalhe que não esteja lá — preço, política de quartos, tamanhos/medidas, formas de pagamento, datas específicas, disponibilidade, qualquer condição operacional — NÃO invente e NÃO improvise. O PADRÃO nesses casos é RESPONDER de forma natural que você vai confirmar esse detalhe com a equipe e já retorna, e SEGUIR conduzindo a conversa rumo ao objetivo (precisa_humano=FALSE). Use precisa_humano=true SOMENTE quando um humano realmente precisa agir/decidir — ex.: negociar preço ou condição, reclamação, pedido fora do escopo da missão — NÃO para toda pergunta cuja resposta você não tem. Nunca pause a missão só porque falta um dado informativo; apenas diga que confirma e continue.',
       'Responda SOMENTE em JSON válido, sem markdown, no formato exato:',
-      `{"resposta": "texto curto e humano (1-3 frases, WhatsApp)", "novo_estado": "${ESTADOS_SAIDA}", "categoria": "string ou null", "fatos_novos": {objeto com o que você descobriu SOBRE ESTE LEAD, ou {}}, "precisa_humano": true|false, "motivo_escala": "string ou null", "aprendizado_sugerido": "uma lição GERAL e reutilizável p/ atendimentos futuros da empresa (NÃO dados de um lead), ou null", "resultado": "SÓ ao concluir a missão (novo_estado=concluida): resumo curto do desfecho (ex.: 'reunião agendada quinta 15h', 'pagamento confirmado'); senão null"}`,
+      `{"resposta": "texto curto e humano no estilo pedido (WhatsApp); se o COMO ESCREVER pedir várias mensagens, coloque cada uma numa linha separada com \\n dentro deste mesmo campo", "novo_estado": "${ESTADOS_SAIDA}", "categoria": "string ou null", "fatos_novos": {objeto com o que você descobriu SOBRE ESTE LEAD, ou {}}, "precisa_humano": true|false, "motivo_escala": "string ou null", "aprendizado_sugerido": "uma lição GERAL e reutilizável p/ atendimentos futuros da empresa (NÃO dados de um lead), ou null", "resultado": "SÓ ao concluir a missão (novo_estado=concluida): resumo curto do desfecho (ex.: 'reunião agendada quinta 15h', 'pagamento confirmado'); senão null"}`,
       'Conduza a conversa rumo ao objetivo, com naturalidade. Se o lead pedir algo que você não pode resolver, use precisa_humano=true.',
       'aprendizado_sugerido: só preencha se surgiu algo claramente generalizável e útil p/ a empresa (ex.: uma objeção comum e como contorná-la); senão null. Nunca invente.',
     ]
@@ -87,7 +87,7 @@ export const provedorOpenai: ProvedorIA = {
 
     const usuario =
       historico(ctx) ||
-      '(a conversa ainda não começou — escreva a PRIMEIRA mensagem para iniciar o contato de forma calorosa, curta e natural, e TERMINE com uma pergunta ou convite claro pra pessoa responder — isso aumenta a taxa de resposta e evita bloqueio)'
+      '(a conversa ainda não começou — escreva a abertura do contato de forma calorosa e natural, seguindo o estilo pedido em COMO ESCREVER, e TERMINE com uma pergunta ou convite claro pra pessoa responder — isso aumenta a taxa de resposta e evita bloqueio)'
 
     const { conteudo: raw, uso } = await chat(
       [
