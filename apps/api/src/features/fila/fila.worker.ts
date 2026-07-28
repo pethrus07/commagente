@@ -68,16 +68,19 @@ async function tick() {
         numero.enviadosHoje = 0
       }
 
-      // regras anti-bloqueio: fora da janela ou sem budget → deixa pendente (tenta depois)
-      if (!dentroDaJanela(agoraHHmm(), numero.janelaInicio, numero.janelaFim)) {
-        continue
+      // JANELA + BUDGET são anti-bloqueio de OUTREACH (abrir conversa nova = 'novo'). NÃO se
+      // aplicam a RESPOSTAS de uma conversa ativa ('conversa'): um cliente que está falando com
+      // a gente TEM que ser respondido — senão o atendimento "trava" sem aviso (o cliente do
+      // Desbravando mandou msg e ficou sem resposta porque o budget diário cortou a resposta).
+      // Resposta segue só o opt-out + anti-rajada (espaçamento) + chip conectado.
+      if (p.tipo === 'novo') {
+        if (!dentroDaJanela(agoraHHmm(), numero.janelaInicio, numero.janelaFim)) continue
+        const tetoEfetivo = Math.min(
+          numero.budgetDiario,
+          tetoDiarioPorEstagio(numero.aquecimentoEstagio),
+        )
+        if (!temBudget(numero.enviadosHoje, tetoEfetivo)) continue
       }
-      // budget efetivo = o menor entre o configurado e o teto do estágio de aquecimento
-      const tetoEfetivo = Math.min(
-        numero.budgetDiario,
-        tetoDiarioPorEstagio(numero.aquecimentoEstagio),
-      )
-      if (!temBudget(numero.enviadosHoje, tetoEfetivo)) continue
 
       // OPT-OUT: o contato pediu pra parar → cancela o envio (não retenta)
       if (await filaRepo.contatoOptOut(item.contatoId)) {
