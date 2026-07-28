@@ -53,6 +53,21 @@ export const evolutionClient: PortaWhatsApp = {
       integration: 'WHATSAPP-BAILEYS',
       qrcode: true,
     })
+    // Settings de robustez (mitiga o "aguardando esta mensagem"/desync de chaves do Baileys e dá
+    // higiene pra um bot 1:1): IGNORA GRUPOS (causa nº1 de desync de LID → "waiting for this message"
+    // em 2026), rejeita chamadas e não puxa histórico pesado no connect. Best-effort: não derruba a
+    // criação se a versão do Evolution não aceitar algum campo.
+    await req('POST', `/settings/set/${instancia}`, {
+      rejectCall: true,
+      msgCall: '',
+      groupsIgnore: true,
+      alwaysOnline: false,
+      readMessages: false,
+      readStatus: false,
+      syncFullHistory: false,
+    }).catch((e) =>
+      console.error('[evolution] settings best-effort falhou (ignorado):', (e as Error)?.message),
+    )
   },
 
   async conectar(instancia): Promise<QrCode> {
