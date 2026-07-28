@@ -2,6 +2,7 @@ import { CheckCircle2, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Sidebar, type Page } from './components/Sidebar'
 import { TermosModal } from './components/TermosModal'
+import { api } from './lib/api'
 import { auth, type TenantSel, type UsuarioSessao } from './lib/auth'
 import { useToasts } from './lib/toast'
 import { cn } from './lib/ui'
@@ -42,6 +43,17 @@ export default function App() {
   // logout / token expirado (401) → volta pra tela de login
   useEffect(() => {
     auth.onSair(() => setUsuario(null))
+    // sincroniza o usuário com o servidor (sessão antiga em cache pode não ter o
+    // aceite de termos) — assim o modal não reaparece pra quem já aceitou.
+    if (auth.usuario()) {
+      api
+        .eu()
+        .then(({ usuario: u }) => {
+          auth.setUsuario(u)
+          setUsuario(u)
+        })
+        .catch(() => {})
+    }
   }, [])
 
   const sair = () => {

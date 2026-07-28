@@ -29,6 +29,8 @@ export const auth = {
     localStorage.setItem(KEY, token)
     localStorage.setItem(UKEY, JSON.stringify(usuario))
   },
+  // atualiza só o usuário na sessão (ex.: sincronizar aceite de termos do /auth/eu)
+  setUsuario: (usuario: UsuarioSessao) => localStorage.setItem(UKEY, JSON.stringify(usuario)),
   // marca os termos como aceitos na sessão local (backend já registrou o timestamp)
   marcarTermosAceitos: (): UsuarioSessao | null => {
     const s = localStorage.getItem(UKEY)

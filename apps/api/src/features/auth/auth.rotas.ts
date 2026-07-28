@@ -30,8 +30,25 @@ export async function authRotas(app: FastifyInstance) {
     }
   })
 
-  // quem sou eu (a partir do token)
-  app.get('/auth/eu', async (req) => ({ usuario: req.user }))
+  // quem sou eu — do BANCO (não só do token), pra o painel ter o aceite de termos
+  // atualizado mesmo em sessão antiga guardada no localStorage antes da feature.
+  app.get('/auth/eu', async (req) => {
+    const sub = (req.user as { sub: string }).sub
+    const u = await db.usuario.findUnique({
+      where: { id: sub },
+      select: { id: true, email: true, papel: true, tenantId: true, aceitouTermosEm: true },
+    })
+    if (!u) return { usuario: req.user }
+    return {
+      usuario: {
+        id: u.id,
+        email: u.email,
+        papel: u.papel,
+        tenantId: u.tenantId,
+        aceitouTermos: !!u.aceitouTermosEm,
+      },
+    }
+  })
 
   // registra o aceite dos termos (LGPD/uso de dados + responsabilidade do número)
   app.post('/auth/aceitar-termos', async (req) => {

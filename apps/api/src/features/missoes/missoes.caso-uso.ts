@@ -64,6 +64,10 @@ export async function criarMissaoEmLote(
       create: { tenantId, telefone, nome: c.nome, origem, optInEm: new Date(), optInOrigem: origem },
     })
 
+    // respeita opt-out também no caminho AVULSO (a tag já exclui na origem): um contato
+    // que já pediu pra não receber não vira missão-fantasma. LGPD + coerência.
+    if (contato.optOut) continue
+
     const missao = await missoesRepo.criar({
       tenantId,
       contatoId: contato.id,

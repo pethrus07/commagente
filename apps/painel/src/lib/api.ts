@@ -60,6 +60,8 @@ export const api = {
       body: '{}',
     }),
 
+  eu: () => req<{ usuario: UsuarioSessao }>('/auth/eu'),
+
   admin: {
     tenants: () => req<TenantResumo[]>('/admin/tenants'),
     criarTenant: (data: { nome: string; adminEmail: string; adminSenha: string }) =>

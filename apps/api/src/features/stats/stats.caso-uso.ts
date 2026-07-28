@@ -35,12 +35,17 @@ async function vigia(tenantId: string): Promise<{ tipo: string; mensagem: string
         mensagem: `Número +${n.telefone} com taxa de resposta baixa (${Math.round((s.replyRate ?? 0) * 100)}%) — novas iniciações pausadas p/ evitar bloqueio.`,
       })
     }
-    // silêncio: conectado, criado há +24h, sem NENHUMA saída nas últimas 24h
+    // silêncio: conectado, criado há +24h, sem NENHUMA saída nas últimas 24h.
+    // Só alerta número OPERADO pela IA (tem missões) — evita falso "silêncio" num número
+    // usado só p/ envios manuais/avisos, que legitimamente não abre conversas.
     if (n.statusConexao === 'conectado' && n.criadoEm < h24) {
-      const saidas = await db.mensagem.count({
-        where: { tenantId, direcao: 'out', criadaEm: { gte: h24 }, missao: { numeroId: n.id } },
-      })
-      if (saidas === 0) {
+      const [saidas, temMissoes] = await Promise.all([
+        db.mensagem.count({
+          where: { tenantId, direcao: 'out', criadaEm: { gte: h24 }, missao: { numeroId: n.id } },
+        }),
+        db.missao.count({ where: { numeroId: n.id } }),
+      ])
+      if (saidas === 0 && temMissoes > 0) {
         alertas.push({
           tipo: 'silencio',
           mensagem: `Número +${n.telefone} conectado, mas sem nenhuma mensagem enviada nas últimas 24h.`,

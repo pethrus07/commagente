@@ -87,8 +87,16 @@ export async function criarCampanha(input: DefCampanha & Alvo) {
       informacoes: input.informacoes,
     },
   })
-  const { criadas } = await dispararDaCampanha(campanha, { contatos: input.contatos, tagId: input.tagId })
-  return { campanha, criadas }
+  // se o disparo resolver a audiência pra vazio (ex.: tag/lista só com opt-out), não
+  // deixa uma campanha órfã: desfaz a criação e devolve o erro claro.
+  try {
+    const { criadas } = await dispararDaCampanha(campanha, { contatos: input.contatos, tagId: input.tagId })
+    if (criadas === 0) throw new ErroHttp(400, 'Nenhum contato válido pra disparar (todos podem estar em opt-out).')
+    return { campanha, criadas }
+  } catch (e) {
+    await db.campanha.delete({ where: { id: campanha.id } }).catch(() => {})
+    throw e
+  }
 }
 
 export async function obterCampanha(id: string) {
