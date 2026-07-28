@@ -5,10 +5,10 @@
 import { z } from 'zod'
 
 export const estiloSchema = z.object({
-  // rótulo do preset aplicado (só p/ a UI saber qual está ativo; não afeta o prompt)
-  preset: z.string().max(60).nullish(),
+  // rótulo do perfil de origem (só p/ a UI mostrar "Vendedor", "Suporte"…; não afeta o prompt)
+  perfil: z.string().max(60).nullish(),
   formalidade: z.enum(['informal', 'equilibrado', 'formal']).default('equilibrado'),
-  emoji: z.enum(['nunca', 'raro', 'natural']).default('raro'),
+  emoji: z.boolean().default(false), // usa emoji ou não (com moderação quando sim)
   abreviacoes: z.boolean().default(false),
   travessaoProibido: z.boolean().default(true), // matar o "—" é ganho universal (marca de robô)
   bolhas: z.boolean().default(false), // quebrar a resposta em 2-3 mensagens curtas (ritmo humano)
@@ -34,9 +34,9 @@ export function regrasDeEstilo(e: EstiloConversa): string {
   else
     r.push('Fale de forma cordial e natural: nem engessado, nem gíria demais.')
 
-  if (e.emoji === 'nunca') r.push('NÃO use emojis.')
-  else if (e.emoji === 'raro') r.push('Use emoji com muita parcimônia (quase nenhum, e nunca logo na primeira mensagem).')
-  else r.push('Pode usar emoji com naturalidade e sem exagero — só quando combinar com o clima da conversa, não em toda mensagem.')
+  if (e.emoji)
+    r.push('Pode usar emoji, mas com MODERAÇÃO: no máximo um de vez em quando, quando combinar com o clima — nunca em toda mensagem e nunca logo na primeira.')
+  else r.push('NÃO use emojis.')
 
   if (e.abreviacoes)
     r.push('Use o registro casual do WhatsApp: pode escrever em minúsculas e usar abreviações comuns (vc, pra, tá, né, hj, cê, blz) — sem exagerar a ponto de parecer descuidado.')

@@ -74,11 +74,12 @@ type MissaoComMsgs = {
   criterioConclusao: string | null
   tom: string | null
   informacoes: string | null
+  estilo?: unknown // perfil de conversa DESTA missão (tem prioridade sobre o do tenant)
   estado: EstadoMissao
   resumo: string | null
   fatos: unknown
   contato?: { memoria: unknown } | null
-  tenant?: { persona: string | null; estilo?: unknown } | null // identidade + estilo da IA
+  tenant?: { persona: string | null; estilo?: unknown } | null // identidade + estilo (fallback) da IA
   mensagens: { direcao: Direcao; conteudo: string }[]
 }
 
@@ -94,7 +95,8 @@ export function montarFicha(
       tom: missao.tom,
       criterioConclusao: missao.criterioConclusao,
       personaTenant: missao.tenant?.persona,
-      estilo: lerEstilo(missao.tenant?.estilo),
+      // perfil da missão vence; sem ele, herda o padrão do tenant (fallback)
+      estilo: lerEstilo(missao.estilo ?? missao.tenant?.estilo),
     }),
     objetivo: missao.objetivo,
     contexto: missao.contexto,

@@ -2,6 +2,7 @@
 import { EstadoMissao } from '@prisma/client'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
+import { estiloSchema } from '../tenant/tenant.estilo'
 import { aprovarRascunho, descartarRascunho } from '../conversa/conversa.caso-uso'
 import {
   assumirConversa,
@@ -30,6 +31,7 @@ const corpoCriar = z.object({
   criterioConclusao: z.string().optional(),
   tom: z.string().optional(),
   informacoes: z.string().optional(),
+  estilo: estiloSchema.optional(),
   nomeContato: z.string().optional(),
 })
 
@@ -56,6 +58,7 @@ const corpoLote = z
     criterioConclusao: z.string().optional(),
     tom: z.string().optional(),
     informacoes: z.string().optional(),
+    estilo: estiloSchema.optional(),
     contatos: z
       .array(z.object({ telefone: z.string().min(8), nome: z.string().optional() }))
       .min(1)

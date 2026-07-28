@@ -1,6 +1,7 @@
 // 🖥️ Apresentação — rotas de campanhas.
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
+import { estiloSchema } from '../tenant/tenant.estilo'
 import {
   adicionarContatosCampanha,
   criarCampanha,
@@ -31,6 +32,7 @@ const corpoCriar = z
     criterioConclusao: z.string().optional(),
     tom: z.string().optional(),
     informacoes: z.string().optional(),
+    estilo: estiloSchema.optional(),
     ...alvo,
   })
   .refine(temAlvo, msgAlvo)

@@ -3,21 +3,19 @@ import { test, expect, irPara } from '../helpers'
 test.use({ storageState: '.auth/super.json' })
 
 // Feature (28/07): Identidade & Estilo da IA na tela Conhecimento — persona (voz da marca)
-// + controles estruturados de COMO ESCREVER (formalidade/emoji/abreviação/travessão/bolhas)
-// com presets prontos. Define uma vez → toda missão herda no prompt.
-test('define identidade + estilo (preset + bolhas) e salva', async ({ page, erros }) => {
+// + o estilo PADRÃO da casa (formalidade/emoji/abreviação/travessão/bolhas), que cada missão
+// pode sobrescrever com o próprio perfil. Aqui testamos o padrão do tenant.
+test('define identidade + estilo padrão (bolhas) e salva', async ({ page, erros }) => {
   await page.goto('/')
   await irPara(page, 'Conhecimento')
 
   await expect(page.getByRole('heading', { name: /Identidade .* estilo da IA/ })).toBeVisible()
 
-  // aplica um preset pronto → carrega a persona sugerida + liga o estilo (bolhas etc.)
-  await page.getByRole('button', { name: /Vendedor humano/ }).click()
-  await expect(page.getByText(/preset "Vendedor humano" carregado/i)).toBeVisible()
-  // preview vivo mostra as BOLHAS (estilo bolhas ligado pelo preset)
-  await expect(page.getByText('te mando os detalhes ja ja')).toBeVisible()
+  // liga "quebrar em bolhas" → o preview vivo passa a mostrar mensagens separadas
+  await page.getByRole('button', { name: /Quebrar em bolhas/ }).click()
+  await expect(page.getByText('já te mando os detalhes')).toBeVisible()
 
-  // ajusta a persona e usa um chip de sugestão
+  // define a persona e usa um chip de sugestão
   const ta = page.getByPlaceholder(/Você é o atendente/)
   await ta.fill('Você é a Bia, atende de forma informal e trata por você.')
   await page.getByRole('button', { name: /Seja direto e objetivo/ }).click()
@@ -31,7 +29,7 @@ test('define identidade + estilo (preset + bolhas) e salva', async ({ page, erro
   await irPara(page, 'Conhecimento')
   await expect(page.getByPlaceholder(/Você é o atendente/)).toHaveValue(/Bia/)
   // o estilo persistiu → o preview segue em bolhas
-  await expect(page.getByText('te mando os detalhes ja ja')).toBeVisible()
+  await expect(page.getByText('já te mando os detalhes')).toBeVisible()
 
   expect(erros, erros.join('\n')).toEqual([])
 })

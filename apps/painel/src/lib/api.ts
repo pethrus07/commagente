@@ -142,6 +142,7 @@ export const api = {
       criterioConclusao?: string
       tom?: string
       informacoes?: string
+      estilo?: EstiloConversa // perfil de conversa da campanha (herdado por cada missão)
       contatos?: { telefone: string; nome?: string }[]
       tagId?: string // dispara pra TODOS os contatos da tag (resolvido no servidor)
     }) => req<{ campanha: { id: string }; criadas: number }>('/campanhas', { method: 'POST', body: JSON.stringify(data) }),
@@ -252,6 +253,7 @@ export const api = {
       criterioConclusao?: string
       tom?: string
       informacoes?: string
+      estilo?: EstiloConversa
       nomeContato?: string
     }) => req<Missao>('/missoes', { method: 'POST', body: JSON.stringify(data) }),
     criarLote: (data: {
@@ -263,6 +265,7 @@ export const api = {
       criterioConclusao?: string
       tom?: string
       informacoes?: string
+      estilo?: EstiloConversa
       contatos?: { telefone: string; nome?: string }[]
       tagId?: string
     }) =>

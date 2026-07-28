@@ -1,90 +1,25 @@
 import type { EstiloConversa } from './types'
 
 // Estilo padrão (espelha o ESTILO_PADRAO da API): mata o travessão de cara (ganho universal),
-// mas mantém o resto conservador — quem quiser o "parecer humano" liga um preset.
+// resto conservador. É o fallback do tenant quando uma missão não define perfil próprio.
 export const ESTILO_PADRAO: EstiloConversa = {
-  preset: null,
+  perfil: null,
   formalidade: 'equilibrado',
-  emoji: 'raro',
+  emoji: false,
   abreviacoes: false,
   travessaoProibido: true,
   bolhas: false,
 }
 
-// Preset = ponto de partida pronto do estilo (+ uma persona sugerida). O tenant clica,
-// ajusta os controles e a persona se quiser, e salva. Nada é aplicado até salvar.
-export interface PresetEstilo {
-  id: string
-  emoji: string
-  titulo: string
-  resumo: string
-  estilo: EstiloConversa
-  personaSugerida: string
+// PERFIS por papel — o "jeito de falar" que vem embutido em cada modelo de missão.
+// O usuário escolhe o modelo, o perfil vem junto e ele ajusta → personalizado (salvo na missão).
+export const PERFIS: Record<string, EstiloConversa> = {
+  vendedor: { perfil: 'Vendedor', formalidade: 'informal', emoji: true, abreviacoes: true, travessaoProibido: true, bolhas: true },
+  vendedorConsultivo: { perfil: 'Vendedor consultivo', formalidade: 'informal', emoji: false, abreviacoes: true, travessaoProibido: true, bolhas: true },
+  qualificacao: { perfil: 'Qualificação', formalidade: 'equilibrado', emoji: false, abreviacoes: true, travessaoProibido: true, bolhas: false },
+  orcamento: { perfil: 'Orçamento', formalidade: 'equilibrado', emoji: false, abreviacoes: false, travessaoProibido: true, bolhas: false },
+  cobranca: { perfil: 'Cobrança', formalidade: 'equilibrado', emoji: false, abreviacoes: false, travessaoProibido: true, bolhas: false },
+  suporte: { perfil: 'Suporte', formalidade: 'equilibrado', emoji: false, abreviacoes: false, travessaoProibido: true, bolhas: false },
+  descolado: { perfil: 'Descolado', formalidade: 'informal', emoji: true, abreviacoes: true, travessaoProibido: true, bolhas: true },
+  padrao: { perfil: 'Padrão da casa', ...{ formalidade: 'equilibrado', emoji: false, abreviacoes: false, travessaoProibido: true, bolhas: false } },
 }
-
-export const PRESETS_ESTILO: PresetEstilo[] = [
-  {
-    id: 'vendedor-humano',
-    emoji: '🤝',
-    titulo: 'Vendedor humano',
-    resumo: 'Informal, direto, em bolhas curtas — igual gente de verdade no zap.',
-    estilo: {
-      preset: 'vendedor-humano',
-      formalidade: 'informal',
-      emoji: 'natural',
-      abreviacoes: true,
-      travessaoProibido: true,
-      bolhas: true,
-    },
-    personaSugerida:
-      'Você fala como um vendedor brasileiro de verdade no WhatsApp: gente boa, direto e sem enrolação. Puxa conversa, faz perguntas e conduz com leveza — nunca insiste nem parece robô.',
-  },
-  {
-    id: 'atendimento-cordial',
-    emoji: '💬',
-    titulo: 'Atendimento cordial',
-    resumo: 'Equilibrado e prestativo, uma mensagem por vez.',
-    estilo: {
-      preset: 'atendimento-cordial',
-      formalidade: 'equilibrado',
-      emoji: 'raro',
-      abreviacoes: false,
-      travessaoProibido: true,
-      bolhas: false,
-    },
-    personaSugerida:
-      'Você é o atendente da empresa: cordial, claro e prestativo. Resolve o que der com paciência e escala pra um humano quando precisa.',
-  },
-  {
-    id: 'formal-corporativo',
-    emoji: '🎩',
-    titulo: 'Formal / corporativo',
-    resumo: 'Profissional, sem gírias nem emoji.',
-    estilo: {
-      preset: 'formal-corporativo',
-      formalidade: 'formal',
-      emoji: 'nunca',
-      abreviacoes: false,
-      travessaoProibido: true,
-      bolhas: false,
-    },
-    personaSugerida:
-      'Você representa a empresa com formalidade e profissionalismo. Linguagem correta, respeitosa e objetiva, sem gírias.',
-  },
-  {
-    id: 'descolado',
-    emoji: '😎',
-    titulo: 'Descolado / jovem',
-    resumo: 'Leve, próximo, com emoji e bolhas.',
-    estilo: {
-      preset: 'descolado',
-      formalidade: 'informal',
-      emoji: 'natural',
-      abreviacoes: true,
-      travessaoProibido: true,
-      bolhas: true,
-    },
-    personaSugerida:
-      'Você fala de um jeito leve, jovem e próximo, tratando o cliente de igual pra igual. Descontraído, mas sempre prestativo e sem forçar.',
-  },
-]
