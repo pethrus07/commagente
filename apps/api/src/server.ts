@@ -62,7 +62,7 @@ app.setErrorHandler((err: FastifyError, _req, reply) => {
 })
 
 // liveness — a API está de pé (não depende de nada externo)
-app.get('/health', async () => ({ ok: true, servico: 'zapagente-api' }))
+app.get('/health', async () => ({ ok: true, servico: 'commagente-api' }))
 
 // readiness — confirma que o banco responde
 app.get('/ready', async (_req, reply) => {
