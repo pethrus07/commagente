@@ -246,19 +246,32 @@ async function executarTurno(missaoId: string) {
   // estilo da missão (fallback: tenant) → se "bolhas" ligado, o executor quebra a resposta
   // em 2-3 mensagens curtas (ritmo humano da demo). Continua UM item de fila (anti-rajada ok).
   const estilo = lerEstilo(missao.estilo ?? missao.tenant?.estilo)
-  await filaRepo.enfileirar({
-    tenantId: missao.tenantId,
-    missaoId,
-    contatoId: missao.contatoId,
-    payload: {
-      numeroId: missao.numeroId,
-      telefone: missao.contato.telefone,
-      texto: saida.resposta,
-      tipo,
-      bolhas: estilo.bolhas,
-    },
-    agendadoPara: new Date(Date.now() + jitterMs(tipo)),
-  })
+  try {
+    await filaRepo.enfileirar({
+      tenantId: missao.tenantId,
+      missaoId,
+      contatoId: missao.contatoId,
+      payload: {
+        numeroId: missao.numeroId,
+        telefone: missao.contato.telefone,
+        texto: saida.resposta,
+        tipo,
+        bolhas: estilo.bolhas,
+      },
+      agendadoPara: new Date(Date.now() + jitterMs(tipo)),
+    })
+  } catch (e) {
+    // a IA GEROU a resposta mas não deu pra enfileirar (DB/etc.) → NÃO deixa sumir: escala pro humano.
+    console.error('[conversa] enfileirar falhou → escalando:', (e as Error)?.message)
+    const pausa = { iaPausada: true, motivoEscala: 'Falha ao enfileirar a resposta — precisa de um humano' }
+    if (podeTransicionar(missao.estado, 'escalada')) {
+      await missoesRepo.atualizarEstado(missaoId, 'escalada', pausa)
+    } else {
+      await missoesRepo.atualizar(missaoId, pausa)
+    }
+    await avisarEscalonamento(missao, 'Falha ao enfileirar a resposta gerada')
+    return { ok: false as const, erro_enfileirar: true }
+  }
   await db.evento.create({
     data: {
       tenantId: missao.tenantId,

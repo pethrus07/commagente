@@ -36,9 +36,31 @@ export async function processarWebhook(payload: unknown) {
   const evento = normalizarEvento((payload ?? {}) as Record<string, unknown>)
 
   if (evento.tipo === 'mensagem') {
-    if (evento.fromMe) return // nossa própria saída → tratada pelo executor
     const numero = await webhookRepo.acharNumeroPorInstancia(evento.instancia)
     if (!numero) return // instância desconhecida
+
+    // fromMe: ou é a NOSSA saída (executor, já gravada) ou o OPERADOR digitou no celular
+    // durante um handoff. A do operador precisa entrar no histórico como 'out' — senão, ao
+    // devolver pra IA, ela não sabe que o humano já respondeu e pode repetir/contradizer.
+    if (evento.fromMe) {
+      if (
+        !evento.providerMsgId ||
+        (await webhookRepo.existeMensagem(numero.tenantId, evento.providerMsgId))
+      ) {
+        return // sem id ou já gravada (foi o executor) → nada a fazer
+      }
+      if (!evento.conteudo) return // mídia própria sem texto → fora de escopo
+      const contato = await webhookRepo.upsertContato(numero.tenantId, evento.telefone, evento.nome)
+      const missao = await missoesRepo.acharAtivaPorContatoNumero(numero.id, contato.id)
+      await webhookRepo.gravarMensagemSaidaOperador({
+        tenantId: numero.tenantId,
+        missaoId: missao?.id ?? null,
+        contatoId: contato.id,
+        conteudo: evento.conteudo,
+        providerMsgId: evento.providerMsgId,
+      })
+      return
+    }
 
     // idempotência: a Evolution pode reentregar o mesmo evento → não processa 2×
     if (

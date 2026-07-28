@@ -53,7 +53,8 @@ export async function enviarTexto(
   const contato = await envioRepo.upsertContato(numero.tenantId, telefone)
 
   const partes = dividirBolhas(texto, bolhas)
-  let ultimoId = ''
+  let ultimoId: string | null = null
+  let enviadas = 0
   for (let i = 0; i < partes.length; i++) {
     const parte = partes[i]
     // sinaliza "digitando…" e espera esse tempo antes de mandar cada bolha.
@@ -66,24 +67,36 @@ export async function enviarTexto(
     }
     await new Promise((r) => setTimeout(r, ms))
 
-    const { providerMsgId } = await wa.enviarTexto(instancia, telefone, parte)
-    ultimoId = providerMsgId
-
-    await envioRepo.gravarMensagemSaida({
-      tenantId: numero.tenantId,
-      missaoId: missaoId ?? null,
-      contatoId: contato.id,
-      conteudo: parte,
-      providerMsgId,
-      statusEnvio: 'enviando', // vira 'ok' quando o status de entrega chegar no webhook
-    })
+    try {
+      const { providerMsgId } = await wa.enviarTexto(instancia, telefone, parte)
+      ultimoId = providerMsgId
+      await envioRepo.gravarMensagemSaida({
+        tenantId: numero.tenantId,
+        missaoId: missaoId ?? null,
+        contatoId: contato.id,
+        conteudo: parte,
+        providerMsgId,
+        statusEnvio: 'enviando', // vira 'ok' quando o status de entrega chegar no webhook
+      })
+      enviadas++
+    } catch (e) {
+      // 1ª bolha falhou (NADA enviado) → propaga pra retentar (sem duplicar nada).
+      // Bolha POSTERIOR falhou (envio parcial) → NÃO propaga: retentar o payload todo
+      // re-mandaria as bolhas já enviadas (duplicata = sinal de robô). Aceita o parcial e para.
+      if (enviadas === 0) throw e
+      console.error(
+        `[envio] bolha ${i + 1}/${partes.length} falhou; mantém o parcial (${enviadas} enviada[s]):`,
+        (e as Error)?.message,
+      )
+      break
+    }
 
     // pausa curta entre bolhas (além do "digitando…") — ritmo de quem manda em sequência
     if (i < partes.length - 1) {
       await new Promise((r) => setTimeout(r, 600 + Math.floor(Math.random() * 900)))
     }
   }
-  return { providerMsgId: ultimoId, telefone, bolhasEnviadas: partes.length, missaoId: missaoId ?? null }
+  return { providerMsgId: ultimoId, telefone, bolhasEnviadas: enviadas, missaoId: missaoId ?? null }
 }
 
 // Envia um documento (ex.: PDF do evento) e registra em `mensagens` (direção out).

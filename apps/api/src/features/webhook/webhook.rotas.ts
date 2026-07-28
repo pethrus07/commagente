@@ -12,13 +12,12 @@ export async function webhookRotas(app: FastifyInstance) {
       reply.code(404)
       return { ok: false }
     }
-    // Responde 200 rápido e engole erros: se devolvêssemos erro, a Evolution
-    // re-tentaria o mesmo evento em loop. Falhas ficam no log.
-    try {
-      await processarWebhook(req.body)
-    } catch (err) {
-      app.log.error({ err }, 'falha ao processar webhook')
-    }
+    // ACK IMEDIATO + processa em BACKGROUND (fire-and-forget): segurar a resposta fazia a
+    // transcrição de áudio (Whisper + download) estourar o timeout da Evolution → reentrega
+    // em loop + custo dobrado. Devolver erro também causaria reentrega, por isso o .catch loga.
+    void processarWebhook(req.body).catch((err) =>
+      app.log.error({ err }, 'falha ao processar webhook'),
+    )
     return { ok: true }
   }
 

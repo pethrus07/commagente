@@ -21,8 +21,12 @@ export const filaRepo = {
     })
   },
 
-  // itens pendentes já "vencidos" (agendado_para <= agora)
-  pegarDevidos(agora: Date, limite = 3) {
+  // itens pendentes já "vencidos" (agendado_para <= agora).
+  // Janela AMPLA (20, não 3): o worker pula itens gated (fora da janela / anti-rajada /
+  // chip fora) com `continue`; se pegasse só os 3 mais antigos e eles estivessem gated,
+  // travava a fila inteira (um tenant em campanha/à noite bloqueava os outros — head-of-line).
+  // O espaçamento real de envio continua pelo `proximoEnvioEm` por número (sem rajada).
+  pegarDevidos(agora: Date, limite = 20) {
     return db.filaEnvio.findMany({
       where: { status: 'pendente', agendadoPara: { lte: agora } },
       orderBy: { agendadoPara: 'asc' },

@@ -59,6 +59,29 @@ export const webhookRepo = {
     })
   },
 
+  // mensagem que o OPERADOR digitou no celular (fromMe, não é envio nosso) → grava como 'out'
+  // já 'ok' (o WhatsApp já entregou). Entra no histórico pra IA/painel não perderem.
+  gravarMensagemSaidaOperador(p: {
+    tenantId: string
+    missaoId: string | null
+    contatoId: string
+    conteudo: string
+    providerMsgId: string | null
+  }) {
+    return db.mensagem.create({
+      data: {
+        tenantId: p.tenantId,
+        missaoId: p.missaoId ?? undefined,
+        contatoId: p.contatoId,
+        direcao: 'out',
+        conteudo: p.conteudo,
+        providerMsgId: p.providerMsgId || null,
+        statusEnvio: 'ok',
+        enviadaEm: new Date(),
+      },
+    })
+  },
+
   // status de entrega/leitura → atualiza a mensagem de SAÍDA correspondente
   atualizarStatusSaida(providerMsgId: string, statusEnvio: StatusEnvio) {
     return db.mensagem.updateMany({
