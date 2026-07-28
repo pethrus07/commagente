@@ -12,7 +12,7 @@ export async function tenantRotas(app: FastifyInstance) {
   app.patch('/tenant', async (req) => {
     const body = z
       .object({
-        persona: z.string().max(4000).nullish(),
+        persona: z.string().max(12000).nullish(), // personas ricas (guia de atendimento completo) cabem
         estilo: estiloSchema.optional(),
       })
       .parse(req.body)
