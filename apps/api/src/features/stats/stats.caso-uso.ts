@@ -26,6 +26,18 @@ async function vigia(tenantId: string): Promise<{ tipo: string; mensagem: string
   const h24 = new Date(Date.now() - 24 * 3_600_000)
   const alertas: { tipo: string; mensagem: string }[] = []
   for (const n of numeros) {
+    // CHIP CAÍDO (backstop do reconciliador): número que opera (tem missões) mas está
+    // desconectado → nada entra nem sai. Alerta forte no dashboard.
+    if (n.statusConexao !== 'conectado') {
+      const temMissoes = await db.missao.count({ where: { numeroId: n.id } })
+      if (temMissoes > 0) {
+        alertas.push({
+          tipo: 'chip_caido',
+          mensagem: `Número +${n.telefone} DESCONECTADO — reconecte o WhatsApp (Números → QR). Nada entra nem sai enquanto isso.`,
+        })
+      }
+      continue // desconectado → não faz sentido checar saúde/silêncio
+    }
     // saúde: taxa de resposta baixa → risco de bloqueio (iniciações já ficam pausadas)
     const { base, naoRespondidas } = await numerosRepo.saude(n.id)
     const s = classificarSaude(base, naoRespondidas)

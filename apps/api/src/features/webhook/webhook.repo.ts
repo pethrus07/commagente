@@ -52,7 +52,9 @@ export const webhookRepo = {
         contatoId: p.contatoId,
         direcao: 'in',
         conteudo: p.conteudo,
-        providerMsgId: p.providerMsgId,
+        // id vazio vira NULL: sob @@unique(tenantId, providerMsgId) os NULLs são DISTINTOS,
+        // então duas msgs sem id não colidem (antes '' colidia → 2ª inbound sumia).
+        providerMsgId: p.providerMsgId || null,
       },
     })
   },

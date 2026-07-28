@@ -30,7 +30,7 @@ export const envioRepo = {
         contatoId: p.contatoId,
         direcao: 'out',
         conteudo: p.conteudo,
-        providerMsgId: p.providerMsgId,
+        providerMsgId: p.providerMsgId || null, // '' → NULL (distinto no @@unique; evita "poisoning")
         statusEnvio: p.statusEnvio,
         enviadaEm: new Date(),
       },

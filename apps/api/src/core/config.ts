@@ -51,3 +51,28 @@ export const config = {
     senha: process.env.SUPER_ADMIN_SENHA ?? 'zapagente123',
   },
 }
+
+// 🔒 Trava de produção (fail-fast): em NODE_ENV=production, RECUSA subir com segredo
+// ausente/fraco/default. Dev e local seguem com os defaults de conveniência (guard dormente).
+// Fecha a classe "inseguro por default" (JWT/super-admin/webhook/evolution/CORS).
+const DEFAULTS_INSEGUROS = new Set([
+  'dev-secret-zapagente-troque-em-producao',
+  'troque-por-um-segredo-forte-em-producao',
+  'zapagente123',
+  'demo123',
+  'zapagente-dev-key',
+])
+if (process.env.NODE_ENV === 'production') {
+  const fraco = (v: string | undefined, min: number) => !v || v.length < min || DEFAULTS_INSEGUROS.has(v)
+  const problemas: string[] = []
+  if (fraco(process.env.JWT_SECRET, 32)) problemas.push('JWT_SECRET ausente/fraco/default (>=32 chars)')
+  if (fraco(process.env.SUPER_ADMIN_SENHA, 10)) problemas.push('SUPER_ADMIN_SENHA ausente/fraca/default (>=10 chars)')
+  if (fraco(process.env.WEBHOOK_SECRET, 16)) problemas.push('WEBHOOK_SECRET ausente/fraco (>=16 chars)')
+  if (fraco(process.env.EVOLUTION_API_KEY, 16)) problemas.push('EVOLUTION_API_KEY ausente/fraca/default (>=16 chars)')
+  if (!process.env.CORS_ORIGIN) problemas.push('CORS_ORIGIN ausente (não deixe liberado geral em produção)')
+  if (problemas.length > 0) {
+    throw new Error(
+      'CONFIG DE PRODUÇÃO INSEGURA — ajuste o .env antes de subir:\n  - ' + problemas.join('\n  - '),
+    )
+  }
+}

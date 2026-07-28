@@ -80,4 +80,15 @@ export const filaRepo = {
       data: { status: 'pendente', tentativas: { increment: 1 }, agendadoPara: quando },
     })
   },
+
+  // REAPER (no boot): itens presos em 'enviando' são de um processo que morreu (deploy/crash)
+  // entre marcar('enviando') e marcar('ok') — nada os re-seleciona. Volta pra 'pendente' pra
+  // não perder a resposta. (Risco baixo de duplicar se já tinha enviado; melhor que sumir.)
+  async reclamarPresos(): Promise<number> {
+    const r = await db.filaEnvio.updateMany({
+      where: { status: 'enviando' },
+      data: { status: 'pendente' },
+    })
+    return r.count
+  },
 }

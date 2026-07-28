@@ -90,7 +90,28 @@ export function normalizarEvento(payload: Payload): EventoWa {
       }
     }
 
-    // outras mídias (imagem/vídeo/documento/reação) → fora de escopo por ora
+    // outras mídias SEM texto (imagem/vídeo/doc/figurinha/localização): não somem no vácuo —
+    // registra um placeholder pra aparecer no painel e a IA/operador reagir (antes: perdido).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const m: any = data?.message ?? {}
+    const midia = m.imageMessage
+      ? '📷 (imagem recebida)'
+      : m.videoMessage
+        ? '🎬 (vídeo recebido)'
+        : m.documentMessage || m.documentWithCaptionMessage
+          ? '📎 (documento recebido)'
+          : m.audioMessage
+            ? '🎤 (áudio recebido)'
+            : m.stickerMessage
+              ? '(figurinha recebida)'
+              : m.locationMessage
+                ? '📍 (localização recebida)'
+                : m.contactMessage || m.contactsArrayMessage
+                  ? '👤 (contato recebido)'
+                  : undefined
+    if (midia) return { ...base, conteudo: midia }
+
+    // reação, protocolo, etc. → realmente sem conteúdo tratável
     return { tipo: 'ignorado' }
   }
 

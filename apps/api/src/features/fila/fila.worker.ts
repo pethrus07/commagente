@@ -58,6 +58,9 @@ async function tick() {
         await filaRepo.marcar(item.id, 'erro', true)
         continue
       }
+      // CHIP FORA DO AR: não tenta enviar (senão queima as 5 tentativas em ~7min e vira
+      // dead-letter → resposta perdida). Deixa 'pendente' pra sair quando o chip voltar.
+      if (numero.statusConexao !== 'conectado') continue
       // reset diário: virou o dia (no TZ) → zera o contador antes de checar o budget
       const hoje = agoraData()
       if (numero.enviadosData !== hoje) {
@@ -122,6 +125,12 @@ async function tick() {
 }
 
 export function iniciarWorker(intervaloMs = 3000) {
+  // REAPER no boot: itens órfãos presos em 'enviando' (processo morreu no meio do envio)
+  // voltam pra 'pendente' — senão a resposta some a cada deploy/restart.
+  filaRepo
+    .reclamarPresos()
+    .then((n) => n > 0 && console.log(`[fila] reaper: ${n} item(ns) preso(s) 'enviando' → 'pendente'`))
+    .catch((e) => console.error('[fila] reaper falhou (ignorado):', e))
   // .catch obrigatório: sem ele, um erro transitório de DB dentro do tick vira
   // unhandled rejection e derruba o processo (Node ≥15). O worker deve ser resiliente.
   setInterval(() => {

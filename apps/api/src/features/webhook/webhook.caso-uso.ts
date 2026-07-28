@@ -146,6 +146,10 @@ export async function processarWebhook(payload: unknown) {
 
   if (evento.tipo === 'status') {
     const status = mapearStatusEnvio(evento.status)
-    if (status) await webhookRepo.atualizarStatusSaida(evento.providerMsgId, status)
+    // exige providerMsgId não-vazio: um '' faria updateMany casar TODAS as saídas sem id
+    // (inclusive de outros tenants) — corrompendo status em massa.
+    if (status && evento.providerMsgId) {
+      await webhookRepo.atualizarStatusSaida(evento.providerMsgId, status)
+    }
   }
 }

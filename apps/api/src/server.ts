@@ -18,6 +18,7 @@ import { contatosRotas } from './features/contatos/contatos.rotas'
 import { envioRotas } from './features/envio/envio.rotas'
 import { iniciarWorker } from './features/fila/fila.worker'
 import { missoesRotas } from './features/missoes/missoes.rotas'
+import { iniciarReconciliadorNumeros } from './features/numeros/numeros.reconciliador'
 import { numerosRotas } from './features/numeros/numeros.rotas'
 import { statsRotas } from './features/stats/stats.rotas'
 import { tagsRotas } from './features/tags/tags.rotas'
@@ -57,8 +58,11 @@ app.setErrorHandler((err: FastifyError, _req, reply) => {
     return { ok: false, erro: 'validacao', detalhes: err.issues }
   }
   app.log.error(err)
-  reply.code(err.statusCode ?? 500)
-  return { ok: false, erro: err.message }
+  const status = err.statusCode ?? 500
+  reply.code(status)
+  // 4xx intencionais (ErroHttp: "Missão não encontrada" etc.) mostram a mensagem;
+  // 5xx/inesperados NÃO vazam internals (Prisma/URLs/SQL) pro cliente — só no log.
+  return { ok: false, erro: status >= 500 ? 'erro interno' : err.message }
 })
 
 // liveness — a API está de pé (não depende de nada externo)
@@ -97,6 +101,7 @@ app
     await seedInicial() // garante tenant padrão + super-admin
     iniciarWorker() // motor anti-bloqueio: consome a fila_envio no ritmo humano
     iniciarAgendador() // missões programadas: dispara o que "vence hoje"
+    iniciarReconciliadorNumeros() // backstop: detecta chip caído (status real da Evolution)
   })
   .catch((err) => {
     app.log.error(err)

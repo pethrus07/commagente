@@ -21,9 +21,13 @@ export async function seedInicial() {
     console.log(`[seed] super-admin criado: ${email}`)
   }
 
-  // 1º tenant de exemplo (para a demo e para os testes) + admin próprio
+  // 1º tenant de exemplo (para a demo e para os testes) + admin próprio.
+  // NUNCA em produção: 'demo123' é público (no repo/docs) → seria um login válido semeado.
   const demoEmail = 'demo@zapagente.local'
-  const demoExiste = await db.usuario.findUnique({ where: { email: demoEmail } })
+  const demoExiste =
+    process.env.NODE_ENV === 'production'
+      ? true // trata como "já existe" → não cria em prod
+      : await db.usuario.findUnique({ where: { email: demoEmail } })
   if (!demoExiste) {
     const t = await db.tenant.create({ data: { nome: 'Cliente Demo' } })
     await db.usuario.create({
