@@ -241,7 +241,12 @@ async function executarTurno(missaoId: string) {
   // 7) enfileira a resposta — o worker anti-bloqueio envia no ritmo humano
   // (janela + budget + jitter + espaçamento serial por número). Substitui o envio direto.
   // opener (1ª saída da missão) espaça mais que uma resposta dentro da conversa.
-  const ehOpener = !missao.mensagens.some((m) => m.direcao === 'out')
+  // 'novo' (opener) = NÓS abrindo uma conversa FRIA — missão sem NENHUM inbound do lead.
+  // Se o lead já mandou algo (há inbound), nossa saída é RESPOSTA ('conversa'), mesmo sendo a
+  // 1ª saída (ex.: suporte reativo). Só opener frio entra no gate de budget/janela de outreach;
+  // resposta a cliente engajado sempre flui. (Antes: checava ausência de OUT → 1ª resposta virava
+  // 'novo' e o budget diário travava a resposta ao cliente — foi o bug do Desbravando.)
+  const ehOpener = !missao.mensagens.some((m) => m.direcao === 'in')
   const tipo = ehOpener ? 'novo' : 'conversa'
   // estilo da missão (fallback: tenant) → se "bolhas" ligado, o executor quebra a resposta
   // em 2-3 mensagens curtas (ritmo humano da demo). Continua UM item de fila (anti-rajada ok).
