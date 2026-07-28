@@ -17,6 +17,16 @@ export const config = {
     apiKey: obrigatorio('EVOLUTION_API_KEY'),
   },
 
+  // WhatsApp Cloud API oficial (Meta) — degrau 1 da escada (docs/escada-api-oficial.md).
+  // Só usado quando WHATSAPP_PROVIDER=cloud. Credenciais vêm da conta Meta Business
+  // (App > WhatsApp): token permanente + phone_number_id; verifyToken é o segredo do webhook.
+  cloud: {
+    token: process.env.CLOUD_API_TOKEN ?? '',
+    phoneNumberId: process.env.CLOUD_API_PHONE_ID ?? '',
+    verifyToken: process.env.CLOUD_API_VERIFY_TOKEN ?? '',
+    graphVersion: process.env.CLOUD_API_GRAPH_VERSION ?? 'v20.0',
+  },
+
   // IA (Fatia 4b) — provider-agnostic; só necessária se IA_PROVIDER=openai
   openaiKey: process.env.OPENAI_API_KEY ?? '',
   openaiModelo: process.env.OPENAI_MODEL ?? 'gpt-4o-mini',

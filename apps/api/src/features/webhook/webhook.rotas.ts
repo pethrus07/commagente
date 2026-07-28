@@ -21,6 +21,24 @@ export async function webhookRotas(app: FastifyInstance) {
     return { ok: true }
   }
 
+  // Verificação do webhook da Meta (Cloud API): a Meta faz um GET com hub.challenge no setup.
+  // Responde o challenge SE o hub.verify_token bater com CLOUD_API_VERIFY_TOKEN. (Evolution não usa GET.)
+  const verify = async (req: FastifyRequest, reply: FastifyReply) => {
+    const q = req.query as Record<string, string | undefined>
+    if (
+      config.cloud.verifyToken &&
+      q['hub.mode'] === 'subscribe' &&
+      q['hub.verify_token'] === config.cloud.verifyToken
+    ) {
+      reply.type('text/plain')
+      return q['hub.challenge'] ?? ''
+    }
+    reply.code(403)
+    return { ok: false }
+  }
+
+  app.get('/webhook', verify)
+  app.get('/webhook/:segredo', verify)
   app.post('/webhook', handler) // dev (sem segredo) — em prod devolve 404 se WEBHOOK_SECRET setado
   app.post('/webhook/:segredo', handler) // prod: segredo no caminho
 }

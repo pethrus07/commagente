@@ -97,3 +97,23 @@ anti-bloqueio, a memória e o painel seguem iguais.
 
 > ⚠️ Números e regras da Meta (preços por categoria, limites de envio, revisão de templates) mudam
 > com frequência — confirmar sempre na documentação oficial vigente antes de precificar/prometer.
+
+## Degrau 1 — CONSTRUÍDO no código (2026-07-28)
+
+Adapter pronto atrás da porta (default segue Evolution; ativa com `WHATSAPP_PROVIDER=cloud`):
+- `core/evolution/cloud-api.client.ts` — envia texto/documento (upload de mídia), baixa mídia; `statusConexao`/`conectar`/`criarInstancia`/`configurarWebhook` adaptados (oficial NÃO tem QR).
+- `core/evolution/index.ts` — provider `cloud` registrado no seam.
+- `features/webhook/webhook.dominio.ts` — `normalizarMeta` decodifica o payload da Meta (`entry[].changes[].value.{messages|statuses}`) pro MESMO `EventoWa` → ingestor/harness/fila NÃO mudam.
+- `features/webhook/webhook.rotas.ts` — GET de verificação (`hub.challenge` vs `CLOUD_API_VERIFY_TOKEN`).
+- `core/config.ts` + `.env.example` — `CLOUD_API_TOKEN`/`CLOUD_API_PHONE_ID`/`CLOUD_API_VERIFY_TOKEN`/`CLOUD_API_GRAPH_VERSION`.
+
+⚠️ **Ainda NÃO testado contra a Meta real** (faltam credenciais). Degrau 1 cobre **RESPOSTA dentro da janela de 24h** — que é exatamente o "responder o cliente engajado" que estava com *aguardando*. **Opener fora da janela = template aprovado** (`enviarTemplate` + model `TemplateWhatsapp`) → degrau 1+ (TODO).
+
+## Onboarding na Meta (externo — Pedro/parceiro; ~1–3 dias de revisão)
+1. **Meta Business** (business.facebook.com) + verificação do negócio (CNPJ) se pedir.
+2. **App** em developers.facebook.com → adicionar produto **WhatsApp** → *API Setup*.
+3. **Número:** registrar um número NA Cloud API. ⚠️ um número em Baileys **NÃO** pode estar nos dois ao mesmo tempo — usar um número **dedicado** ao oficial. Anotar o **phone_number_id**.
+4. **Token PERMANENTE:** criar um **System User** no Business + token permanente com `whatsapp_business_messaging` (o token de *API Setup* expira em 24h — não serve pra prod).
+5. **Webhook:** WhatsApp > Configuration → Callback URL = `https://<dominio>/api/webhook/<segredo>` + Verify Token = o `CLOUD_API_VERIFY_TOKEN`; assinar o campo **messages**. **Exige HTTPS** (ver pendência de HTTPS).
+6. **`.env`** do número oficial: `WHATSAPP_PROVIDER=cloud` + os `CLOUD_API_*`. Convenção do normalizador: `NumeroWhatsapp.instanciaEvolution` desse número = o **phone_number_id**.
+7. **Templates** (opener/cobrança fora da janela): criar + aprovar no Business Manager (degrau 1+).

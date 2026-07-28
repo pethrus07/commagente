@@ -50,7 +50,66 @@ function textoDaMensagem(message: any): string | undefined {
   )
 }
 
+// Normaliza o webhook da WhatsApp Cloud API OFICIAL (Meta) — formato diferente do Evolution:
+// entry[].changes[].value.{messages[]|statuses[]}. Mapeia pro MESMO EventoWa (o resto do fluxo não muda).
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function normalizarMeta(payload: any): EventoWa {
+  const value = payload?.entry?.[0]?.changes?.[0]?.value
+  if (!value) return { tipo: 'ignorado' }
+  const instancia = String(value.metadata?.phone_number_id ?? '') // convenção: = NumeroWhatsapp.instanciaEvolution
+  const msg = value.messages?.[0]
+  if (msg) {
+    const telefone = String(msg.from ?? '')
+    const providerMsgId = String(msg.id ?? '')
+    const base = {
+      tipo: 'mensagem' as const,
+      instancia,
+      telefone,
+      nome: value.contacts?.[0]?.profile?.name as string | undefined,
+      providerMsgId,
+      fromMe: false, // no oficial, messages[] é sempre INBOUND (nossa saída vem em statuses[])
+    }
+    const texto: string | undefined =
+      msg.text?.body ??
+      msg.button?.text ??
+      msg.interactive?.button_reply?.title ??
+      msg.interactive?.list_reply?.title
+    if (texto) return { ...base, conteudo: texto }
+    if (msg.type === 'audio' && msg.audio?.id) {
+      return {
+        ...base,
+        conteudo: '',
+        audio: { chave: { id: String(msg.audio.id), remoteJid: telefone, fromMe: false }, mimetype: msg.audio.mime_type },
+      }
+    }
+    const midia = msg.image
+      ? '📷 (imagem recebida)'
+      : msg.video
+        ? '🎬 (vídeo recebido)'
+        : msg.document
+          ? '📎 (documento recebido)'
+          : msg.sticker
+            ? '(figurinha recebida)'
+            : msg.location
+              ? '📍 (localização recebida)'
+              : msg.contacts
+                ? '👤 (contato recebido)'
+                : undefined
+    if (midia) return { ...base, conteudo: midia }
+    return { tipo: 'ignorado' }
+  }
+  const st = value.statuses?.[0]
+  if (st) {
+    return { tipo: 'status', instancia, providerMsgId: String(st.id ?? ''), status: String(st.status ?? '') }
+  }
+  return { tipo: 'ignorado' }
+}
+
 export function normalizarEvento(payload: Payload): EventoWa {
+  // Cloud API oficial (Meta): payload tem `entry[]` (formato próprio) → normalizador dedicado.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if ((payload as any)?.entry) return normalizarMeta(payload)
+
   const { event, instance = '', data } = payload
 
   if (event === 'messages.upsert') {
@@ -147,7 +206,8 @@ export function ehPedidoOptOut(texto: string): boolean {
 // mapeia o status cru da Evolution para o nosso StatusEnvio (ou null se irrelevante)
 export function mapearStatusEnvio(evoStatus: string): StatusEnvio | null {
   const s = evoStatus.toUpperCase()
-  if (['SERVER_ACK', 'DELIVERY_ACK', 'READ', 'PLAYED'].includes(s)) return 'ok'
+  // Evolution (Baileys): SERVER_ACK/DELIVERY_ACK/READ/PLAYED · Cloud API (Meta): SENT/DELIVERED/READ
+  if (['SERVER_ACK', 'DELIVERY_ACK', 'READ', 'PLAYED', 'SENT', 'DELIVERED'].includes(s)) return 'ok'
   if (['ERROR', 'FAILED'].includes(s)) return 'erro'
   return null
 }
