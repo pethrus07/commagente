@@ -1,6 +1,6 @@
 # Escada para a API oficial do WhatsApp
 
-> Como o zapagente sai da API **não-oficial** (Evolution/Baileys) rumo à **oficial**
+> Como o Commagente sai da API **não-oficial** (Evolution/Baileys) rumo à **oficial**
 > (WhatsApp Cloud API, da Meta) — em degraus, sem reescrever o produto.
 > Contexto de mercado e por que isso importa: ver **[pesquisa-mercado.html](pesquisa-mercado.html)**.
 

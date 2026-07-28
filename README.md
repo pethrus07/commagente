@@ -1,4 +1,6 @@
-# zapagente
+# Commagente
+
+> **Commagente** (comunicação + agente; lê como "com a gente") — nome do produto decidido em **2026-07-28** (antes *zapagente*). Identificadores internos (repo, DB, containers, logins) seguem `zapagente` por ora.
 
 Assistente autônomo de IA que opera **várias conversas de WhatsApp em paralelo, cada uma com uma "missão"** (vender, qualificar, pedir orçamento, cobrar, dar suporte…), conduzindo cada conversa ao longo do dia como uma secretária humana — no ritmo humano, para não tomar bloqueio.
 

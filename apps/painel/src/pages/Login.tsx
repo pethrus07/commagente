@@ -35,7 +35,7 @@ export function Login({ onEntrar }: { onEntrar: (u: UsuarioSessao) => void }) {
             <Zap className="h-7 w-7 text-white" fill="currentColor" />
           </div>
           <div>
-            <h1 className="text-xl font-semibold tracking-tight text-content">zapagente</h1>
+            <h1 className="text-xl font-semibold tracking-tight text-content">Commagente</h1>
             <p className="text-sm text-muted">Assistente de WhatsApp com IA</p>
           </div>
         </div>

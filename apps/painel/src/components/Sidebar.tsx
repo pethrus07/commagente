@@ -102,7 +102,7 @@ export function Sidebar({
           <Zap className="h-5 w-5 text-white" fill="currentColor" />
         </div>
         <div>
-          <p className="text-sm font-semibold tracking-tight text-content">zapagente</p>
+          <p className="text-sm font-semibold tracking-tight text-content">Commagente</p>
           <p className="text-[11px] text-subtle">assistente WhatsApp</p>
         </div>
       </div>
