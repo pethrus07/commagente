@@ -97,6 +97,12 @@ Abra `https://SEU_DOMINIO` → login super-admin → **troque a senha** → **N�
 ## P0 de segurança / operação (não pular)
 - **Postgres/Evolution só em `127.0.0.1`** (já no compose). Confirme: `ss -tlnp | grep -E '8080|5432'` → deve mostrar `127.0.0.1`.
 - **Webhook com segredo:** `WEBHOOK_URL` tem que ter o `/<WEBHOOK_SECRET>` no fim.
+- **⚠️ ufw x webhook de entrada (CRÍTICO — descoberto 2026-07-28):** o Evolution (container) entrega o inbound na API do **host** via `host.docker.internal:3000`. Com **ufw ativo (default-deny)** esse tráfego container→host:3000 é **DROPADO silenciosamente** → **as mensagens recebidas não aparecem no painel** (sem erro visível). **Fix permanente:** liberar a rede interna do Docker pra porta da API:
+  ```bash
+  ufw allow from 172.16.0.0/12 to any port 3000 proto tcp   # só bridges internas do Docker; nada público
+  ```
+  Diagnóstico rápido (o container não tem curl — use node): `docker exec zapagente-evolution node -e "fetch('http://host.docker.internal:3000/health').then(r=>r.text()).then(console.log).catch(e=>console.log('FAIL',e.message))"` — tem que responder `{"ok":true,...}`.
+- **"aguardando esta mensagem" (Baileys/não-oficial):** se o WhatsApp do remetente/destinatário mostra *"aguardando esta mensagem"*, a sessão **Baileys não conseguiu DECIFRAR** (E2E/Signal) e o Evolution **não emite `messages.upsert`** → o inbound **nunca chega na API** (não é bug nosso; agrava com sessão nova/reconexão). Mitiga reconectando a sessão; **fix definitivo = degrau 1 da escada (WhatsApp Cloud API oficial)** — ver [escada-api-oficial.md](escada-api-oficial.md).
 - **Backup do Postgres** (com 1 banco, os dois DBs saem juntos com `pg_dumpall`):
   ```bash
   (crontab -l 2>/dev/null; echo "0 3 * * * docker exec zapagente-db pg_dumpall -U zapagente | gzip > /root/backup-\$(date +\%F).sql.gz") | crontab -
