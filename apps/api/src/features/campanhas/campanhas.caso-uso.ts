@@ -1,5 +1,6 @@
 // ⚙️ Aplicação — campanhas: a MESMA definição de missão disparada/agrupada p/ N contatos,
 // com poder de adicionar mais contatos depois (reusa criarMissaoEmLote).
+import type { Prisma } from '@prisma/client'
 import { conferirDono, tenantAtual } from '../../core/contexto'
 import { db } from '../../core/db'
 import { ErroHttp } from '../../core/erros'
@@ -15,6 +16,7 @@ type DefCampanha = {
   criterioConclusao?: string
   tom?: string
   informacoes?: string
+  estilo?: unknown // perfil de conversa da campanha (validado na rota); herdado por cada missão
 }
 
 export async function listarCampanhas() {
@@ -85,6 +87,7 @@ export async function criarCampanha(input: DefCampanha & Alvo) {
       criterioConclusao: input.criterioConclusao,
       tom: input.tom,
       informacoes: input.informacoes,
+      estilo: (input.estilo ?? undefined) as Prisma.InputJsonValue | undefined,
     },
   })
   // se o disparo resolver a audiência pra vazio (ex.: tag/lista só com opt-out), não
@@ -129,6 +132,7 @@ function dispararDaCampanha(
     criterioConclusao: string | null
     tom: string | null
     informacoes: string | null
+    estilo?: Prisma.JsonValue
   },
   alvo: Alvo,
 ) {
@@ -141,6 +145,7 @@ function dispararDaCampanha(
     criterioConclusao: campanha.criterioConclusao ?? undefined,
     tom: campanha.tom ?? undefined,
     informacoes: campanha.informacoes ?? undefined,
+    estilo: campanha.estilo ?? undefined,
     campanhaId: campanha.id,
     contatos: alvo.contatos,
     tagId: alvo.tagId,

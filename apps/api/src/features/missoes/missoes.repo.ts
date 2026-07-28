@@ -14,6 +14,7 @@ export const missoesRepo = {
     criterioConclusao?: string
     tom?: string
     informacoes?: string
+    estilo?: Prisma.InputJsonValue // perfil de conversa desta missão (null → herda tenant)
     templateId?: string
     campanhaId?: string
     estado?: EstadoMissao

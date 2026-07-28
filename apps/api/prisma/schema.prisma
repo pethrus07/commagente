@@ -304,6 +304,7 @@ model Missao {
   criterioConclusao  String?      @map("criterio_conclusao") // quando a missão está cumprida
   tom                String? // humor/estilo da conversa (ex.: "amigável e informal")
   informacoes        String? // base de fatos autorizados que a IA PODE afirmar (preço, prazo, condições)
+  estilo             Json? // perfil de conversa DESTA missão (formalidade/emoji/bolhas…); null → herda do tenant
   estado             EstadoMissao @default(configurada)
   modo               String       @default("auto") // auto = IA envia sozinha · copilot = rascunha e aguarda aprovação
   rascunho           String? // resposta da IA aguardando aprovação humana (modo copilot)
@@ -346,6 +347,7 @@ model Campanha {
   criterioConclusao String?  @map("criterio_conclusao")
   tom               String?
   informacoes       String?
+  estilo            Json? // perfil de conversa da campanha (herdado por cada missão dela)
   criadoEm          DateTime @default(now()) @map("criado_em")
 
   tenant  Tenant         @relation(fields: [tenantId], references: [id])

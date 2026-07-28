@@ -1,8 +1,11 @@
-import type { ModoMissao, TipoMissao } from './types'
+import { PERFIS } from './estilos-conversa'
+import type { EstiloConversa, ModoMissao, TipoMissao } from './types'
 
 // Modelo de missão = ponto de partida pronto pro builder visual.
 // Um não-dev escolhe o objetivo pela linguagem do dia a dia; os campos técnicos
 // (objetivo, tom, critério, modo) já vêm preenchidos com um bom padrão — e editáveis.
+// Cada modelo também traz um PERFIL DE CONVERSA (estilo) embutido — o "jeito de falar"
+// do papel; vem junto ao escolher o modelo e o usuário ajusta → personalizado (salvo na missão).
 export interface ModeloMissao {
   id: string
   tipo: TipoMissao
@@ -15,6 +18,8 @@ export interface ModeloMissao {
   /** dica do que preencher em "informações autorizadas" */
   informacoesDica: string
   modo: ModoMissao
+  /** perfil de conversa embutido (formalidade/emoji/bolhas…) */
+  estilo: EstiloConversa
 }
 
 export const MODELOS: ModeloMissao[] = [
@@ -30,6 +35,7 @@ export const MODELOS: ModeloMissao[] = [
     criterioConclusao: 'Lead demonstrou interesse claro ou aceitou uma conversa/demonstração.',
     informacoesDica: 'O que sua empresa faz, para quem, e o diferencial. Preços só se puder afirmar.',
     modo: 'auto',
+    estilo: PERFIS.vendedor,
   },
   {
     id: 'followup',
@@ -43,6 +49,7 @@ export const MODELOS: ModeloMissao[] = [
     criterioConclusao: 'Proposta aceita, reunião marcada, ou objeção resolvida/encaminhada.',
     informacoesDica: 'Resumo da proposta enviada, valores e condições que você pode confirmar.',
     modo: 'auto',
+    estilo: PERFIS.vendedorConsultivo,
   },
   {
     id: 'qualificacao',
@@ -56,6 +63,7 @@ export const MODELOS: ModeloMissao[] = [
     criterioConclusao: 'Lead qualificado com necessidade, orçamento e urgência entendidos.',
     informacoesDica: 'Faixas de atendimento, tipos de cliente ideais e o que caracteriza um bom lead.',
     modo: 'auto',
+    estilo: PERFIS.qualificacao,
   },
   {
     id: 'orcamento',
@@ -69,6 +77,7 @@ export const MODELOS: ModeloMissao[] = [
     criterioConclusao: 'Todos os dados para o orçamento foram coletados.',
     informacoesDica: 'Itens/serviços que você oferece e quais informações são obrigatórias pra orçar.',
     modo: 'auto',
+    estilo: PERFIS.orcamento,
   },
   {
     id: 'cobranca',
@@ -82,6 +91,7 @@ export const MODELOS: ModeloMissao[] = [
     criterioConclusao: 'Pagamento confirmado ou acordo/prazo combinado.',
     informacoesDica: 'Valor, vencimento, formas de pagamento e link/chave que você pode informar.',
     modo: 'copilot',
+    estilo: PERFIS.cobranca,
   },
   {
     id: 'suporte',
@@ -95,6 +105,7 @@ export const MODELOS: ModeloMissao[] = [
     criterioConclusao: 'Dúvida resolvida ou encaminhada ao time responsável.',
     informacoesDica: 'FAQ, políticas, prazos e procedimentos que a IA pode informar com segurança.',
     modo: 'auto',
+    estilo: PERFIS.suporte,
   },
   {
     id: 'reativacao',
@@ -108,6 +119,7 @@ export const MODELOS: ModeloMissao[] = [
     criterioConclusao: 'Cliente reengajado (respondeu com interesse) ou reativou.',
     informacoesDica: 'A novidade/oferta que pode ser oferecida e condições que você pode confirmar.',
     modo: 'auto',
+    estilo: PERFIS.vendedor,
   },
   {
     id: 'zero',
@@ -120,5 +132,6 @@ export const MODELOS: ModeloMissao[] = [
     criterioConclusao: '',
     informacoesDica: 'Preços, prazos e condições REAIS que a IA pode afirmar.',
     modo: 'auto',
+    estilo: PERFIS.padrao,
   },
 ]

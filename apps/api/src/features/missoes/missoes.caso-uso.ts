@@ -19,6 +19,7 @@ type DadosMissao = {
   criterioConclusao?: string
   tom?: string
   informacoes?: string
+  estilo?: unknown // perfil de conversa da missão (formalidade/emoji/bolhas…); validado na rota
   campanhaId?: string
 }
 
@@ -79,6 +80,7 @@ export async function criarMissaoEmLote(
       criterioConclusao: input.criterioConclusao,
       tom: input.tom,
       informacoes: input.informacoes,
+      estilo: (input.estilo ?? undefined) as Prisma.InputJsonValue | undefined,
       campanhaId: input.campanhaId,
     })
     await db.evento.create({

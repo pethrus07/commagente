@@ -219,15 +219,15 @@ export interface TenantResumo {
 
 // estilo de conversa da IA (controles estruturados de COMO ESCREVER — o "parecer humano")
 export interface EstiloConversa {
-  preset?: string | null
+  perfil?: string | null // rótulo do perfil de origem (Vendedor, Suporte…)
   formalidade: 'informal' | 'equilibrado' | 'formal'
-  emoji: 'nunca' | 'raro' | 'natural'
+  emoji: boolean
   abreviacoes: boolean
   travessaoProibido: boolean
   bolhas: boolean
 }
 
-// configuração do tenant atual — persona/identidade (voz da marca) + estilo de conversa
+// configuração do tenant atual — persona/identidade (voz da marca) + estilo de conversa (fallback)
 export interface TenantConfig {
   id: string
   nome: string

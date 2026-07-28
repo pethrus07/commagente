@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft, ArrowRight, Check, Rocket, Sparkles, X } from 'lucide-react'
 import { api } from '../lib/api'
+import { ESTILO_PADRAO } from '../lib/estilos-conversa'
 import { MODELOS, type ModeloMissao } from '../lib/modelos-missao'
 import { toast } from '../lib/toast'
-import type { Numero } from '../lib/types'
+import type { EstiloConversa, Numero } from '../lib/types'
 import { Button, Card, cn } from '../lib/ui'
+import { EstiloControles } from './EstiloControles'
 import { SeletorContatos } from './SeletorContatos'
 
 const campo =
@@ -31,6 +33,7 @@ export function AssistenteMissao({ onFechar }: { onFechar: (criou: boolean) => v
     informacoesDica: 'Preços, prazos e condições REAIS que a IA pode afirmar.',
   })
   const [contatos, setContatos] = useState<Contato[]>([])
+  const [estilo, setEstilo] = useState<EstiloConversa>(ESTILO_PADRAO) // perfil de conversa da missão
   const [reativo, setReativo] = useState(false)
   const [salvando, setSalvando] = useState(false)
 
@@ -45,6 +48,7 @@ export function AssistenteMissao({ onFechar }: { onFechar: (criou: boolean) => v
   const escolherModelo = (m: ModeloMissao) => {
     setModeloId(m.id)
     setReativo(m.tipo === 'suporte') // suporte já entra como reativo por padrão
+    setEstilo(m.estilo) // o perfil de conversa vem embutido no modelo (ajustável no passo seguinte)
     setForm((f) => ({
       ...f,
       tipo: m.tipo,
@@ -89,6 +93,7 @@ export function AssistenteMissao({ onFechar }: { onFechar: (criou: boolean) => v
           criterioConclusao: form.criterioConclusao.trim() || undefined,
           tom: form.tom.trim() || undefined,
           informacoes: form.informacoes.trim() || undefined,
+          estilo, // perfil de conversa desta missão (personalizado se ajustado)
           contatos,
         })
         criadas = r.criadas
@@ -184,6 +189,14 @@ export function AssistenteMissao({ onFechar }: { onFechar: (criou: boolean) => v
                 <textarea value={form.informacoes} onChange={(e) => setForm({ ...form, informacoes: e.target.value })} rows={3} placeholder={form.informacoesDica} className={cn(campo, 'resize-none')} />
                 <p className="mt-1 text-[11px] leading-snug text-muted">🛡️ A IA só afirma o que estiver aqui. Fora disso, ela confirma ou escala — nunca inventa.</p>
               </div>
+              {/* Perfil de conversa — vem do modelo, ajustável (→ personalizado, salvo na missão) */}
+              <div className="rounded-xl border border-line bg-surface/40 p-3">
+                <div className="mb-2 flex items-center justify-between">
+                  <label className="block text-xs font-medium text-muted">Perfil de conversa — como a IA escreve</label>
+                  <span className="rounded-full bg-indigo-500/15 px-2 py-0.5 text-[10px] font-medium text-indigo-200">{estilo.perfil ?? 'Personalizado'}</span>
+                </div>
+                <EstiloControles estilo={estilo} onChange={setEstilo} />
+              </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-xs text-muted">Modo</label>
@@ -239,6 +252,7 @@ export function AssistenteMissao({ onFechar }: { onFechar: (criou: boolean) => v
                 </p>
                 <ul className="space-y-1.5 text-sm text-content">
                   <li><span className="text-muted">Objetivo:</span> {form.objetivo || <span className="text-subtle">—</span>}</li>
+                  <li><span className="text-muted">Perfil:</span> {estilo.perfil ?? 'Personalizado'}{estilo.bolhas ? ' · bolhas' : ''}{estilo.formalidade === 'informal' ? ' · informal' : estilo.formalidade === 'formal' ? ' · formal' : ''}</li>
                   {form.tom && <li><span className="text-muted">Tom:</span> {form.tom}</li>}
                   {form.criterioConclusao && <li><span className="text-muted">Conclui quando:</span> {form.criterioConclusao}</li>}
                   <li><span className="text-muted">Modo:</span> {form.modo === 'auto' ? '⚡ Auto (envia sozinha)' : '👁️ Co-pilot (você aprova)'}</li>

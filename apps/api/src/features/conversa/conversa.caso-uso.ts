@@ -243,9 +243,9 @@ async function executarTurno(missaoId: string) {
   // opener (1ª saída da missão) espaça mais que uma resposta dentro da conversa.
   const ehOpener = !missao.mensagens.some((m) => m.direcao === 'out')
   const tipo = ehOpener ? 'novo' : 'conversa'
-  // estilo do tenant → se "bolhas" ligado, o executor quebra a resposta em 2-3 mensagens
-  // curtas (o ritmo humano da demo). Continua UM item de fila (anti-rajada preservado).
-  const estilo = lerEstilo(missao.tenant?.estilo)
+  // estilo da missão (fallback: tenant) → se "bolhas" ligado, o executor quebra a resposta
+  // em 2-3 mensagens curtas (ritmo humano da demo). Continua UM item de fila (anti-rajada ok).
+  const estilo = lerEstilo(missao.estilo ?? missao.tenant?.estilo)
   await filaRepo.enfileirar({
     tenantId: missao.tenantId,
     missaoId,
