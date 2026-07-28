@@ -13,6 +13,7 @@ import { filaRepo } from '../fila/fila.repo'
 import { montarFicha } from '../memoria/memoria.montador'
 import { podeTransicionar } from '../missoes/missao.dominio'
 import { missoesRepo } from '../missoes/missoes.repo'
+import { lerEstilo } from '../tenant/tenant.estilo'
 import { conversaRepo } from './conversa.repo'
 
 const turnosAtivos = new Set<string>()
@@ -242,6 +243,9 @@ async function executarTurno(missaoId: string) {
   // opener (1ª saída da missão) espaça mais que uma resposta dentro da conversa.
   const ehOpener = !missao.mensagens.some((m) => m.direcao === 'out')
   const tipo = ehOpener ? 'novo' : 'conversa'
+  // estilo do tenant → se "bolhas" ligado, o executor quebra a resposta em 2-3 mensagens
+  // curtas (o ritmo humano da demo). Continua UM item de fila (anti-rajada preservado).
+  const estilo = lerEstilo(missao.tenant?.estilo)
   await filaRepo.enfileirar({
     tenantId: missao.tenantId,
     missaoId,
@@ -251,6 +255,7 @@ async function executarTurno(missaoId: string) {
       telefone: missao.contato.telefone,
       texto: saida.resposta,
       tipo,
+      bolhas: estilo.bolhas,
     },
     agendadoPara: new Date(Date.now() + jitterMs(tipo)),
   })

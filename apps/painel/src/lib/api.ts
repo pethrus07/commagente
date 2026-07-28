@@ -5,6 +5,7 @@ import type {
   Conhecimento,
   ContatoResumo,
   EstadoMissao,
+  EstiloConversa,
   Historico,
   ImportResultado,
   Missao,
@@ -75,11 +76,14 @@ export const api = {
   historico: (dias?: number) =>
     req<Historico>(`/stats/historico${dias ? `?dias=${dias}` : ''}`),
 
-  // configuração do tenant atual (persona/identidade da IA)
+  // configuração do tenant atual (persona/identidade + estilo de conversa da IA)
   tenant: {
     obter: () => req<TenantConfig>('/tenant'),
     salvarPersona: (persona: string | null) =>
       req<TenantConfig>('/tenant', { method: 'PATCH', body: JSON.stringify({ persona }) }),
+    // salva persona e/ou estilo numa tacada (reflete no próximo turno)
+    salvar: (dados: { persona?: string | null; estilo?: EstiloConversa }) =>
+      req<TenantConfig>('/tenant', { method: 'PATCH', body: JSON.stringify(dados) }),
   },
 
   numeros: {
