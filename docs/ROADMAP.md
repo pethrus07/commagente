@@ -1,4 +1,4 @@
-# zapagente — Roadmap & Divisão de Funcionalidades
+# Commagente — Roadmap & Divisão de Funcionalidades
 
 > Consolida os estudos em [docs/estudos/](estudos/) numa visão única: **o que** o produto faz, **como** as funcionalidades se agrupam e em **que ordem** construir.
 > Base: [ESTRUTURA](estudos/ESTRUTURA.md) · [DECISÕES](estudos/DECISOES-stack-arquitetura-roadmap.md) · [ARQUITETURA-TÉCNICA](estudos/ARQUITETURA-TECNICA.md) · [ESTUDO-memória-e-custo](estudos/ESTUDO-memoria-e-custo.md).
@@ -39,7 +39,7 @@ Todo o produto, dividido em **8 grupos**. Cada folha é uma funcionalidade const
 
 ```mermaid
 mindmap
-  root((zapagente))
+  root((Commagente))
     Conexão WhatsApp
       Conectar número Evolution
       Receber mensagens webhook

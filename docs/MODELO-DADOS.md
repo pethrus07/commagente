@@ -1,4 +1,4 @@
-# zapagente — Modelo de Dados
+# Commagente — Modelo de Dados
 
 > A camada 💛 **Domínio** virando 🔌 **persistência**. Expresso concretamente em **Prisma** (`apps/api/prisma/schema.prisma`).
 > Base: [ARQUITETURA-TÉCNICA §2](estudos/ARQUITETURA-TECNICA.md). Regra transversal: **toda tabela tem `tenant_id`** (single-tenant hoje, white-label sem refatorar).

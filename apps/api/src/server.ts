@@ -93,7 +93,7 @@ app.register(tenantRotas)
 app
   .listen({ port: config.porta, host: '0.0.0.0' })
   .then(async (addr) => {
-    app.log.info(`zapagente-api em ${addr}`)
+    app.log.info(`Commagente API em ${addr}`)
     await seedInicial() // garante tenant padrão + super-admin
     iniciarWorker() // motor anti-bloqueio: consome a fila_envio no ritmo humano
     iniciarAgendador() // missões programadas: dispara o que "vence hoje"

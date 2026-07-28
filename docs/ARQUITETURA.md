@@ -1,4 +1,4 @@
-# zapagente — Arquitetura (decisões e alternativas)
+# Commagente — Arquitetura (decisões e alternativas)
 
 > **O que estamos usando, por quê, e o que ficou de fora.** Consolida e explica as decisões dos estudos ([DECISÕES](estudos/DECISOES-stack-arquitetura-roadmap.md), [ARQUITETURA-TÉCNICA](estudos/ARQUITETURA-TECNICA.md)).
 > Formato: para cada eixo → **a escolha**, **as alternativas**, **por que essa**.
@@ -101,7 +101,7 @@ flowchart TB
     L4 -.->|implementa as portas do| L3
 ```
 
-**As 4 camadas do zapagente:**
+**As 4 camadas do Commagente:**
 
 - **🖥️ Apresentação** — entrada/saída do mundo: o painel React, as rotas HTTP da API e o webhook da Evolution. Valida payload e serializa. **Zero regra de negócio.**
 - **⚙️ Aplicação** — os *casos de uso*: coordena o passo a passo (ex.: "mensagem recebida" = grava → monta ficha → chama IA → aplica estado → enfileira resposta). Orquestra, mas a regra em si mora abaixo.
@@ -146,7 +146,7 @@ flowchart TB
 
 Um LLM sozinho é **stateless e só prevê texto** — não guarda estado, não age no mundo e não garante formato de saída. Pra virar uma assistente confiável, ele precisa de um **harness**: a moldura **determinística** em volta do modelo que monta o contexto, força um contrato de saída, valida, aplica no estado e controla o ritmo. *(O próprio Claude Code é um harness em volta de um LLM — mesma ideia.)*
 
-No zapagente o harness = os blocos **2 (Montador de contexto) + 3 (Cérebro IA) + 4 (Máquina de estados)** + a fila, operando em loop a cada turno:
+No Commagente o harness = os blocos **2 (Montador de contexto) + 3 (Cérebro IA) + 4 (Máquina de estados)** + a fila, operando em loop a cada turno:
 
 ```mermaid
 flowchart LR

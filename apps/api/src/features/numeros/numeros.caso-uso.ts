@@ -82,7 +82,7 @@ export async function enviarAvisoTeste(id: string) {
   await wa.enviarTexto(
     numero.instanciaEvolution,
     destino,
-    '🔔 Teste de aviso — zapagente. Se você recebeu isto, os avisos de escalonamento chegam neste WhatsApp.',
+    '🔔 Teste de aviso — Commagente. Se você recebeu isto, os avisos de escalonamento chegam neste WhatsApp.',
   )
   return { ok: true as const, destino }
 }

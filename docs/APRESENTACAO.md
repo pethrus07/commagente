@@ -1,4 +1,4 @@
-# zapagente — guia de apresentação
+# Commagente — guia de apresentação
 
 > Um panorama de tudo que o sistema faz. Serve como roteiro pra apresentar pro parceiro
 > (ou pra qualquer cliente). Linguagem de benefício, mas cobrindo todas as funcionalidades.
@@ -9,7 +9,7 @@
 Um **assistente de IA que opera várias conversas de WhatsApp ao mesmo tempo**, cada uma com uma **"missão"** (vender, qualificar, cobrar, dar suporte…). Ele **inicia o contato sozinho**, conduz a conversa até o objetivo, **passa pra um humano** quando precisa — tudo no **ritmo humano** pra não bloquear o número.
 
 ## 2. Por que é diferente (o fosso)
-No mercado, cada ferramenta faz um pedaço. O zapagente é o único que junta os **5 atributos** ao mesmo tempo:
+No mercado, cada ferramenta faz um pedaço. O Commagente é o único que junta os **5 atributos** ao mesmo tempo:
 1. **Proativo** — a IA começa a conversa (não fica só respondendo).
 2. **Missão variável** — cada conversa tem um objetivo próprio.
 3. **Multi-conversa** — dezenas em paralelo.

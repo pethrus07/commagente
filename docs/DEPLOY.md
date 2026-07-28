@@ -1,6 +1,6 @@
 # Deploy — produção (always-on)
 
-Guia pra subir o zapagente num VPS **Ubuntu 22.04/24.04 LTS**. Serve pra qualquer provedor
+Guia pra subir o Commagente num VPS **Ubuntu 22.04/24.04 LTS**. Serve pra qualquer provedor
 (Hostinger, Hetzner, Contabo…). Complementa o [SETUP.md](SETUP.md) (ambiente de dev).
 
 > **Escolha do servidor (2026-07):** parceiro optou pela **Hostinger** (data center **São Paulo**),
