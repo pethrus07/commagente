@@ -1,6 +1,6 @@
 # Commagente — contexto do projeto
 
-> **Nome do produto (decidido 2026-07-28): `Commagente`** (antes *zapagente*). Junta *comunicação + agente* e lê como "com a gente" (o "M" dobrado evita a leitura "coma gente"). Domínios `commagente.com.br`/`.com` livres. **Exibição/painel/docs usam Commagente**; identificadores internos seguem como estão por ora (repo `pethrus07/zapagente`, DB/containers `zapagente-*`, logins `*@zapagente.local`, pm2 `zapagente-api`) — renomeá-los é uma migração de infra à parte.
+> **Nome do produto (decidido 2026-07-28): `Commagente`** (antes *zapagente*). Junta *comunicação + agente* e lê como "com a gente" (o "M" dobrado evita a leitura "coma gente"). Domínios `commagente.com.br`/`.com` livres. **Exibição/painel/docs usam Commagente.** **Já renomeados (2026-07-28):** repo **`pethrus07/commagente`**, pm2 **`commagente-api`**, pacote **`@commagente/api`**. **Ainda `zapagente` (infra viva — rename à parte, com janela):** DB/containers `zapagente-*`, logins `*@zapagente.local`, pasta `~/zapagente` (local e VPS), instância Evolution `zap-<tel>`. ⚠️ **A API de prod roda via `npx tsx src/server.ts` (NÃO `node dist` — imports ESM sem `.js` quebram); `pm2 restart commagente-api` reusa esse comando.**
 
 Assistente autônomo de IA no **WhatsApp** que opera várias conversas em paralelo, cada uma com uma **"missão"** (vender, qualificar, orçar, cobrar, suporte…). Parceria **Pedro (Pethrus) × parceiro (Celiware)**. **Multi-tenant** (super-admin + tenants, isolamento por `tenant_id` + impersonação via `x-tenant-id`) — plataforma white-label.
 

@@ -77,7 +77,7 @@ O build (`tsc`/`vite`) é pesado pra 1 núcleo. **Recomendado:** buíde no seu P
 ## 6. Subir a API (reinicia sozinha, sobe no boot)
 ```bash
 cd ~/zapagente/apps/api
-pm2 start npm --name zapagente-api -- start
+pm2 start npx --name commagente-api -- tsx src/server.ts   # roda o TS direto; "node dist" quebra (imports ESM sem .js)
 pm2 startup && pm2 save
 ```
 A API já inicia o **worker anti-bloqueio** + o **agendador** de missões programadas.
@@ -111,6 +111,6 @@ Abra `https://SEU_DOMINIO` → login super-admin → **troque a senha** → **N�
 ## Atualizar depois
 ```bash
 cd ~/zapagente && git pull
-cd apps/api && npm ci && npx prisma migrate deploy && npm run build && pm2 restart zapagente-api
+cd apps/api && npm ci && npx prisma migrate deploy && pm2 restart commagente-api   # a API roda via tsx (sem build)
 cd ../painel && npm ci && npm run build   # Caddy já serve o dist novo
 ```
