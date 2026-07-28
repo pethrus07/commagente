@@ -5,6 +5,7 @@ import {
   atualizarConfigNumero,
   cadastrarNumero,
   conectarNumero,
+  enviarAvisoTeste,
   listarNumeros,
   statusNumero,
 } from './numeros.caso-uso'
@@ -25,6 +26,8 @@ const corpoConfig = z.object({
   suporteInformacoes: z.string().nullish(),
   suporteCriterio: z.string().nullish(),
   suporteModo: z.enum(['auto', 'copilot']).optional(),
+  avisarEscalonamento: z.boolean().optional(),
+  numeroAviso: z.string().nullish(),
 })
 
 const paramsId = z.object({ id: z.string().uuid() })
@@ -62,5 +65,11 @@ export async function numerosRotas(app: FastifyInstance) {
   app.get('/numeros/:id/status', async (req) => {
     const { id } = paramsId.parse(req.params)
     return statusNumero(id)
+  })
+
+  // testa o aviso de escalonamento (manda uma msg de exemplo pro destino)
+  app.post('/numeros/:id/testar-aviso', async (req) => {
+    const { id } = paramsId.parse(req.params)
+    return enviarAvisoTeste(id)
   })
 }

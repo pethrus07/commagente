@@ -109,11 +109,18 @@ export const api = {
         suporteInformacoes?: string | null
         suporteCriterio?: string | null
         suporteModo?: string
+        avisarEscalonamento?: boolean
+        numeroAviso?: string | null
       },
     ) =>
       req<Numero>(`/numeros/${id}`, {
         method: 'PATCH',
         body: JSON.stringify(patch),
+      }),
+    testarAviso: (id: string) =>
+      req<{ ok: true; destino: string }>(`/numeros/${id}/testar-aviso`, {
+        method: 'POST',
+        body: '{}',
       }),
   },
 

@@ -2,6 +2,7 @@
 // 1 turno: monta contexto → IA (structured) → valida → aplica estado + fatos → responde.
 import { conferirDono } from '../../core/contexto'
 import { db } from '../../core/db'
+import { whatsapp } from '../../core/evolution'
 import { ErroHttp } from '../../core/erros'
 import { ia } from '../../core/ia'
 import { SaidaIASchema, type SaidaIA, type UsoIA } from '../../core/ia/porta-ia'
@@ -68,6 +69,44 @@ function registrarUso(missaoId: string, uso?: UsoIA) {
     .catch((err) => console.error('[custo] incremento de tokens falhou:', err))
 }
 
+// Avisa o operador no WhatsApp quando uma conversa escala (reusa o self-send validado:
+// o número entrega mensagem pra ele mesmo). Best-effort — NUNCA derruba o turno.
+// Destino = numeroAviso configurado, senão o próprio número (self).
+async function avisarEscalonamento(
+  missao: {
+    id: string
+    tenantId: string
+    numero: {
+      avisarEscalonamento: boolean
+      numeroAviso: string | null
+      telefone: string
+      instanciaEvolution: string
+    }
+    contato: { nome: string | null; telefone: string }
+  },
+  motivo?: string | null,
+) {
+  const n = missao.numero
+  if (!n?.avisarEscalonamento) return
+  const destino = (n.numeroAviso || n.telefone || '').replace(/\D/g, '')
+  if (destino.length < 8) return
+  const quem = missao.contato?.nome
+    ? `${missao.contato.nome} (+${missao.contato.telefone})`
+    : `+${missao.contato?.telefone ?? '?'}`
+  try {
+    await whatsapp.enviarTexto(
+      n.instanciaEvolution,
+      destino,
+      `🔔 Conversa escalada — ${quem} precisa de você.\nMotivo: ${motivo || 'atendimento humano'}.\nAbra o painel pra assumir.`,
+    )
+    await db.evento.create({
+      data: { tenantId: missao.tenantId, missaoId: missao.id, tipo: 'aviso_escalonamento', dados: { destino } },
+    })
+  } catch (e) {
+    console.error('[aviso-escalonamento] falhou (ignorado):', (e as Error)?.message)
+  }
+}
+
 async function executarTurno(missaoId: string) {
   const missao = await missoesRepo.buscar(missaoId)
   if (!missao) return { ok: false as const, motivo: 'missao_inexistente' }
@@ -110,6 +149,7 @@ async function executarTurno(missaoId: string) {
     } else {
       await missoesRepo.atualizar(missaoId, pausa)
     }
+    await avisarEscalonamento(missao, 'Falha na IA — precisa de um humano')
     return { ok: false as const, erro_ia: true }
   }
 
@@ -138,6 +178,7 @@ async function executarTurno(missaoId: string) {
         dados: { motivo: saida.motivo_escala ?? null },
       },
     })
+    await avisarEscalonamento(missao, saida.motivo_escala)
     // NÃO deixa o cliente no vácuo: se a IA escreveu uma mensagem-ponte
     // ("deixa eu confirmar e já retorno"), envia antes de pausar pro humano.
     // Em co-pilot o humano trata a resposta, então não auto-envia.

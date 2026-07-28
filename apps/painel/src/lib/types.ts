@@ -62,6 +62,8 @@ export interface Numero {
   suporteInformacoes: string | null
   suporteCriterio: string | null
   suporteModo: string
+  avisarEscalonamento: boolean
+  numeroAviso: string | null
   criadoEm: string
   saude?: SaudeNumero
 }

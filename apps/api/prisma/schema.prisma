@@ -155,6 +155,10 @@ model NumeroWhatsapp {
   suporteInformacoes String?       @map("suporte_informacoes")
   suporteCriterio    String?       @map("suporte_criterio")
   suporteModo        String        @default("auto") @map("suporte_modo")
+  // Aviso de escalonamento no WhatsApp: quando uma conversa escala, avisa o operador.
+  // Reusa o self-send (validado: o número entrega mensagem pra ele mesmo).
+  avisarEscalonamento Boolean      @default(false) @map("avisar_escalonamento")
+  numeroAviso         String?      @map("numero_aviso") // destino do aviso; null = o próprio número
   criadoEm           DateTime      @default(now()) @map("criado_em")
 
   tenant       Tenant        @relation(fields: [tenantId], references: [id])

@@ -47,6 +47,8 @@ export async function atualizarConfigNumero(
     suporteInformacoes?: string | null
     suporteCriterio?: string | null
     suporteModo?: string
+    avisarEscalonamento?: boolean
+    numeroAviso?: string | null
   },
 ) {
   const numero = await numerosRepo.buscar(id)
@@ -65,6 +67,24 @@ export async function atualizarConfigNumero(
     throw new ErroHttp(400, 'suporteModo inválido (auto | copilot)')
 
   return numerosRepo.atualizarConfig(id, patch)
+}
+
+// Testa o aviso de escalonamento: manda uma mensagem de exemplo pro destino (numeroAviso
+// ou o próprio número). Reusa o self-send validado — serve pra confirmar que chega.
+export async function enviarAvisoTeste(id: string) {
+  const numero = await numerosRepo.buscar(id)
+  if (!numero) throw new ErroHttp(404, 'Número não encontrado')
+  await conferirDono(numero.tenantId)
+  if (numero.statusConexao !== 'conectado')
+    throw new ErroHttp(409, 'Conecte o número antes de testar o aviso.')
+  const destino = (numero.numeroAviso || numero.telefone || '').replace(/\D/g, '')
+  if (destino.length < 8) throw new ErroHttp(400, 'Número de aviso inválido.')
+  await wa.enviarTexto(
+    numero.instanciaEvolution,
+    destino,
+    '🔔 Teste de aviso — zapagente. Se você recebeu isto, os avisos de escalonamento chegam neste WhatsApp.',
+  )
+  return { ok: true as const, destino }
 }
 
 export async function conectarNumero(id: string): Promise<QrCode> {

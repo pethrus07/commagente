@@ -21,8 +21,11 @@ function ConfigModal({ numero, onFechar }: { numero: Numero; onFechar: (salvou: 
     budgetDiario: String(numero.budgetDiario),
     maxConversasAtivas: String(numero.maxConversasAtivas),
     suporteReativo: numero.suporteReativo,
+    avisarEscalonamento: numero.avisarEscalonamento,
+    numeroAviso: numero.numeroAviso ?? '',
   })
   const [salvando, setSalvando] = useState(false)
+  const [testando, setTestando] = useState(false)
 
   const salvar = async () => {
     const budget = Number(form.budgetDiario)
@@ -37,6 +40,8 @@ function ConfigModal({ numero, onFechar }: { numero: Numero; onFechar: (salvou: 
         budgetDiario: budget,
         maxConversasAtivas: cap,
         suporteReativo: form.suporteReativo,
+        avisarEscalonamento: form.avisarEscalonamento,
+        numeroAviso: form.numeroAviso.trim() || null,
       })
       toast('Configuração salva.', 'ok')
       onFechar(true)
@@ -44,6 +49,23 @@ function ConfigModal({ numero, onFechar }: { numero: Numero; onFechar: (salvou: 
       toast((e as Error).message, 'erro')
     } finally {
       setSalvando(false)
+    }
+  }
+
+  // testa o aviso: salva a config do aviso (pra usar o número da tela) e dispara um teste
+  const testar = async () => {
+    setTestando(true)
+    try {
+      await api.numeros.editar(numero.id, {
+        avisarEscalonamento: form.avisarEscalonamento,
+        numeroAviso: form.numeroAviso.trim() || null,
+      })
+      const r = await api.numeros.testarAviso(numero.id)
+      toast(`Aviso de teste enviado pra +${r.destino}. Confira o WhatsApp.`, 'ok')
+    } catch (e) {
+      toast((e as Error).message, 'erro')
+    } finally {
+      setTestando(false)
     }
   }
 
@@ -95,6 +117,27 @@ function ConfigModal({ numero, onFechar }: { numero: Numero; onFechar: (salvou: 
                 <span className="mt-0.5 block text-[11px] leading-snug text-muted">A IA atende automaticamente qualquer um que mandar mensagem neste número. Defina a persona pelo assistente (missão tipo Suporte).</span>
               </span>
             </button>
+          </div>
+          <div className="border-t border-line pt-3">
+            <button
+              type="button"
+              onClick={() => setForm({ ...form, avisarEscalonamento: !form.avisarEscalonamento })}
+              className="flex w-full items-start gap-3 text-left"
+            >
+              <span className={cn('mt-0.5 grid h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition', form.avisarEscalonamento ? 'bg-emerald-500' : 'bg-line-strong')}>
+                <span className={cn('h-4 w-4 rounded-full bg-white transition', form.avisarEscalonamento && 'translate-x-4')} />
+              </span>
+              <span>
+                <span className="block text-sm font-medium text-content">🔔 Avisar escalonamento no WhatsApp</span>
+                <span className="mt-0.5 block text-[11px] leading-snug text-muted">Quando uma conversa precisa de um humano, manda um aviso no WhatsApp com o contato + motivo. Reusa o self-send (o número avisa a si mesmo).</span>
+              </span>
+            </button>
+            {form.avisarEscalonamento && (
+              <div className="mt-3 space-y-2 pl-12">
+                <input value={form.numeroAviso} onChange={(e) => setForm({ ...form, numeroAviso: e.target.value })} placeholder={`Número de aviso — vazio = o próprio (+${numero.telefone})`} className={campo} />
+                <Button variant="ghost" onClick={testar} loading={testando} className="!py-1.5 !text-xs">Testar aviso agora</Button>
+              </div>
+            )}
           </div>
         </div>
         <div className="mt-5 flex justify-end gap-2">

@@ -40,6 +40,8 @@ export const numerosRepo = {
       suporteInformacoes?: string | null
       suporteCriterio?: string | null
       suporteModo?: string
+      avisarEscalonamento?: boolean
+      numeroAviso?: string | null
     },
   ) {
     return db.numeroWhatsapp.update({ where: { id }, data })
