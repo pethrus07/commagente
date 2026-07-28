@@ -9,6 +9,8 @@ type Payload = {
   telefone: string
   texto: string
   tipo?: 'novo' | 'conversa'
+  // estilo "bolhas": o executor quebra a resposta em 2-3 mensagens curtas (ritmo humano)
+  bolhas?: boolean
   // quando presente, envia um documento (ex.: PDF) em vez de texto
   documento?: { base64: string; nomeArquivo: string; mimetype?: string; legenda?: string }
 }
@@ -89,13 +91,15 @@ async function tick() {
 
       await filaRepo.marcar(item.id, 'enviando')
       try {
+        let enviados = 1
         if (p.documento) {
           await enviarDocumento(p.numeroId, p.telefone, p.documento, item.missaoId ?? undefined)
         } else {
-          await enviarTexto(p.numeroId, p.telefone, p.texto, item.missaoId ?? undefined)
+          const r = await enviarTexto(p.numeroId, p.telefone, p.texto, item.missaoId ?? undefined, p.bolhas)
+          enviados = r.bolhasEnviadas ?? 1 // bolhas contam cada uma no budget diário (anti-ban preciso)
         }
         await filaRepo.marcar(item.id, 'ok')
-        await filaRepo.incrementarEnviados(p.numeroId)
+        await filaRepo.incrementarEnviados(p.numeroId, enviados)
         // agenda o próximo envio permitido deste número (espaça o gotejamento)
         await filaRepo.marcarProximoEnvio(
           p.numeroId,

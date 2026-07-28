@@ -60,6 +60,9 @@ model Tenant {
   // Persona / identidade da IA do tenant (voz da marca): injetada SEMPRE no prompt de
   // toda missão (o `tom` da missão dá nuance/override). Define uma vez → tudo herda.
   persona  String?
+  // Estilo de conversa (JSON): controles estruturados (formalidade, emoji, abreviação,
+  // travessão, bolhas) que viram regras de escrita no prompt. Ver features/tenant/tenant.estilo.
+  estilo   Json?
   criadoEm DateTime @default(now()) @map("criado_em")
 
   numeros   NumeroWhatsapp[]

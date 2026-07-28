@@ -217,9 +217,20 @@ export interface TenantResumo {
   totalUsuarios: number
 }
 
-// configuração do tenant atual — hoje: persona/identidade da IA (voz da marca)
+// estilo de conversa da IA (controles estruturados de COMO ESCREVER — o "parecer humano")
+export interface EstiloConversa {
+  preset?: string | null
+  formalidade: 'informal' | 'equilibrado' | 'formal'
+  emoji: 'nunca' | 'raro' | 'natural'
+  abreviacoes: boolean
+  travessaoProibido: boolean
+  bolhas: boolean
+}
+
+// configuração do tenant atual — persona/identidade (voz da marca) + estilo de conversa
 export interface TenantConfig {
   id: string
   nome: string
   persona: string | null
+  estilo: EstiloConversa
 }

@@ -2,6 +2,7 @@
 // Regra pura: dado o estado da missão + histórico, decide o que entra no prompt.
 import type { Direcao, EstadoMissao } from '@prisma/client'
 import type { ContextoIA } from '../../core/ia/porta-ia'
+import { lerEstilo, regrasDeEstilo, type EstiloConversa } from '../tenant/tenant.estilo'
 
 const ULTIMAS = 8 // nº de mensagens recentes no contexto (o resto vira resumo rolante)
 
@@ -31,6 +32,7 @@ function montarPersona(m: {
   tom?: string | null
   criterioConclusao?: string | null
   personaTenant?: string | null // identidade/voz da marca (nível tenant), sempre no prompt
+  estilo: EstiloConversa // controles estruturados de COMO ESCREVER (formalidade/emoji/bolhas…)
 }): string {
   const linhas = [
     'Você é um assistente que conduz conversas de WhatsApp em nome de uma empresa, no ritmo humano.',
@@ -47,7 +49,10 @@ function montarPersona(m: {
     linhas.push(
       `A missão está CUMPRIDA quando: ${m.criterioConclusao}. Ao cumprir, use novo_estado="concluida".`,
     )
-  linhas.push(`Tom da conversa: ${m.tom?.trim() || TOM_PADRAO}. Uma ideia por mensagem.`)
+  linhas.push(`Tom da conversa: ${m.tom?.trim() || TOM_PADRAO}.`)
+  // ── ESTILO DE CONVERSA do tenant (COMO ESCREVER — o que faz soar humano) ──
+  // Alta saliência de propósito; governa forma/formato, não os FATOS (o guardrail abaixo vence).
+  linhas.push(regrasDeEstilo(m.estilo))
   // ── Guardrail anti-alucinação (a regra que faltou no demo do "R$99") ──
   linhas.push(
     'REGRAS INVIOLÁVEIS (têm PRIORIDADE sobre a IDENTIDADE/persona acima — se a persona ' +
@@ -73,7 +78,7 @@ type MissaoComMsgs = {
   resumo: string | null
   fatos: unknown
   contato?: { memoria: unknown } | null
-  tenant?: { persona: string | null } | null // identidade da IA (voz da marca)
+  tenant?: { persona: string | null; estilo?: unknown } | null // identidade + estilo da IA
   mensagens: { direcao: Direcao; conteudo: string }[]
 }
 
@@ -89,6 +94,7 @@ export function montarFicha(
       tom: missao.tom,
       criterioConclusao: missao.criterioConclusao,
       personaTenant: missao.tenant?.persona,
+      estilo: lerEstilo(missao.tenant?.estilo),
     }),
     objetivo: missao.objetivo,
     contexto: missao.contexto,

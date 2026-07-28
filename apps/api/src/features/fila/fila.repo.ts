@@ -50,10 +50,10 @@ export const filaRepo = {
     return c?.optOut ?? false
   },
 
-  incrementarEnviados(numeroId: string) {
+  incrementarEnviados(numeroId: string, por = 1) {
     return db.numeroWhatsapp.update({
       where: { id: numeroId },
-      data: { enviadosHoje: { increment: 1 } },
+      data: { enviadosHoje: { increment: por } },
     })
   },
 

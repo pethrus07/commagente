@@ -33,7 +33,7 @@ export const missoesRepo = {
       include: {
         contato: true,
         numero: true,
-        tenant: { select: { persona: true } }, // identidade da IA (voz da marca) p/ o prompt
+        tenant: { select: { persona: true, estilo: true } }, // identidade + estilo da IA p/ o prompt
         mensagens: { orderBy: { criadaEm: 'asc' } },
       },
     })
