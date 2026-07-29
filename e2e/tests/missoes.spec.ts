@@ -23,6 +23,7 @@ test('assistente cria missão a partir de um modelo', async ({ page, erros }) =>
 
   await expect(page.getByText(/Missão criada|missões criadas/)).toBeVisible()
   // o card aparece no board (coluna Configurada), com o nome do contato
-  await expect(page.getByText('QA Missao Prospec')).toBeVisible()
+  // .first(): missões QA podem se acumular no DB de dev entre runs (nome não é único)
+  await expect(page.getByText('QA Missao Prospec').first()).toBeVisible()
   expect(erros, erros.join('\n')).toEqual([])
 })
