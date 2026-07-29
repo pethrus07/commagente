@@ -273,6 +273,24 @@ Custo hoje é baixíssimo (~R$0,06 numa conversa longa de 27 turnos), mas dá pr
 
 > ⚠️ **Pra não queimar na quarta:** os 3 itens que a ata deu como "prontos" mas estão PARCIAL/inexistentes — **campanha que dispara sozinha**, **vigia**, **escalonamento no WhatsApp da vendedora** — não devem ser prometidos como prontos na demo ProAuto.
 
+### 8.9 📋 Relatórios por missão e por campanha (consolidação + síntese por IA) `F1`
+
+> Pedido do Pedro (2026-07-29). **Caso de uso central:** um **gerente cria uma missão pra falar com N colaboradores** (ex.: confirmar disponibilidade do sábado, coletar feedback de cliente, levantar pendências/equipamento) **e recebe as informações de todos reunidas num relatório** — por missão individual **e** consolidado por campanha. Arquiteturalmente é o `Campanha` que já temos (1 definição → N missões-conversa, uma por contato) **+ uma camada de relatório que hoje não existe**. Forte diferencial de venda: gerente coordenando equipe/leads e recebendo o relatório pronto (bom de mostrar pro ProAuto).
+
+**O que já existe (a matéria-prima — nada se perde hoje):** cada missão já captura e persiste `fatos` (Json — o que a IA descobriu sobre o contato, via `fatos_novos` mesclado a cada turno), `resumo` (resumo rolante), `resultado` + `categoriaResultado` (desfecho ao concluir) e `estado`. Por campanha existe só o **placar** (contadores concluídas/perdidas/ativas + taxa). **O que falta é consolidar o CONTEÚDO** num relatório e sintetizá-lo — a coleta em si já roda.
+
+**O gap:**
+1. **Consolidação** — reunir `fatos`/`resumo`/`resultado`/`estado` de todas as missões (de uma campanha, ou de uma **tag** §8.6) numa tabela: **linhas = contatos, colunas = campos coletados**; + o relatório individual por missão.
+2. **Síntese por IA** — novo `ProvedorIA.sintetizar(dados)`: recebe os fatos/resumos de todas as missões e devolve um relatório narrativo ("8 de 10 confirmaram presença; 3 pediram equipamento; ponto recorrente: X"). Consome tokens → **candidato natural ao "relatório pago R$5–15"** (§8.8#6, que esta seção subsume).
+3. **Campos a coletar (coleta estruturada)** — hoje `fatos_novos` é livre (`z.record`); pra o relatório sair consistente entre conversas, o gerente **declara os campos** (ex.: "disponibilidade sábado", "equipamento faltando", "orçamento"). O montador instrui a IA a preencher *essas* chaves → tabela alinhada + **placar de coleta** (quantos campos preenchidos por conversa).
+4. **Export** — CSV (colunas de fatos) e **PDF branded** (receita RYZE de Chrome headless já existe).
+
+**Plano de implementação (2 estágios):**
+- **MVP `F1` — reusa 100% do que já é salvo, sem migration:** `GET /campanhas/:id/relatorio` + `GET /missoes/:id/relatorio` (agregam `fatos`/`resumo`/`resultado`/`estado`); tela **"Relatório"** na Campanha e na missão (tabela contatos × campos + resumos + desfechos); botão **"Consolidar com IA"** (`ProvedorIA.sintetizar`, provider-agnostic + dublê); export **CSV**.
+- **Completo `F2` — relatório forte e consistente:** campo **`camposColeta`** na `Campanha`/`Missao` (lista nome+tipo) → persona instrui a coleta daqueles campos → tabela consistente + **placar de coleta**; **PDF branded**; filtros/pivô; **relatório recorrente** (casa com Missões Programadas — "toda sexta, resumo da semana").
+
+**Encaixe técnico:** MVP = **zero modelo novo** (só endpoints de agregação + `sintetizar` em `core/ia` + telas no painel). O `camposColeta` (estágio completo) = 1 migration + ajuste no montador/prompt. Reusa `Campanha` + `Tags` (§8.6) + `Programadas`. Respeita multi-tenant (relatório escopado ao tenant, custo da síntese só-super no card de custo).
+
 ---
 
 > **Nota (2026-07-23):** as seções §1–§7 (mapa/matriz/fases F0–F3) são o **plano pré-construção** e ficaram **desatualizadas** — na prática F1/F2 estão quase inteiros e parte do F3 (multi-tenant) foi feita. O **status real por fatia está no [CLAUDE.md](../CLAUDE.md)**; o backlog vivo é esta §8. Ao ler as fases abaixo, tratar como histórico de intenção, não como estado atual.
