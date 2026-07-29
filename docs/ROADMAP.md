@@ -291,6 +291,23 @@ Custo hoje é baixíssimo (~R$0,06 numa conversa longa de 27 turnos), mas dá pr
 
 **Encaixe técnico:** MVP = **zero modelo novo** (só endpoints de agregação + `sintetizar` em `core/ia` + telas no painel). O `camposColeta` (estágio completo) = 1 migration + ajuste no montador/prompt. Reusa `Campanha` + `Tags` (§8.6) + `Programadas`. Respeita multi-tenant (relatório escopado ao tenant, custo da síntese só-super no card de custo).
 
+### 8.10 🔭 Monitoramento ao vivo por tenant (super-admin) `F1`
+
+> Pedido do Pedro (2026-07-29), motivado pela entrada do **ProAuto**: "a partir do momento em que o cliente conecta o número, quero monitorar de perto — uso, conversas, tempo de resposta, TUDO." **Decisão: mora no PAINEL, só super-admin, por tenant** (não é algo que o cliente vê; o super-admin já enxerga todos os tenants; reusa dados que já logamos → zero infra nova). Consolida e estende §8.3 (custo) e §8.4 (observabilidade/alerta).
+
+**Já capturado (a base):** `eventos` (log de tudo com timestamp: `turno_ia`, `suporte_reativo`, `escalada`, `erro_ia`, `chip_desconectado`, `chip_caido`, `audio_transcrito`…), `mensagens` (in/out com `criada_em` + `enviada_em` + `status_envio`), tokens por missão (§8.3), vigia + reconciliador (§8.4). Super-admin já vê conversa por missão via impersonação.
+
+**O que falta (o "TUDO"):**
+1. **Tempo de resposta** — o dado existe (`mensagens`), mas ninguém agrega. ⚠️ **Medir DOIS tempos separados:** (a) *processamento* = inbound.`criada_em` → reply.`criada_em` (debounce 7s + IA ~2-5s); (b) *até entrega* = inbound → reply.`enviada_em` (**inclui o atraso anti-ban 12-30s+, que é INTENCIONAL**). Não separar faz o disfarce humano parecer "lentidão". Mostrar p50/p95 dos dois.
+2. **Feed ao vivo do tenant** — um fluxo único ("o que rola agora") lendo `eventos`+`mensagens`, em vez de abrir missão a missão.
+3. **Push em tempo real** — hoje é poll no dashboard; alertar (1ª conversa, escalada, erro, chip caiu, resposta > SLA) por canal (WhatsApp self-send / e-mail / Telegram). Estende o vigia (§8.4).
+
+**Plano:**
+- **MVP `F1` (sem modelo novo):** seção **"Monitoramento"** (só super-admin), por tenant: cards de volume (msgs in/out, conversas ativas, missões por estado), **tempo de resposta p50/p95** (processamento × entrega), taxa de escalada/erro, saúde do chip, custo (tokens/R$); **feed ao vivo** (últimos eventos+mensagens, auto-refresh). Endpoints `GET /admin/monitor/:tenantId` (agrega `eventos`/`mensagens`/tokens).
+- **Completo `F2`:** push de alertas (reusa/estende vigia) + SLA de tempo de resposta configurável + drill-down por conversa + export. **Camada de BI externa (Metabase/Grafana sobre o Postgres)** fica pra quando o **DONO do cliente** quiser self-service (não pro operador).
+
+**Ponte pra hoje (sem construir):** enquanto a ferramenta não existe, o monitoramento ao vivo do ProAuto é feito **direto no banco** (tail de `eventos`/`mensagens` + cálculo de tempo de resposta via SSH), disparado no instante em que o chip conecta.
+
 ---
 
 > **Nota (2026-07-23):** as seções §1–§7 (mapa/matriz/fases F0–F3) são o **plano pré-construção** e ficaram **desatualizadas** — na prática F1/F2 estão quase inteiros e parte do F3 (multi-tenant) foi feita. O **status real por fatia está no [CLAUDE.md](../CLAUDE.md)**; o backlog vivo é esta §8. Ao ler as fases abaixo, tratar como histórico de intenção, não como estado atual.
