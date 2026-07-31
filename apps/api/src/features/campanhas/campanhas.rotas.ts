@@ -9,6 +9,7 @@ import {
   listarCampanhas,
   obterCampanha,
   obterRelatorioCampanha,
+  relatorioCampanhaCsv,
   sintetizarRelatorioCampanha,
 } from './campanhas.caso-uso'
 
@@ -66,6 +67,16 @@ export async function campanhasRotas(app: FastifyInstance) {
   app.post('/campanhas/:id/relatorio/sintetizar', async (req) => {
     const { id } = paramsId.parse(req.params)
     return sintetizarRelatorioCampanha(id)
+  })
+
+  // EXPORTAR o relatório como CSV (download)
+  app.get('/campanhas/:id/relatorio/csv', async (req, reply) => {
+    const { id } = paramsId.parse(req.params)
+    const { nome, csv } = await relatorioCampanhaCsv(id)
+    const arquivo = `relatorio-${nome.replace(/[^\w.-]+/g, '_')}.csv`
+    reply.header('content-type', 'text/csv; charset=utf-8')
+    reply.header('content-disposition', `attachment; filename="${arquivo}"`)
+    return '﻿' + csv // BOM p/ o Excel abrir acentos certo
   })
 
   // adiciona mais contatos a uma campanha em andamento (contatos avulsos e/ou tag)

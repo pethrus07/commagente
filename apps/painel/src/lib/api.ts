@@ -11,6 +11,7 @@ import type {
   Missao,
   Numero,
   QrResposta,
+  RelatorioCampanha,
   ResultadoDisparo,
   Stats,
   StatusConhecimento,
@@ -152,6 +153,24 @@ export const api = {
     ) => req<{ criadas: number }>(`/campanhas/${id}/contatos`, { method: 'POST', body: JSON.stringify(alvo) }),
     iniciar: (id: string) =>
       req<ResultadoDisparo>(`/campanhas/${id}/iniciar`, { method: 'POST', body: '{}' }),
+    relatorio: (id: string) => req<RelatorioCampanha>(`/campanhas/${id}/relatorio`),
+    sintetizar: (id: string) =>
+      req<{ sintese: string }>(`/campanhas/${id}/relatorio/sintetizar`, {
+        method: 'POST',
+        body: '{}',
+      }),
+    exportarCsv: async (id: string): Promise<string> => {
+      const token = auth.token()
+      const tenant = auth.tenantSel()
+      const res = await fetch(BASE + `/campanhas/${id}/relatorio/csv`, {
+        headers: {
+          ...(token ? { authorization: `Bearer ${token}` } : {}),
+          ...(tenant ? { 'x-tenant-id': tenant.id } : {}),
+        },
+      })
+      if (!res.ok) throw new Error('Falha ao exportar o relatório.')
+      return res.text()
+    },
   },
 
   agendamentos: {

@@ -207,6 +207,26 @@ export interface ResultadoDisparo {
   puladas: Record<string, number>
 }
 
+// Relatório consolidado de uma campanha (conteúdo coletado por contato)
+export interface RelatorioLinha {
+  missaoId: string
+  contato: string
+  telefone: string
+  estado: EstadoMissao
+  resultado?: string | null
+  resumo?: string | null
+  fatos: Record<string, unknown>
+}
+export interface RelatorioCampanha {
+  campanha: { id: string; nome: string; objetivo: string; tipo: TipoMissao; criadoEm: string }
+  total: number
+  concluidas: number
+  escaladas: number
+  porEstado: Record<string, number>
+  camposFatos: string[]
+  linhas: RelatorioLinha[]
+}
+
 export interface TenantResumo {
   id: string
   nome: string

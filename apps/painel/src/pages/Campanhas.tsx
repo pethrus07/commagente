@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Megaphone, Plus, Send, UserPlus, X } from 'lucide-react'
+import { BarChart3, Download, FileText, Megaphone, Plus, Send, Sparkles, UserPlus, X } from 'lucide-react'
 import { SeletorContatos } from '../components/SeletorContatos'
 import { api } from '../lib/api'
 import { TIPO_INFO, TIPOS_MISSAO, descreverDisparo } from '../lib/estados'
 import { toast } from '../lib/toast'
-import type { CampanhaResumo, Numero } from '../lib/types'
+import type { CampanhaResumo, Numero, RelatorioCampanha } from '../lib/types'
 import { Button, Card, EmptyState, Spinner, cn, tempoRelativo } from '../lib/ui'
 
 const campo =
@@ -164,10 +164,139 @@ function AddContatosModal({ campanha, onFechar }: { campanha: CampanhaResumo; on
   )
 }
 
+const rotularEstado = (e: string) => e.replace(/_/g, ' ')
+const valorFato = (v: unknown) =>
+  v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v)
+
+function RelatorioModal({ campanha, onFechar }: { campanha: CampanhaResumo; onFechar: () => void }) {
+  const [rel, setRel] = useState<RelatorioCampanha | null>(null)
+  const [sintese, setSintese] = useState<string | null>(null)
+  const [sintetizando, setSintetizando] = useState(false)
+  const [erro, setErro] = useState<string | null>(null)
+
+  useEffect(() => {
+    api.campanhas
+      .relatorio(campanha.id)
+      .then(setRel)
+      .catch((e) => setErro((e as Error).message))
+  }, [campanha.id])
+
+  const consolidar = async () => {
+    setSintetizando(true)
+    try {
+      const { sintese } = await api.campanhas.sintetizar(campanha.id)
+      setSintese(sintese)
+    } catch (e) {
+      toast((e as Error).message, 'erro')
+    } finally {
+      setSintetizando(false)
+    }
+  }
+
+  const exportar = async () => {
+    try {
+      const csv = await api.campanhas.exportarCsv(campanha.id)
+      const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `relatorio-${campanha.nome.replace(/[^\w.-]+/g, '_')}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (e) {
+      toast((e as Error).message, 'erro')
+    }
+  }
+
+  const taxa = rel && rel.total > 0 ? Math.round((rel.concluidas / rel.total) * 100) : 0
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 backdrop-blur-sm">
+      <Card className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden p-0">
+        <div className="flex items-start justify-between border-b border-line p-5">
+          <div className="min-w-0">
+            <h3 className="flex items-center gap-2 font-semibold text-content">
+              <FileText className="h-5 w-5 text-indigo-300" /> Relatório · {campanha.nome}
+            </h3>
+            <p className="mt-0.5 truncate text-xs text-muted">{campanha.objetivo}</p>
+          </div>
+          <button onClick={onFechar} className="text-muted hover:text-content"><X className="h-5 w-5" /></button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-5">
+          {erro ? (
+            <p className="text-sm text-rose-300">{erro}</p>
+          ) : !rel ? (
+            <div className="grid place-items-center py-16"><Spinner className="h-6 w-6" /></div>
+          ) : (
+            <div className="space-y-5">
+              {/* placar */}
+              <div className="flex flex-wrap gap-3 text-sm">
+                <span className="rounded-lg bg-surface2 px-3 py-1.5 text-content"><b className="tabular-nums">{rel.total}</b> <span className="text-muted">conversas</span></span>
+                <span className="rounded-lg bg-emerald-500/10 px-3 py-1.5 text-emerald-300"><b className="tabular-nums">{rel.concluidas}</b> cumpridas</span>
+                {rel.escaladas > 0 && <span className="rounded-lg bg-amber-500/10 px-3 py-1.5 text-amber-300"><b className="tabular-nums">{rel.escaladas}</b> escaladas</span>}
+                <span className="rounded-lg bg-surface2 px-3 py-1.5 text-muted tabular-nums">{taxa}% conclusão</span>
+              </div>
+
+              {/* ações */}
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={consolidar} loading={sintetizando}><Sparkles className="h-4 w-4" /> Consolidar com IA</Button>
+                <Button variant="ghost" onClick={exportar}><Download className="h-4 w-4" /> Exportar CSV</Button>
+              </div>
+
+              {/* síntese da IA */}
+              {sintese && (
+                <div className="rounded-xl border border-indigo-500/30 bg-indigo-500/5 p-4">
+                  <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-indigo-300"><Sparkles className="h-3.5 w-3.5" /> Relatório consolidado</p>
+                  <div className="whitespace-pre-wrap text-sm leading-relaxed text-content">{sintese}</div>
+                </div>
+              )}
+
+              {/* tabela de coleta */}
+              {rel.linhas.length === 0 ? (
+                <EmptyState icon={<BarChart3 className="h-6 w-6" />} titulo="Sem conversas ainda" texto="Dispare a campanha — o relatório se preenche conforme as conversas rolam." />
+              ) : (
+                <div className="overflow-x-auto rounded-xl border border-line">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-surface2 text-xs text-muted">
+                      <tr>
+                        <th className="whitespace-nowrap px-3 py-2 font-medium">Contato</th>
+                        <th className="whitespace-nowrap px-3 py-2 font-medium">Estado</th>
+                        <th className="whitespace-nowrap px-3 py-2 font-medium">Desfecho</th>
+                        <th className="whitespace-nowrap px-3 py-2 font-medium">Resumo</th>
+                        {rel.camposFatos.map((k) => (
+                          <th key={k} className="whitespace-nowrap px-3 py-2 font-medium">{k}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-line">
+                      {rel.linhas.map((l) => (
+                        <tr key={l.missaoId} className="align-top">
+                          <td className="whitespace-nowrap px-3 py-2 text-content">{l.contato}</td>
+                          <td className="whitespace-nowrap px-3 py-2 text-muted">{rotularEstado(l.estado)}</td>
+                          <td className="px-3 py-2 text-content">{l.resultado ?? '—'}</td>
+                          <td className="max-w-xs px-3 py-2 text-muted">{l.resumo ?? '—'}</td>
+                          {rel.camposFatos.map((k) => (
+                            <td key={k} className="px-3 py-2 text-content">{valorFato(l.fatos[k])}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </Card>
+    </div>
+  )
+}
+
 export function Campanhas() {
   const [campanhas, setCampanhas] = useState<CampanhaResumo[] | null>(null)
   const [modal, setModal] = useState(false)
   const [add, setAdd] = useState<CampanhaResumo | null>(null)
+  const [relatorio, setRelatorio] = useState<CampanhaResumo | null>(null)
 
   const [disparando, setDisparando] = useState<string | null>(null)
 
@@ -226,7 +355,10 @@ export function Campanhas() {
                     <Button onClick={() => disparar(c)} loading={disparando === c.id} className="!py-1 !text-xs"><Send className="h-3.5 w-3.5" /> Disparar</Button>
                   </div>
                 )}
-                <Button variant="ghost" className="mt-3 w-full" onClick={() => setAdd(c)}><UserPlus className="h-4 w-4" /> Adicionar contatos</Button>
+                <div className="mt-3 flex gap-2">
+                  <Button variant="ghost" className="flex-1" onClick={() => setRelatorio(c)}><FileText className="h-4 w-4" /> Relatório</Button>
+                  <Button variant="ghost" className="flex-1" onClick={() => setAdd(c)}><UserPlus className="h-4 w-4" /> Contatos</Button>
+                </div>
               </Card>
             )
           })}
@@ -235,6 +367,7 @@ export function Campanhas() {
 
       {modal && <NovaCampanhaModal onFechar={(criou) => { setModal(false); if (criou) carregar() }} />}
       {add && <AddContatosModal campanha={add} onFechar={(a) => { setAdd(null); if (a) carregar() }} />}
+      {relatorio && <RelatorioModal campanha={relatorio} onFechar={() => setRelatorio(null)} />}
     </div>
   )
 }

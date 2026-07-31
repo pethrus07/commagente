@@ -166,6 +166,29 @@ export async function obterRelatorioCampanha(id: string) {
   }
 }
 
+// Exporta o relatório da campanha como CSV (linhas = contatos, colunas = campos coletados).
+export async function relatorioCampanhaCsv(id: string): Promise<{ nome: string; csv: string }> {
+  const rel = await obterRelatorioCampanha(id)
+  const cols = ['contato', 'telefone', 'estado', 'desfecho', 'resumo', ...rel.camposFatos]
+  const esc = (v: unknown) => {
+    const s = v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v)
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+  }
+  const linhas = rel.linhas.map((l) =>
+    [
+      l.contato,
+      l.telefone,
+      l.estado,
+      l.resultado ?? '',
+      l.resumo ?? '',
+      ...rel.camposFatos.map((k) => l.fatos[k]),
+    ]
+      .map(esc)
+      .join(','),
+  )
+  return { nome: rel.campanha.nome, csv: [cols.join(','), ...linhas].join('\n') }
+}
+
 // Consolida o relatório com IA: um resumo gerencial narrativo do que foi coletado.
 // Sob demanda (custa tokens) — o painel chama num botão, não ao abrir o relatório.
 export async function sintetizarRelatorioCampanha(id: string) {
