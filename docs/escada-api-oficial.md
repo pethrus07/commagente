@@ -117,3 +117,16 @@ Adapter pronto atrás da porta (default segue Evolution; ativa com `WHATSAPP_PRO
 5. **Webhook:** WhatsApp > Configuration → Callback URL = `https://<dominio>/api/webhook/<segredo>` + Verify Token = o `CLOUD_API_VERIFY_TOKEN`; assinar o campo **messages**. **Exige HTTPS** (ver pendência de HTTPS).
 6. **`.env`** do número oficial: `WHATSAPP_PROVIDER=cloud` + os `CLOUD_API_*`. Convenção do normalizador: `NumeroWhatsapp.instanciaEvolution` desse número = o **phone_number_id**.
 7. **Templates** (opener/cobrança fora da janela): criar + aprovar no Business Manager (degrau 1+).
+
+## ATUALIZAÇÃO 2026-07-31 — reframe da estratégia (pós-pesquisa de mercado)
+
+Uma pesquisa de mercado (jul/2026) mudou dois pontos da abordagem:
+
+- **✅ HTTPS resolvido.** A VPS já tem Caddy com TLS automático: `https://<ip-do-servidor>.sslip.io` (cert Let's Encrypt válido; o HTTP do IP cru segue funcionando). O webhook da Meta pode apontar pra `https://<ip-do-servidor>.sslip.io/api/webhook/<segredo>` **hoje** — o gargalo de HTTPS **saiu**. (Trocar pelo domínio real depois = 1 linha no Caddyfile.)
+- **🔑 A própria Evolution já fala a Cloud API oficial** pelos MESMOS endpoints REST (modo multi-provider `baileys`/`cloudapi`). Então há **DOIS caminhos** pro oficial:
+  - **(A) Nosso adapter próprio** (`cloud-api.client.ts`, já construído) — controle total, fala direto o Graph API da Meta.
+  - **(B) Modo `cloudapi` da Evolution** — trocar o provider da instância; nosso código quase não muda. **Menos esforço pra pilotar.**
+  - **Recomendação:** pilotar com **(B)** (rápido, reusa o que já roda) e manter **(A)** como opção de controle fino. Reavaliar depois de 1 tenant no ar.
+- **Estratégia de fases (da pesquisa):** mover primeiro a camada **REATIVA (suporte)** pro oficial — dentro da janela de 24h é **grátis** e **zero risco de ban**; é onde o oficial ganha limpo e onde o "aguardando" mais dói. Outreach proativo vira **templates de utility** (barato/conforme); não-oficial fica como **fallback tático**. Motivo extra: as regressões de 2026 (passkey "Shortcake", erro 428) deixaram o **pareamento de número NOVO instável em TODAS as libs não-oficiais** — arriscado pra onboarding de tenant.
+
+**Bloqueio remanescente = SÓ credenciais Meta** (Business + número dedicado + token permanente do System User) — ação do parceiro. Todo o resto (HTTPS, adapter, normalizador, config, webhook verify) já está pronto.
