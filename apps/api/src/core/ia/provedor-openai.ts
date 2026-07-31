@@ -137,4 +137,33 @@ export const provedorOpenai: ProvedorIA = {
     )
     return { texto: raw.trim(), uso }
   },
+
+  async sintetizar(dados): Promise<{ texto: string; uso?: UsoIA }> {
+    // amostra as conversas (cap pra não estourar o contexto em campanhas grandes)
+    const amostra = dados.linhas
+      .slice(0, 120)
+      .map((l) => {
+        const p = [`- ${l.contato} [${l.estado}]`]
+        if (l.resultado) p.push(`desfecho: ${l.resultado}`)
+        if (l.resumo) p.push(`resumo: ${l.resumo}`)
+        if (l.fatos && Object.keys(l.fatos).length) p.push(`dados: ${JSON.stringify(l.fatos)}`)
+        return p.join(' · ')
+      })
+      .join('\n')
+    const { conteudo, uso } = await chat(
+      [
+        {
+          role: 'system',
+          content:
+            'Você é um analista. A partir das conversas de uma campanha de WhatsApp (cada linha = um contato), escreva um RELATÓRIO GERENCIAL curto e direto em português-BR, em markdown com bullets: (1) **Visão geral** — quantos responderam/converteram/escalaram; (2) **Principais achados** — padrões e informações recorrentes coletadas; (3) **Pontos de atenção e próximos passos**. Seja concreto e cite números. NÃO invente nada que não esteja nas conversas; se um dado não aparece, diga que não foi coletado.',
+        },
+        {
+          role: 'user',
+          content: `Objetivo da campanha: ${dados.objetivo}\nTipo: ${dados.tipo}\nTotal de contatos: ${dados.total}\n\nConversas:\n${amostra || '(nenhuma conversa com conteúdo ainda)'}`,
+        },
+      ],
+      { temperature: 0.4 },
+    )
+    return { texto: conteudo.trim(), uso }
+  },
 }

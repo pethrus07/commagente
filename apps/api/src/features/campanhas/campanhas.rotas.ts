@@ -8,6 +8,8 @@ import {
   iniciarCampanha,
   listarCampanhas,
   obterCampanha,
+  obterRelatorioCampanha,
+  sintetizarRelatorioCampanha,
 } from './campanhas.caso-uso'
 
 const tipoMissao = z.enum(['vender', 'qualificar', 'orcar', 'cobrar', 'suporte', 'outro'])
@@ -52,6 +54,18 @@ export async function campanhasRotas(app: FastifyInstance) {
   app.get('/campanhas/:id', async (req) => {
     const { id } = paramsId.parse(req.params)
     return obterCampanha(id)
+  })
+
+  // RELATÓRIO consolidado da campanha (conteúdo coletado por contato + placar por estado)
+  app.get('/campanhas/:id/relatorio', async (req) => {
+    const { id } = paramsId.parse(req.params)
+    return obterRelatorioCampanha(id)
+  })
+
+  // CONSOLIDAR com IA: relatório gerencial narrativo (sob demanda — custa tokens)
+  app.post('/campanhas/:id/relatorio/sintetizar', async (req) => {
+    const { id } = paramsId.parse(req.params)
+    return sintetizarRelatorioCampanha(id)
   })
 
   // adiciona mais contatos a uma campanha em andamento (contatos avulsos e/ou tag)

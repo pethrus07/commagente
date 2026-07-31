@@ -4,6 +4,7 @@ import type { Prisma } from '@prisma/client'
 import { conferirDono, tenantAtual } from '../../core/contexto'
 import { db } from '../../core/db'
 import { ErroHttp } from '../../core/erros'
+import { ia } from '../../core/ia'
 import { criarMissaoEmLote, iniciarMissoesConfiguradas } from '../missoes/missoes.caso-uso'
 
 type DefCampanha = {
@@ -110,6 +111,78 @@ export async function obterCampanha(id: string) {
   if (!campanha) throw new ErroHttp(404, 'Campanha não encontrada')
   await conferirDono(campanha.tenantId)
   return campanha
+}
+
+/**
+ * Relatório consolidado da campanha: reúne o CONTEÚDO coletado em cada conversa
+ * (fatos + resumo + desfecho + estado, por contato) num formato tabulável — a matéria-prima
+ * que já era salva por missão mas ninguém via junta. A síntese por IA é um passo à parte
+ * (sob demanda) pra não custar tokens toda vez que se abre o relatório.
+ */
+export async function obterRelatorioCampanha(id: string) {
+  const campanha = await db.campanha.findUnique({
+    where: { id },
+    include: {
+      missoes: {
+        orderBy: { criadoEm: 'desc' },
+        include: { contato: { select: { nome: true, telefone: true } } },
+      },
+    },
+  })
+  if (!campanha) throw new ErroHttp(404, 'Campanha não encontrada')
+  await conferirDono(campanha.tenantId)
+
+  const linhas = campanha.missoes.map((m) => ({
+    missaoId: m.id,
+    contato: m.contato?.nome ?? m.contato?.telefone ?? '—',
+    telefone: m.contato?.telefone ?? '',
+    estado: m.estado,
+    resultado: m.resultado,
+    resumo: m.resumo,
+    fatos: (m.fatos ?? {}) as Record<string, unknown>,
+  }))
+
+  // contadores por estado (o placar detalhado)
+  const porEstado: Record<string, number> = {}
+  for (const m of campanha.missoes) porEstado[m.estado] = (porEstado[m.estado] ?? 0) + 1
+
+  // união das chaves de fatos → viram as COLUNAS da tabela de coleta
+  const camposFatos = Array.from(new Set(linhas.flatMap((l) => Object.keys(l.fatos)))).sort()
+
+  return {
+    campanha: {
+      id: campanha.id,
+      nome: campanha.nome,
+      objetivo: campanha.objetivo,
+      tipo: campanha.tipo,
+      criadoEm: campanha.criadoEm,
+    },
+    total: campanha.missoes.length,
+    concluidas: porEstado['concluida'] ?? 0,
+    escaladas: porEstado['escalada'] ?? 0,
+    porEstado,
+    camposFatos,
+    linhas,
+  }
+}
+
+// Consolida o relatório com IA: um resumo gerencial narrativo do que foi coletado.
+// Sob demanda (custa tokens) — o painel chama num botão, não ao abrir o relatório.
+export async function sintetizarRelatorioCampanha(id: string) {
+  const rel = await obterRelatorioCampanha(id) // já confere dono (404 cross-tenant)
+  const { texto, uso } = await ia.sintetizar({
+    objetivo: rel.campanha.objetivo,
+    tipo: rel.campanha.tipo,
+    total: rel.total,
+    linhas: rel.linhas.map((l) => ({
+      contato: l.contato,
+      estado: l.estado,
+      resultado: l.resultado,
+      resumo: l.resumo,
+      fatos: l.fatos,
+    })),
+  })
+  return { sintese: texto, uso }
 }
 
 // adiciona mais contatos a uma campanha em andamento (mesma definição → novas missões)

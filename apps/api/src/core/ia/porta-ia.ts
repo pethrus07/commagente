@@ -31,6 +31,21 @@ export interface UsoIA {
   saida: number
 }
 
+/** Dados agregados de uma campanha, pra IA consolidar num relatório gerencial. */
+export interface DadosSintese {
+  objetivo: string
+  tipo: string
+  total: number
+  /** uma linha por contato/conversa da campanha */
+  linhas: {
+    contato: string
+    estado: string
+    resultado?: string | null
+    resumo?: string | null
+    fatos: Record<string, unknown>
+  }[]
+}
+
 // Contrato de SAÍDA (structured output) — o harness valida contra isto.
 export const SaidaIASchema = z.object({
   resposta: z.string().min(1),
@@ -52,4 +67,6 @@ export interface ProvedorIA {
   gerar(ctx: ContextoIA): Promise<{ saida: SaidaIA; uso?: UsoIA }>
   /** condensa a conversa num resumo rolante (memória de longo prazo). */
   resumir(ctx: ContextoIA): Promise<{ texto: string; uso?: UsoIA }>
+  /** consolida os dados coletados numa campanha num relatório gerencial narrativo. */
+  sintetizar(dados: DadosSintese): Promise<{ texto: string; uso?: UsoIA }>
 }

@@ -58,4 +58,16 @@ export const provedorDuble: ProvedorIA = {
       texto: `Objetivo: ${ctx.objetivo}. Trocas recentes: ${ins} do lead / ${outs} nossas. Última do lead: "${ultimaIn}". Fatos: ${fatos}.`,
     }
   },
+
+  async sintetizar(dados): Promise<{ texto: string }> {
+    const porEstado: Record<string, number> = {}
+    for (const l of dados.linhas) porEstado[l.estado] = (porEstado[l.estado] ?? 0) + 1
+    const linhasEstado = Object.entries(porEstado)
+      .map(([e, n]) => `- ${e}: ${n}`)
+      .join('\n')
+    const comDados = dados.linhas.filter((l) => l.fatos && Object.keys(l.fatos).length).length
+    return {
+      texto: `## Relatório (dublê) — ${dados.objetivo}\n\n**Total de contatos:** ${dados.total}\n**Com dados coletados:** ${comDados}\n\n**Por estado:**\n${linhasEstado || '- (nenhum)'}\n\n_(Ative IA_PROVIDER=openai para a síntese narrativa real.)_`,
+    }
+  },
 }
