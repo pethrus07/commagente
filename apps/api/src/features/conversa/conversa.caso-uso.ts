@@ -70,6 +70,13 @@ function registrarUso(missaoId: string, uso?: UsoIA) {
     .catch((err) => console.error('[custo] incremento de tokens falhou:', err))
 }
 
+// Anti-rajada do aviso de escalonamento: numa queda da OpenAI, TODAS as missões ativas
+// escalam de uma vez → seria uma rajada de self-sends direto no chip (fora da fila anti-ban).
+// Este throttle por instância coalesce a rajada (1 aviso / janela); o operador ainda vê tudo
+// no inbox de Escalados (fonte da verdade). [P2-4] Ideal futuro: item de fila com destino próprio.
+const ultimoAvisoPorInstancia = new Map<string, number>()
+const JANELA_AVISO_MS = 20_000
+
 // Avisa o operador no WhatsApp quando uma conversa escala (reusa o self-send validado:
 // o número entrega mensagem pra ele mesmo). Best-effort — NUNCA derruba o turno.
 // Destino = numeroAviso configurado, senão o próprio número (self).
@@ -91,6 +98,10 @@ async function avisarEscalonamento(
   if (!n?.avisarEscalonamento) return
   const destino = (n.numeroAviso || n.telefone || '').replace(/\D/g, '')
   if (destino.length < 8) return
+  // anti-rajada: numa queda de IA em massa, não dispara N self-sends seguidos no mesmo chip
+  const agora = Date.now()
+  if (agora - (ultimoAvisoPorInstancia.get(n.instanciaEvolution) ?? 0) < JANELA_AVISO_MS) return
+  ultimoAvisoPorInstancia.set(n.instanciaEvolution, agora)
   const quem = missao.contato?.nome
     ? `${missao.contato.nome} (+${missao.contato.telefone})`
     : `+${missao.contato?.telefone ?? '?'}`

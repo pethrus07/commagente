@@ -169,6 +169,7 @@ model NumeroWhatsapp {
   campanhas    Campanha[]
   agendamentos Agendamento[]
 
+  @@unique([instanciaEvolution]) // webhook resolve o número pela instância → tem que ser único (anti-vazamento cross-tenant)
   @@index([tenantId])
   @@map("numeros_whatsapp")
 }
