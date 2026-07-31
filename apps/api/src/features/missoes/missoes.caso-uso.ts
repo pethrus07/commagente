@@ -289,6 +289,7 @@ export async function iniciarMissoesConfiguradas(ids: string[]) {
   // caches por número — evita N queries de saúde/cap num lote grande
   const emRisco = new Map<string, boolean>()
   const vagas = new Map<string, number>() // cap de conversas ativas restante no número
+  const paraAbrir: string[] = [] // missões que passaram nos guardas → gerar opener em background
 
   for (const id of ids) {
     try {
@@ -340,25 +341,37 @@ export async function iniciarMissoesConfiguradas(ids: string[]) {
         continue
       }
 
-      // inicia: move p/ na_fila e consome a vaga JÁ (antes do turno), pra o cap não furar.
-      // Se o turno falhar, reverte pra 'configurada' (não deixa missão órfã em na_fila
-      // sem opener) e devolve a vaga.
+      // inicia: move p/ na_fila e consome a vaga JÁ (antes do opener), pra o cap não furar.
+      // A GERAÇÃO do opener (IA, ~2-5s CADA) NÃO roda aqui — em lote grande estouraria o
+      // timeout do proxy no request. Vai pra background (abrirOpeners), fora do request.
       await missoesRepo.atualizarEstado(id, 'na_fila')
       vagas.set(missao.numeroId, (vagas.get(missao.numeroId) ?? 1) - 1)
-      try {
-        await processarTurno(id) // gera opener via IA + enfileira; worker envia
-      } catch (e) {
-        await missoesRepo.atualizarEstado(id, 'configurada').catch(() => {})
-        vagas.set(missao.numeroId, (vagas.get(missao.numeroId) ?? 0) + 1)
-        throw e // cai no catch externo → conta como 'erro'
-      }
+      paraAbrir.push(id)
       iniciadas++
     } catch (e) {
       console.error('[iniciar-lote] falhou a missão', id, e)
       pula('erro')
     }
   }
+  // Openers em BACKGROUND: não segura a resposta (o worker anti-ban já espaça os ENVIOS;
+  // a geração roda serial pra não martelar a OpenAI). O relatório abaixo já é confiável —
+  // 'iniciadas' = missões que passaram nos guardas e foram pra fila.
+  if (paraAbrir.length > 0) void abrirOpeners(paraAbrir)
   return { iniciadas, total: ids.length, puladas }
+}
+
+// Gera os openers das missões já em 'na_fila' — roda FORA do request (fire-and-forget).
+// Serial: uma chamada de IA por vez. Se um opener falha, reverte a missão pra 'configurada'
+// (não deixa órfã em na_fila sem opener → pode ser re-disparada depois).
+async function abrirOpeners(ids: string[]) {
+  for (const id of ids) {
+    try {
+      await processarTurno(id) // gera opener via IA + enfileira; worker envia no ritmo anti-ban
+    } catch (e) {
+      console.error('[iniciar-lote] opener falhou, revertendo p/ configurada', id, e)
+      await missoesRepo.atualizarEstado(id, 'configurada').catch(() => {})
+    }
+  }
 }
 
 export async function mudarEstado(id: string, novoEstado: EstadoMissao) {
