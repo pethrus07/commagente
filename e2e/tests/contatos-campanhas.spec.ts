@@ -40,5 +40,10 @@ test('contatos + campanha com selecionar-todos', async ({ page, erros }) => {
   await expect(page.getByText(/Campanha criada/)).toBeVisible()
   // .first(): campanhas QA podem se acumular no DB de dev entre runs (nome não é único)
   await expect(page.getByText('QA Campanha E2E').first()).toBeVisible()
+
+  // abre o RELATÓRIO da campanha e confere que consolida (placar + tabela por contato)
+  await page.getByRole('button', { name: 'Relatório' }).first().click()
+  await expect(page.getByRole('heading', { name: /Relatório ·/ })).toBeVisible()
+  await expect(page.getByText('conversas').first()).toBeVisible()
   expect(erros, erros.join('\n')).toEqual([])
 })
