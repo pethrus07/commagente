@@ -47,6 +47,7 @@ export interface Agendamento {
 export interface Numero {
   id: string
   telefone: string
+  apelido: string | null
   instanciaEvolution: string
   statusConexao: StatusConexao
   aquecimentoEstagio: number

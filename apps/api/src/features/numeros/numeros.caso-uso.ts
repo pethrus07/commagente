@@ -12,10 +12,10 @@ import { numerosRepo } from './numeros.repo'
 // injeta a porta (aqui, o adapter Evolution)
 const wa: PortaWhatsApp = whatsapp
 
-export async function cadastrarNumero(telefone: string, instancia?: string) {
+export async function cadastrarNumero(telefone: string, instancia?: string, apelido?: string | null) {
   const tenantId = await tenantAtual()
   const nomeInstancia = instancia ?? `zap-${telefone}`
-  return numerosRepo.criar(tenantId, telefone, nomeInstancia)
+  return numerosRepo.criar(tenantId, telefone, nomeInstancia, apelido?.trim() || null)
 }
 
 export async function listarNumeros() {
@@ -37,6 +37,7 @@ const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/
 export async function atualizarConfigNumero(
   id: string,
   patch: {
+    apelido?: string | null
     janelaInicio?: string
     janelaFim?: string
     budgetDiario?: number
@@ -55,6 +56,7 @@ export async function atualizarConfigNumero(
   if (!numero) throw new ErroHttp(404, 'Número não encontrado')
   await conferirDono(numero.tenantId)
 
+  if (patch.apelido !== undefined) patch.apelido = patch.apelido?.trim() || null
   if (patch.janelaInicio && !HHMM.test(patch.janelaInicio))
     throw new ErroHttp(400, 'janelaInicio inválida (use HH:mm)')
   if (patch.janelaFim && !HHMM.test(patch.janelaFim))

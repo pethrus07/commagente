@@ -89,10 +89,10 @@ export const api = {
 
   numeros: {
     listar: () => req<Numero[]>('/numeros'),
-    cadastrar: (telefone: string) =>
+    cadastrar: (telefone: string, apelido?: string) =>
       req<Numero>('/numeros', {
         method: 'POST',
-        body: JSON.stringify({ telefone }),
+        body: JSON.stringify({ telefone, apelido: apelido?.trim() || undefined }),
       }),
     conectar: (id: string) =>
       req<QrResposta>(`/numeros/${id}/conectar`, {
@@ -104,6 +104,7 @@ export const api = {
     editar: (
       id: string,
       patch: {
+        apelido?: string | null
         janelaInicio?: string
         janelaFim?: string
         budgetDiario?: number

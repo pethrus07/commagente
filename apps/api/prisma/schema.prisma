@@ -140,6 +140,7 @@ model NumeroWhatsapp {
   id                 String        @id @default(uuid()) @db.Uuid
   tenantId           String        @map("tenant_id") @db.Uuid
   telefone           String
+  apelido            String? // nome/apelido do número (ex.: "Comercial", "João") — identificação amigável
   instanciaEvolution String        @map("instancia_evolution")
   statusConexao      StatusConexao @default(desconectado) @map("status_conexao")
   aquecimentoEstagio Int           @default(1) @map("aquecimento_estagio")

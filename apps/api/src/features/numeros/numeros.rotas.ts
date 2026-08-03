@@ -13,9 +13,11 @@ import {
 const corpoCadastro = z.object({
   telefone: z.string().min(8),
   instancia: z.string().min(1).optional(),
+  apelido: z.string().max(60).nullish(),
 })
 
 const corpoConfig = z.object({
+  apelido: z.string().max(60).nullish(),
   janelaInicio: z.string().optional(),
   janelaFim: z.string().optional(),
   budgetDiario: z.number().int().optional(),
@@ -38,12 +40,13 @@ export async function numerosRotas(app: FastifyInstance) {
 
   // cadastra um número (chip) que depois será conectado
   app.post('/numeros', async (req, reply) => {
-    const { telefone, instancia } = corpoCadastro.parse(req.body)
-    const numero = await cadastrarNumero(telefone, instancia)
+    const { telefone, instancia, apelido } = corpoCadastro.parse(req.body)
+    const numero = await cadastrarNumero(telefone, instancia, apelido)
     reply.code(201)
     return {
       id: numero.id,
       telefone: numero.telefone,
+      apelido: numero.apelido,
       instancia: numero.instanciaEvolution,
     }
   })
