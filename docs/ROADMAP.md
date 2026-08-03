@@ -308,6 +308,35 @@ Custo hoje é baixíssimo (~R$0,06 numa conversa longa de 27 turnos), mas dá pr
 
 **Ponte pra hoje (sem construir):** enquanto a ferramenta não existe, o monitoramento ao vivo do ProAuto é feito **direto no banco** (tail de `eventos`/`mensagens` + cálculo de tempo de resposta via SSH), disparado no instante em que o chip conecta.
 
+### 8.11 🧬 Visão de produto do parceiro (11 itens) + avaliação + princípio de INTERCALAR `F1/F2`
+
+> Fonte: documento **"Melhorias e recursos sistema"** do parceiro (03/08/2026), escrito **após uso real** — visão de produto densa e coerente. **Tese central:** tudo gira em torno de **"DNA"** = base de conhecimento **hierárquica e categorizada** (Principal → Campanha → Missão → Contato) com controle **Herdar/Combinar/Substituir** por categoria. **Não é pivô** — formaliza/aprofunda o que já temos (persona + Conhecimento/RAG + memória do contato + contexto em camadas). Naming dele: "ComAgente" (é **Commagente**).
+
+**Os 11 itens × estado atual:**
+
+| # | Item | Estado | Onde encaixa |
+|---|---|---|---|
+| 1 | **Tags Inteligentes** (tag com *descrição que vira contexto pra IA*) | 🟡 parcial | §8.6 (tags existem); falta descrição-como-conhecimento |
+| 2 | **Apelido dos números** (nome por chip em todo lugar) | 🔴 novo (simples) | `NumeroWhatsapp.apelido` + UI |
+| 3 | **Recorrências completas** (diário/a-cada-X/semanal/anual/dias-úteis…) | 🟡 base pronta | expandir `Agendamento` (hoje só uma-vez/mensal — dor exata do parceiro) |
+| 4 | **DNA** (renomear "Voz da Marca" + 12 categorias c/ arquivos) | 🟡 parcial | persona+Conhecimento+RAG+DOC existem; falta reorganizar/renomear |
+| 5 | **DNA do Contato** (Perfil/Comunicação/Histórico/Observações) | 🟡 parcial | memória do contato (MEM-1) existe; falta estruturar/editar |
+| 6 | **Relatórios Inteligentes** (Analítico + Executivo/IA + chat da campanha) | 🟢 **núcleo FEITO** (§8.9) | falta o **chat da campanha** + indicadores ricos |
+| 7 | **Central de Inteligência** (chat global sobre TODA a base) | 🔴 novo, grande | épico próprio; relaciona a §8.10 |
+| 8 | **Tutorial Inteligente** (mascote guia a UI) | 🔴 novo (front-heavy) | adoção/suporte |
+| 9 | **DNA Hierárquico** (Herdar/Combinar/Substituir, 4 níveis) | 🔴 novo/arquitetural | **coração da visão**; depende do #4 |
+| 10 | **Assistente Virtual** (DNA próprio + avatar + inbox + modo exec.) | 🟡 parcial | Suporte Reativo (IMP-2) é a base |
+| 11 | **Arquitetura Multiagente** | 🟡 parcial/conceitual | vários "agentes" já são features; ver caution abaixo |
+
+**⚠️ AVALIAÇÃO CRÍTICA (os contras a gerenciar — não ignorar):**
+1. **Config-rica × usuário-simples.** DNA = 4 níveis × 12 categorias × 3 modos = superfície enorme. Cliente de PME **não preenche formulário gigante** → **desenhar DNA defaults-first** (preenche o Principal, o resto herda; só mexe no que quer). Sem isso, colapsa na própria complexidade.
+2. **"Mais contexto ≠ mais inteligente" (verdade de LLM).** Empilhar Principal+Campanha+Missão+Contato+Tags+histórico em toda mensagem = **mais caro, lento e PIOR** (diluição / lost-in-the-middle). Exige **orçamento de contexto + RAG** (puxar só o relevante), não "jogar tudo dentro".
+3. **A metade omitida = entrega/anti-ban/custo.** O doc é 100% cérebro; **não toca** no que decide a sobrevivência (o "aguardando", ban do chip, teto de custo). A IA mais genial não vale nada se a msg não chega. → ver §8.4 (entrega/observabilidade) + escada oficial + §8.5 (custo/comercial).
+4. **Multiagente (Item 11) = features, não framework.** Boa narrativa de venda; na prática construir as *funções* (relatório/aprendizado/assistente), não um framework de "agentes conversando" (muito já existe). Evitar arquitetura-pela-arquitetura.
+5. **Central de Inteligência (Item 7)** = o mais difícil/arriscado/menor-ROI-curto — **item tardio, escopo apertado** (começar com consultas estruturadas, não "pergunte qualquer coisa"). Sem priorização/dependências no doc; exemplos com viés industrial (mundo do parceiro).
+
+**🔁 PRINCÍPIO DE INTERCALAR (a regra de sequenciamento acordada):** pra cada bloco de **"cérebro"** entregue (relatório, DNA, assistente) entra um bloco de **"pneu"** (entrega/estabilidade/API oficial/teto de custo). Valor visível sempre + não construir na areia. Mensagem-alinhamento enviada ao parceiro 03/08. **Ordem de dependência real:** DNA (#4) → antes de tags-contexto (#1), DNA-contato (#5), hierarquia (#9), assistente (#10) e multiagente (#11); relatórios (#6) já tem núcleo; Central (#7) e Tutorial (#8) por último.
+
 ---
 
 > **Nota (2026-07-23):** as seções §1–§7 (mapa/matriz/fases F0–F3) são o **plano pré-construção** e ficaram **desatualizadas** — na prática F1/F2 estão quase inteiros e parte do F3 (multi-tenant) foi feita. O **status real por fatia está no [CLAUDE.md](../CLAUDE.md)**; o backlog vivo é esta §8. Ao ler as fases abaixo, tratar como histórico de intenção, não como estado atual.
