@@ -337,6 +337,35 @@ Custo hoje é baixíssimo (~R$0,06 numa conversa longa de 27 turnos), mas dá pr
 
 **🔁 PRINCÍPIO DE INTERCALAR (a regra de sequenciamento acordada):** pra cada bloco de **"cérebro"** entregue (relatório, DNA, assistente) entra um bloco de **"pneu"** (entrega/estabilidade/API oficial/teto de custo). Valor visível sempre + não construir na areia. Mensagem-alinhamento enviada ao parceiro 03/08. **Ordem de dependência real:** DNA (#4) → antes de tags-contexto (#1), DNA-contato (#5), hierarquia (#9), assistente (#10) e multiagente (#11); relatórios (#6) já tem núcleo; Central (#7) e Tutorial (#8) por último.
 
+### 8.12 🗺️ Plano de FASES intercaladas (cérebro × pneu) `execução`
+
+> Operacionaliza §8.11 + o princípio de intercalar. Cada fase entrega **um bloco de inteligência (parceiro) + um de confiabilidade ("pneu")** — valor visível sempre, sem construir na areia. Dependência-chave: **DNA base (#4) antes de #5/#9/#10**; #1 e #3 são independentes (quick wins). Trabalho na branch `feat/parceiro-melhorias` (backup: tag `backup-pre-parceiro-2026-08-03`).
+
+**Fase 0 — Base (JÁ ENTREGUE):** Relatórios inteligentes núcleo (#6, prod) · HTTPS Caddy+sslip (prod) · **Apelido dos números (#2, na branch)**.
+
+**Fase 1 — "Inteligência rápida + proteger o bolso":**
+- 🧠 **#1 Tags-como-contexto** (descrição da tag → prompt, SÓ as do contato)
+- 🧠 **#3 Recorrências completas** (diário/a-cada-X/semanal/anual/dias-úteis/data-fim/máx-execuções)
+- 🛞 **Teto de gasto OpenAI + alerta de custo por tenant** (§8.4/§8.5 — protege a key do parceiro) · merge+deploy do #2
+- ➡️ Entregável: tags inteligentes + agendamento completo no ar, custo sob controle.
+
+**Fase 2 — "A fundação (DNA) + começar o oficial":**
+- 🧠 **#4 DNA** (categorias + rename "Voz da Marca"→DNA) — **defaults-first + orçamento de contexto**
+- 🧠 **#5 DNA do Contato** (monta sobre o #4)
+- 🛞 **Piloto da API oficial no suporte reativo** (Evolution `cloudapi`) — mata o "aguardando" + zero ban; precisa creds Meta do parceiro (escada `docs/escada-api-oficial.md`)
+- ➡️ Entregável: DNA base funcionando + 1 tenant respondendo pelo oficial (reativo).
+
+**Fase 3 — "Personalização total + operar em escala":**
+- 🧠 **#9 DNA hierárquico** (Herdar/Combinar/Substituir) — o coração; depende do #4
+- 🧠 **#10 Assistente Virtual com DNA próprio** (base = suporte reativo)
+- 🛞 **Monitoração ao vivo (§8.10) + camada comercial/quotas por tenant (§8.5)** — revender com segurança
+- ➡️ Entregável: personalização por nível + assistente + observabilidade + pronto pra revenda.
+
+**Fase 4 — "Módulos avançados" (tardios, escopo apertado):**
+- 🧠 **#7 Central de Inteligência** (chat global — começar por consultas estruturadas, não "pergunte qualquer coisa")
+- 🧠 **#8 Tutorial/mascote** (adoção/suporte)
+- **#11 Multiagente = EMERGE das features** (narrativa de venda, não é fase de build)
+
 ---
 
 > **Nota (2026-07-23):** as seções §1–§7 (mapa/matriz/fases F0–F3) são o **plano pré-construção** e ficaram **desatualizadas** — na prática F1/F2 estão quase inteiros e parte do F3 (multi-tenant) foi feita. O **status real por fatia está no [CLAUDE.md](../CLAUDE.md)**; o backlog vivo é esta §8. Ao ler as fases abaixo, tratar como histórico de intenção, não como estado atual.
