@@ -38,7 +38,8 @@ export async function obterContato(id: string) {
     where: { id },
     include: { tags: { include: { tag: { select: { id: true, nome: true, cor: true } } } } },
   })
-  if (!c) throw new ErroHttp(404, 'Contato não encontrado')
+  // 'Recurso não encontrado' (igual ao conferirDono) p/ não virar oráculo de existência entre tenants
+  if (!c) throw new ErroHttp(404, 'Recurso não encontrado')
   await conferirDono(c.tenantId)
   return {
     id: c.id,
@@ -56,7 +57,7 @@ export async function obterContato(id: string) {
 // Anti-IDOR: só grava se o contato for do tenant da requisição. {} → não muda nada.
 export async function definirDnaContato(id: string, patch: unknown): Promise<DnaContato> {
   const atual = await db.contato.findUnique({ where: { id }, select: { tenantId: true, dna: true } })
-  if (!atual) throw new ErroHttp(404, 'Contato não encontrado')
+  if (!atual) throw new ErroHttp(404, 'Recurso não encontrado')
   await conferirDono(atual.tenantId)
   const mesclado = { ...lerDnaContato(atual.dna), ...dnaContatoSchema.partial().parse(patch ?? {}) }
   const limpo = lerDnaContato(mesclado) // descarta categorias que ficaram vazias

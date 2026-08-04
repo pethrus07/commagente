@@ -271,6 +271,7 @@ function PerfilContatoModal({ contatoId, nome, onFechar }: { contatoId: string; 
                     value={dna[c.chave] ?? ''}
                     onChange={(e) => setDna((d) => ({ ...(d ?? {}), [c.chave]: e.target.value }))}
                     rows={2}
+                    maxLength={4000}
                     placeholder={c.dica}
                     className={cn(campo, 'resize-none text-[13px]')}
                   />
