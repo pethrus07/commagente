@@ -21,7 +21,17 @@ export interface SaudeNumero {
   status: StatusSaude
 }
 
-export type RecorrenciaAgendamento = 'uma_vez' | 'mensal'
+export type RecorrenciaAgendamento =
+  | 'uma_vez'
+  | 'diario'
+  | 'dias_uteis'
+  | 'fim_de_semana'
+  | 'semanal'
+  | 'a_cada_dias'
+  | 'a_cada_semanas'
+  | 'mensal'
+  | 'a_cada_meses'
+  | 'anual'
 export type EntregaAgendamento = 'ia' | 'fixa'
 
 export interface Agendamento {
@@ -32,6 +42,13 @@ export interface Agendamento {
   recorrencia: RecorrenciaAgendamento
   diaDoMes: number | null
   dataUnica: string | null
+  intervalo: number | null
+  diasSemana: string | null
+  horario: string | null
+  dataInicio: string | null
+  dataFim: string | null
+  maxExecucoes: number | null
+  execucoes: number
   entrega: EntregaAgendamento
   mensagemFixa: string | null
   rotulo: string | null

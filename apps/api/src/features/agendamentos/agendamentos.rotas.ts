@@ -11,7 +11,18 @@ import {
   removerAgendamento,
 } from './agendamentos.caso-uso'
 
-const recorrencia = z.enum(['uma_vez', 'mensal'])
+const recorrencia = z.enum([
+  'uma_vez',
+  'diario',
+  'dias_uteis',
+  'fim_de_semana',
+  'semanal',
+  'a_cada_dias',
+  'a_cada_semanas',
+  'mensal',
+  'a_cada_meses',
+  'anual',
+])
 const entrega = z.enum(['ia', 'fixa'])
 
 const def = {
@@ -26,6 +37,12 @@ const def = {
   recorrencia,
   diaDoMes: z.number().int().min(1).max(31).optional(),
   dataUnica: z.string().optional(),
+  intervalo: z.number().int().min(1).max(365).optional(),
+  diasSemana: z.array(z.number().int().min(0).max(6)).optional(),
+  horario: z.string().optional(),
+  dataInicio: z.string().optional(),
+  dataFim: z.string().optional(),
+  maxExecucoes: z.number().int().min(1).optional(),
   entrega,
   mensagemFixa: z.string().optional(),
   rotulo: z.string().optional(),

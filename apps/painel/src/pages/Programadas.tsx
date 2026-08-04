@@ -39,9 +39,45 @@ function parseLinhas(txt: string): { telefone: string; nome?: string; dia?: numb
 
 const mesAtual = () => new Date().toISOString().slice(0, 7) // "YYYY-MM" (aproximado p/ badge)
 
+// recorrências (rótulo amigável) + quais campos cada uma usa. [parceiro Item 3]
+const RECORRENCIAS: { v: string; label: string }[] = [
+  { v: 'uma_vez', label: '📅 Uma vez' },
+  { v: 'diario', label: '☀️ Todo dia' },
+  { v: 'dias_uteis', label: '💼 Dias úteis (seg–sex)' },
+  { v: 'fim_de_semana', label: '🌴 Fim de semana' },
+  { v: 'semanal', label: '📆 Semanal (dias)' },
+  { v: 'a_cada_dias', label: '🔁 A cada X dias' },
+  { v: 'a_cada_semanas', label: '🔁 A cada X semanas' },
+  { v: 'mensal', label: '🗓️ Todo mês (dia)' },
+  { v: 'a_cada_meses', label: '🔁 A cada X meses' },
+  { v: 'anual', label: '🎂 Anual' },
+]
+const usaDiaMes = (r: string) => r === 'mensal' || r === 'a_cada_meses'
+const usaDataUnica = (r: string) => r === 'uma_vez' || r === 'anual'
+const usaDiasSemana = (r: string) => r === 'semanal' || r === 'a_cada_semanas'
+const usaIntervalo = (r: string) => r === 'a_cada_dias' || r === 'a_cada_semanas' || r === 'a_cada_meses'
+const unidadeIntervalo = (r: string) => (r === 'a_cada_dias' ? 'dias' : r === 'a_cada_semanas' ? 'semanas' : 'meses')
+const DIAS_SEMANA = [
+  { n: 1, l: 'Seg' }, { n: 2, l: 'Ter' }, { n: 3, l: 'Qua' }, { n: 4, l: 'Qui' },
+  { n: 5, l: 'Sex' }, { n: 6, l: 'Sáb' }, { n: 0, l: 'Dom' },
+]
+const NOMES_DIA = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb']
+const semanaLabel = (csv: string | null) =>
+  csv ? csv.split(',').map((s) => NOMES_DIA[Number(s.trim())] ?? '?').join(', ') : 'semanal'
+const dataBR = (s: string) => new Date(s).toLocaleDateString('pt-BR')
+
 function quandoLabel(a: Agendamento): string {
-  if (a.recorrencia === 'mensal') return `todo dia ${a.diaDoMes}`
-  if (a.dataUnica) return new Date(a.dataUnica).toLocaleDateString('pt-BR')
+  const r = a.recorrencia
+  if (r === 'mensal') return `todo dia ${a.diaDoMes}`
+  if (r === 'a_cada_meses') return `a cada ${a.intervalo} meses · dia ${a.diaDoMes}`
+  if (r === 'uma_vez') return a.dataUnica ? dataBR(a.dataUnica) : '—'
+  if (r === 'anual') return a.dataUnica ? `todo ano em ${dataBR(a.dataUnica).slice(0, 5)}` : 'anual'
+  if (r === 'diario') return 'todo dia'
+  if (r === 'dias_uteis') return 'dias úteis'
+  if (r === 'fim_de_semana') return 'fim de semana'
+  if (r === 'semanal') return semanaLabel(a.diasSemana)
+  if (r === 'a_cada_dias') return `a cada ${a.intervalo} dias`
+  if (r === 'a_cada_semanas') return `a cada ${a.intervalo} sem · ${semanaLabel(a.diasSemana)}`
   return '—'
 }
 
@@ -50,9 +86,15 @@ function NovoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
   const [salvando, setSalvando] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const [form, setForm] = useState({
-    recorrencia: 'mensal' as 'mensal' | 'uma_vez',
+    recorrencia: 'mensal' as string,
     diaPadrao: '',
     dataUnica: '',
+    intervalo: '1',
+    diasSemana: [] as number[],
+    horario: '',
+    dataInicio: '',
+    dataFim: '',
+    maxExecucoes: '',
     entrega: 'ia' as 'ia' | 'fixa',
     tipo: 'cobrar',
     objetivo: 'Lembrar o cliente do pagamento em aberto com cordialidade e oferecer o caminho pra regularizar.',
@@ -84,11 +126,15 @@ function NovoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
     if (!form.numeroId) return toast('Cadastre/conecte um número primeiro.', 'erro')
     const contatos = parseLinhas(form.contatos)
     if (contatos.length === 0) return toast('Informe ao menos um contato (telefone por linha).', 'erro')
-    if (form.recorrencia === 'mensal') {
+    const r = form.recorrencia
+    if (usaDiaMes(r)) {
       const semDia = contatos.filter((c) => c.dia === undefined)
       if (semDia.length > 0 && !form.diaPadrao) return toast('Defina o "dia do mês" (padrão ou por linha).', 'erro')
     }
-    if (form.recorrencia === 'uma_vez' && !form.dataUnica) return toast('Escolha a data do disparo.', 'erro')
+    if (usaDataUnica(r) && !form.dataUnica) return toast('Escolha a data.', 'erro')
+    if (usaDiasSemana(r) && form.diasSemana.length === 0) return toast('Escolha ao menos um dia da semana.', 'erro')
+    if (usaIntervalo(r) && (!form.intervalo || Number(form.intervalo) < 1)) return toast('Informe o intervalo (a cada X).', 'erro')
+    if (form.horario && !/^([01]\d|2[0-3]):[0-5]\d$/.test(form.horario)) return toast('Horário inválido (use HH:mm).', 'erro')
     if (form.entrega === 'fixa' && !form.mensagemFixa.trim()) return toast('Escreva a mensagem fixa.', 'erro')
     if (form.entrega === 'ia' && !form.objetivo.trim()) return toast('Descreva o objetivo.', 'erro')
     setSalvando(true)
@@ -100,9 +146,15 @@ function NovoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
         objetivo: form.objetivo.trim() || undefined,
         tom: form.tom.trim() || undefined,
         informacoes: form.informacoes.trim() || undefined,
-        recorrencia: form.recorrencia,
-        diaDoMes: form.recorrencia === 'mensal' && form.diaPadrao ? Number(form.diaPadrao) : undefined,
-        dataUnica: form.recorrencia === 'uma_vez' ? form.dataUnica : undefined,
+        recorrencia: r,
+        diaDoMes: usaDiaMes(r) && form.diaPadrao ? Number(form.diaPadrao) : undefined,
+        dataUnica: usaDataUnica(r) ? form.dataUnica : undefined,
+        intervalo: usaIntervalo(r) ? Number(form.intervalo) : undefined,
+        diasSemana: usaDiasSemana(r) ? form.diasSemana : undefined,
+        horario: form.horario.trim() || undefined,
+        dataInicio: form.dataInicio || undefined,
+        dataFim: form.dataFim || undefined,
+        maxExecucoes: form.maxExecucoes ? Number(form.maxExecucoes) : undefined,
         entrega: form.entrega,
         mensagemFixa: form.entrega === 'fixa' ? form.mensagemFixa.trim() : undefined,
         rotulo: form.rotulo.trim() || undefined,
@@ -127,23 +179,67 @@ function NovoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
         <div className="space-y-3">
           <div>
             <label className="mb-1 block text-xs text-muted">Recorrência</label>
-            <div className="flex gap-1.5">
-              {(['mensal', 'uma_vez'] as const).map((r) => (
-                <button key={r} onClick={() => setForm({ ...form, recorrencia: r })} className={cn('flex-1 rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 ring-inset transition', form.recorrencia === r ? 'bg-indigo-500/20 text-indigo-200 ring-indigo-500/40' : 'text-muted ring-line hover:text-content')}>
-                  {r === 'mensal' ? '🔁 Todo mês' : '📅 Uma vez'}
-                </button>
-              ))}
-            </div>
+            <select value={form.recorrencia} onChange={(e) => setForm({ ...form, recorrencia: e.target.value })} className={campo}>
+              {RECORRENCIAS.map((r) => (<option key={r.v} value={r.v} className="bg-slate-900">{r.label}</option>))}
+            </select>
           </div>
-          {form.recorrencia === 'mensal' ? (
+          {/* campos que só aparecem quando o tipo precisa */}
+          {usaIntervalo(form.recorrencia) && (
+            <div>
+              <label className="mb-1 block text-xs text-muted">A cada</label>
+              <div className="flex items-center gap-2">
+                <input type="number" min={1} value={form.intervalo} onChange={(e) => setForm({ ...form, intervalo: e.target.value })} className={cn(campo, 'w-24')} />
+                <span className="text-sm text-muted">{unidadeIntervalo(form.recorrencia)}</span>
+              </div>
+            </div>
+          )}
+          {usaDiasSemana(form.recorrencia) && (
+            <div>
+              <label className="mb-1 block text-xs text-muted">Dias da semana</label>
+              <div className="flex flex-wrap gap-1.5">
+                {DIAS_SEMANA.map((d) => {
+                  const on = form.diasSemana.includes(d.n)
+                  return (
+                    <button key={d.n} type="button" onClick={() => setForm({ ...form, diasSemana: on ? form.diasSemana.filter((x) => x !== d.n) : [...form.diasSemana, d.n] })} className={cn('rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 ring-inset transition', on ? 'bg-indigo-500/20 text-indigo-200 ring-indigo-500/40' : 'text-muted ring-line hover:text-content')}>
+                      {d.l}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+          {usaDiaMes(form.recorrencia) && (
             <div>
               <label className="mb-1 block text-xs text-muted">Dia do mês (padrão) <span className="text-subtle">— dá pra sobrescrever por linha</span></label>
               <input type="number" min={1} max={31} value={form.diaPadrao} onChange={(e) => setForm({ ...form, diaPadrao: e.target.value })} placeholder="Ex.: 27" className={campo} />
             </div>
-          ) : (
+          )}
+          {usaDataUnica(form.recorrencia) && (
             <div>
-              <label className="mb-1 block text-xs text-muted">Data do disparo</label>
+              <label className="mb-1 block text-xs text-muted">{form.recorrencia === 'anual' ? 'Data de referência (dia/mês)' : 'Data do disparo'}</label>
               <input type="date" value={form.dataUnica} onChange={(e) => setForm({ ...form, dataUnica: e.target.value })} className={campo} />
+            </div>
+          )}
+          {form.recorrencia !== 'uma_vez' && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-1 block text-xs text-muted">Horário (opcional)</label>
+                <input value={form.horario} onChange={(e) => setForm({ ...form, horario: e.target.value })} placeholder="Ex.: 09:00" className={campo} />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-muted">Parar após (opcional)</label>
+                <input type="number" min={1} value={form.maxExecucoes} onChange={(e) => setForm({ ...form, maxExecucoes: e.target.value })} placeholder="nº de vezes" className={campo} />
+              </div>
+              {usaIntervalo(form.recorrencia) && (
+                <div>
+                  <label className="mb-1 block text-xs text-muted">Início (opcional)</label>
+                  <input type="date" value={form.dataInicio} onChange={(e) => setForm({ ...form, dataInicio: e.target.value })} className={campo} />
+                </div>
+              )}
+              <div>
+                <label className="mb-1 block text-xs text-muted">Até (opcional)</label>
+                <input type="date" value={form.dataFim} onChange={(e) => setForm({ ...form, dataFim: e.target.value })} className={campo} />
+              </div>
             </div>
           )}
           <div>

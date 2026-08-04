@@ -184,9 +184,15 @@ export const api = {
       criterioConclusao?: string
       tom?: string
       informacoes?: string
-      recorrencia: 'uma_vez' | 'mensal'
+      recorrencia: string
       diaDoMes?: number
       dataUnica?: string
+      intervalo?: number
+      diasSemana?: number[]
+      horario?: string
+      dataInicio?: string
+      dataFim?: string
+      maxExecucoes?: number
       entrega: 'ia' | 'fixa'
       mensagemFixa?: string
       rotulo?: string
