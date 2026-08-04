@@ -396,6 +396,26 @@ Custo hoje é baixíssimo (~R$0,06 numa conversa longa de 27 turnos), mas dá pr
 
 **Próximo:** #9 (DNA hierárquico) une tenant + campanha + missão + contato num modelo de herança Herdar/Combinar/Substituir — o padrão de categorias e o orçamento de contexto já estão provados em dois níveis.
 
+### 8.14 🔗 Aprendizado por link (ingestão de site/loja) `backlog` — ideia do Pedro (04/08)
+
+> O cliente cola a **URL do site institucional e/ou da loja** no Conhecimento; o sistema **busca o conteúdo daquelas páginas, extrai o texto e usa como base** para as conversas. Extensão natural do import de documento que já existe (PDF/DOCX/TXT) — mesma esteira de chunk + embeddings + RAG, só que a fonte é uma URL.
+
+**Como encaixa no que já temos:** vira **Base de Conhecimento** (RAG por relevância), **não DNA** — o DNA é o resumo enxuto sempre-presente; o site é volumoso e variável, então entra como fonte recuperável por relevância (mesmo caminho do `Conhecimento`/`ConhecimentoChunk`). Fonte autorizada (o cliente declarou), sujeita ao mesmo guardrail.
+
+**Esboço técnico:**
+- **Fetch server-side** da URL (a partir do backend, não do browser) → HTML.
+- **Extração de texto** legível (tipo Readability/`@mozilla/readability` ou similar) — descartar menu/rodapé/scripts.
+- **Crawl raso opcional:** seguir links do mesmo domínio até um limite (ex.: páginas de produtos/serviços/sobre/FAQ), com teto de páginas — **orçamento também aqui** (não indexar o site inteiro).
+- **Chunk + embeddings** → grava como itens de Conhecimento com `origem: 'link'` e a URL de origem (rastreável, editável, removível).
+- **Reindexação periódica** (o site muda) — botão "reprocessar" + opcional agendado; guardar `hash`/`lastFetched` pra não reprocessar à toa.
+
+**Cuidados (pra não virar dor):**
+- **Respeitar `robots.txt`** e um User-Agent identificável; timeout + limite de tamanho por página; tratar SPA/JS-rendered (muitos sites de loja renderizam no cliente → talvez precise de um render headless, custo maior — começar por sites estáticos).
+- **Preço no site desatualizado** é armadilha clássica: o site pode ter preço velho e a IA passaria a afirmá-lo. Mitigar: marcar conteúdo de link como fonte com **menor prioridade que o DNA/Informações** e/ou sinalizar "confirme valores" pra dados numéricos vindos de link.
+- **LGPD/escopo:** só o domínio do próprio cliente; não sair rastreando a web.
+
+**Esforço:** médio. O grosso da esteira (chunk/embeddings/RAG/UI de Conhecimento) já existe; o novo é o fetch + extração + crawl raso + reprocessamento. Bom candidato a **quick win de alto valor** (reduz muito o atrito de "ensinar" a IA — cola o link e pronto).
+
 ---
 
 > **Nota (2026-07-23):** as seções §1–§7 (mapa/matriz/fases F0–F3) são o **plano pré-construção** e ficaram **desatualizadas** — na prática F1/F2 estão quase inteiros e parte do F3 (multi-tenant) foi feita. O **status real por fatia está no [CLAUDE.md](../CLAUDE.md)**; o backlog vivo é esta §8. Ao ler as fases abaixo, tratar como histórico de intenção, não como estado atual.
