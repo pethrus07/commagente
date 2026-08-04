@@ -212,7 +212,7 @@ Custo hoje é baixíssimo (~R$0,06 numa conversa longa de 27 turnos), mas dá pr
 ### 8.4 🚀 Deploy "always-on desassistido" (bloqueadores de produção) `F1`
 > Levantado na revisão 360° (2026-07-23). "Deploy" não é só subir o código — é **sobreviver em produção sem babá**. Além dos P0 de segurança já conhecidos (segredo no webhook, helmet/rate-limit/CORS, segredos fortes, rodar `backfill-rag.mts` 1×), faltam:
 - **Observabilidade/alerta** — alertar quando `statusConexao != conectado` (chip caiu), `classificarSaude = risco`, e um heartbeat do worker. Hoje uma queda é silenciosa até o parceiro perceber que parou. Falha #1 esperada em produção.
-- **Backup do Postgres** — hoje **ZERO backup**. `pg_dump` em cron + cópia off-site. Um VPS único com dados multi-tenant (contatos, conversas, consentimento LGPD) sem backup = perda total numa falha de disco. Bloqueador antes de dado real de cliente.
+- **Backup do Postgres** — ✅ **backup diário local FEITO** (28/07): `/root/backup-pg.sh` via cron `0 3 * * *` → `/root/backups/pg-YYYY-MM-DD.sql.gz` (confirmado rodando 04/08). ⚠️ **Falta a cópia off-site** — hoje mora no MESMO VPS; uma falha de disco perde banco + backups juntos. Pendente: espelhar os dumps pra fora (R2/S3/outro host).
 - **Teto de gasto da OpenAI** — a key é do parceiro, **única e compartilhada**. Setar limite hard + alerta na conta antes de rodar always-on (loop/abuso gasta sem freio).
 - **Proteger a Evolution API** (:8080) — sobe junto no compose; se exposta, é vetor direto pro WhatsApp. Só acessível na rede interna/localhost + key forte.
 
