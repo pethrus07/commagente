@@ -233,8 +233,10 @@ export const api = {
 
   tags: {
     listar: () => req<TagResumo[]>('/tags'),
-    criar: (data: { nome: string; cor?: string }) =>
+    criar: (data: { nome: string; cor?: string; descricao?: string | null }) =>
       req<Tag>('/tags', { method: 'POST', body: JSON.stringify(data) }),
+    editar: (id: string, patch: { nome?: string; cor?: string | null; descricao?: string | null }) =>
+      req<Tag>(`/tags/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
     remover: (id: string) => req(`/tags/${id}`, { method: 'DELETE' }),
     aplicarEmLote: (id: string, contatoIds: string[]) =>
       req<{ aplicados: number }>(`/tags/${id}/contatos`, { method: 'POST', body: JSON.stringify({ contatoIds }) }),

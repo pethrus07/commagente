@@ -5,6 +5,7 @@ import {
   aplicarTag,
   aplicarTagEmLote,
   criarTag,
+  editarTag,
   listarTags,
   removerTag,
   removerTagDoContato,
@@ -13,6 +14,12 @@ import {
 const corpoCriar = z.object({
   nome: z.string().min(1),
   cor: z.string().optional(),
+  descricao: z.string().max(2000).nullish(),
+})
+const corpoEditar = z.object({
+  nome: z.string().min(1).optional(),
+  cor: z.string().nullish(),
+  descricao: z.string().max(2000).nullish(),
 })
 const corpoLote = z.object({ contatoIds: z.array(z.string().uuid()).min(1) })
 
@@ -23,6 +30,12 @@ export async function tagsRotas(app: FastifyInstance) {
     const dados = corpoCriar.parse(req.body)
     reply.code(201)
     return criarTag(dados)
+  })
+
+  app.patch('/tags/:id', async (req) => {
+    const { id } = req.params as { id: string }
+    const patch = corpoEditar.parse(req.body)
+    return editarTag(id, patch)
   })
 
   app.delete('/tags/:id', async (req) => {

@@ -9,6 +9,7 @@ import {
   Moon,
   Smartphone,
   Sun,
+  Tag,
   Target,
   Users,
   Zap,
@@ -40,6 +41,7 @@ export type Page =
   | 'programadas'
   | 'escalados'
   | 'contatos'
+  | 'tags'
   | 'conhecimento'
   | 'tenants'
 
@@ -51,6 +53,7 @@ const ITENS: Item[] = [
   { id: 'programadas', label: 'Programadas', icon: CalendarClock },
   { id: 'escalados', label: 'Escalados', icon: LifeBuoy },
   { id: 'contatos', label: 'Contatos', icon: Users },
+  { id: 'tags', label: 'Tags', icon: Tag },
   { id: 'conhecimento', label: 'Conhecimento', icon: BookOpen },
   { id: 'numeros', label: 'Números', icon: Smartphone },
 ]

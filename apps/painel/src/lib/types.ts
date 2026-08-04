@@ -81,6 +81,7 @@ export interface Tag {
   id: string
   nome: string
   cor: string | null
+  descricao?: string | null
 }
 
 export interface TagResumo extends Tag {

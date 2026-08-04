@@ -16,6 +16,7 @@ import { MissaoDetalhe } from './pages/MissaoDetalhe'
 import { Missoes } from './pages/Missoes'
 import { Numeros } from './pages/Numeros'
 import { Programadas } from './pages/Programadas'
+import { Tags } from './pages/Tags'
 import { Tenants } from './pages/Tenants'
 
 type Rota = { page: Page } | { page: 'missao'; id: string }
@@ -27,6 +28,7 @@ const TITULOS: Record<Page, { t: string; s: string }> = {
   programadas: { t: 'Programadas', s: 'Missões que disparam sozinhas na data de cada cliente' },
   escalados: { t: 'Escalados', s: 'Conversas que a IA entregou pra você' },
   contatos: { t: 'Contatos', s: 'Leads e clientes (CRM)' },
+  tags: { t: 'Tags', s: 'Rótulos que viram conhecimento pra IA sobre o contato' },
   conhecimento: { t: 'Conhecimento', s: 'Memória coletiva — o que a IA aprende' },
   numeros: { t: 'Números', s: 'Chips conectados via Evolution' },
   tenants: { t: 'Tenants', s: 'Clientes da plataforma' },
@@ -110,6 +112,7 @@ export default function App() {
               {rota.page === 'dashboard' && <Dashboard />}
               {rota.page === 'numeros' && <Numeros />}
               {rota.page === 'contatos' && <Contatos />}
+              {rota.page === 'tags' && <Tags />}
               {rota.page === 'conhecimento' && <Conhecimento />}
               {rota.page === 'escalados' && <Escalados onAbrir={(id) => setRota({ page: 'missao', id })} />}
               {rota.page === 'missoes' && <Missoes onAbrir={(id) => setRota({ page: 'missao', id })} />}

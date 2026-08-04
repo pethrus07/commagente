@@ -78,7 +78,10 @@ type MissaoComMsgs = {
   estado: EstadoMissao
   resumo: string | null
   fatos: unknown
-  contato?: { memoria: unknown } | null
+  contato?: {
+    memoria: unknown
+    tags?: { tag: { nome: string; descricao: string | null } }[]
+  } | null
   tenant?: { persona: string | null; estilo?: unknown } | null // identidade + estilo (fallback) da IA
   mensagens: { direcao: Direcao; conteudo: string }[]
 }
@@ -106,6 +109,12 @@ export function montarFicha(
     fatos: (missao.fatos as Record<string, unknown> | null) ?? {},
     memoriaContato:
       (missao.contato?.memoria as Record<string, unknown> | null) ?? null,
+    // TAGS com descrição viram características do contato (só as que carregam conhecimento).
+    caracteristicasContato:
+      missao.contato?.tags
+        ?.map((t) => t.tag)
+        .filter((t) => t.descricao?.trim())
+        .map((t) => `${t.nome}: ${t.descricao!.trim()}`) ?? null,
     conhecimento: conhecimento ?? null,
     ultimasMensagens: missao.mensagens
       .slice(-ULTIMAS)
