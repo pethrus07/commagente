@@ -450,7 +450,9 @@ Custo hoje é baixíssimo (~R$0,06 numa conversa longa de 27 turnos), mas dá pr
 - Selecionar todos os **filtrados** de uma vez e aplicar/remover **múltiplas tags** numa tacada.
 - Taguear direto a partir da busca/resultado, sem entrar contato a contato.
 
-**Princípio:** **manter simples** — o caminho comum (mandar pra uma tag) = 2 cliques; o poder (combinar/excluir) é opcional e não polui. Alto valor (é o gesto que gerente/parceiro mais repete).
+**Unificar — Agendamento (Programadas) usa o MESMO seletor (pedido do Pedro, 04/08):** hoje o Programadas atribui clientes por **caixa de texto** ("telefone, nome, dia" por linha → `criarAgendamentosEmLote`), enquanto a Campanha usa o `SeletorContatos` (contatos existentes + "toda a tag"). Devem ser **iguais**: trocar a textarea pelo `SeletorContatos` no Programadas + o backend `criarAgendamentosEmLote` aceitar `tagId` (resolver o segmento como a campanha faz, reusando `resolverContatosDaTag`). ⚠️ **Nuance:** o agendamento tem `dia` por contato (recorrência mensal com dia próprio) — ao escolher uma tag inteira não dá pra pôr dia por pessoa; nesse caso o agendamento vira **uniforme** (mesma recorrência/horário pro segmento todo), e o `dia`-por-contato fica só pro modo lista manual (que pode continuar existindo como opção avançada).
+
+**Princípio:** **manter simples** — o caminho comum (mandar pra uma tag) = 2 cliques; o poder (combinar/excluir/dia-por-pessoa) é opcional e não polui. Alto valor (é o gesto que gerente/parceiro mais repete).
 
 **Nota (feito 04/08):** o **apelido do número** agora aparece em TODOS os seletores de disparo — Campanhas e Missão já mostravam; **Programadas** estava mostrando só o número → corrigido (`rotuloNumero`). Basta nomear o chip em Números pra ele aparecer.
 
