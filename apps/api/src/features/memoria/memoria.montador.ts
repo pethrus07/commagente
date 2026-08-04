@@ -110,11 +110,13 @@ export function montarFicha(
     memoriaContato:
       (missao.contato?.memoria as Record<string, unknown> | null) ?? null,
     // TAGS com descrição viram características do contato (só as que carregam conhecimento).
+    // Orçamento de contexto: no máx. 10 tags e ~400 chars cada (não infla o prompt a cada turno).
     caracteristicasContato:
       missao.contato?.tags
         ?.map((t) => t.tag)
         .filter((t) => t.descricao?.trim())
-        .map((t) => `${t.nome}: ${t.descricao!.trim()}`) ?? null,
+        .slice(0, 10)
+        .map((t) => `${t.nome}: ${t.descricao!.trim().slice(0, 400)}`) ?? null,
     conhecimento: conhecimento ?? null,
     ultimasMensagens: missao.mensagens
       .slice(-ULTIMAS)

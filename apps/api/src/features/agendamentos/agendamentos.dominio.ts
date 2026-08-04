@@ -93,9 +93,15 @@ export function ehDiaDeDisparo(ag: AgDatas, hojeYMD: string): boolean {
       const meses = (ano - ia) * 12 + (mes - im)
       return meses >= 0 && meses % ag.intervalo === 0
     }
-    case 'anual':
+    case 'anual': {
       // dataUnica guarda o dia+mês de referência; compara MM-DD
-      return ag.dataUnica != null && ymd(ag.dataUnica).slice(5) === hojeYMD.slice(5)
+      if (ag.dataUnica == null) return false
+      const refMD = ymd(ag.dataUnica).slice(5)
+      const hojeMD = hojeYMD.slice(5)
+      if (refMD === hojeMD) return true
+      // 29/fev em ano não-bissexto → dispara em 28/fev (senão pularia o ano inteiro)
+      return refMD === '02-29' && hojeMD === '02-28' && ultimoDiaDoMes(ano, 2) === 28
+    }
     default:
       return false
   }

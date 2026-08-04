@@ -225,9 +225,9 @@ type AgComContato = Awaited<ReturnType<typeof agendamentosRepo.buscar>>
 // Cria a missão e dispara (IA conduz) ou enfileira o texto fixo. Não lança em opt-out.
 async function dispararAgendamento(ag: NonNullable<AgComContato>) {
   if (ag.contato.optOut) {
-    await db.evento.create({
-      data: { tenantId: ag.tenantId, tipo: 'agendamento_pulado', dados: { agendamentoId: ag.id, motivo: 'opt_out' } },
-    })
+    await db.evento
+      .create({ data: { tenantId: ag.tenantId, tipo: 'agendamento_pulado', dados: { agendamentoId: ag.id, motivo: 'opt_out' } } })
+      .catch((e) => console.error('[agendamento] evento pulado (ignorado):', e))
     return
   }
   const base = {
@@ -252,14 +252,16 @@ async function dispararAgendamento(ag: NonNullable<AgComContato>) {
       payload: { numeroId: ag.numeroId, telefone: ag.contato.telefone, texto: ag.mensagemFixa ?? ag.objetivo, tipo: 'novo' },
       agendadoPara: new Date(Date.now() + jitterMs('novo')),
     })
-    await db.evento.create({
-      data: { tenantId: ag.tenantId, missaoId: missao.id, tipo: 'agendamento_disparado', dados: { agendamentoId: ag.id, entrega: 'fixa' } },
-    })
+    // best-effort: um erro aqui NÃO pode subir (o texto já foi enfileirado). Se subisse,
+    // processarDevidos não marcaria o ciclo e re-disparava no próximo tick → cobrança 2×. [P1]
+    await db.evento
+      .create({ data: { tenantId: ag.tenantId, missaoId: missao.id, tipo: 'agendamento_disparado', dados: { agendamentoId: ag.id, entrega: 'fixa' } } })
+      .catch((e) => console.error('[agendamento] evento disparado (ignorado):', e))
   } else {
     const missao = await missoesRepo.criar({ ...base, estado: 'na_fila', iniciadaEm: new Date() })
-    await db.evento.create({
-      data: { tenantId: ag.tenantId, missaoId: missao.id, tipo: 'agendamento_disparado', dados: { agendamentoId: ag.id, entrega: 'ia' } },
-    })
+    await db.evento
+      .create({ data: { tenantId: ag.tenantId, missaoId: missao.id, tipo: 'agendamento_disparado', dados: { agendamentoId: ag.id, entrega: 'ia' } } })
+      .catch((e) => console.error('[agendamento] evento disparado (ignorado):', e))
     try {
       await processarTurno(missao.id) // gera o opener + enfileira (fila respeita janela/anti-ban)
     } catch (e) {

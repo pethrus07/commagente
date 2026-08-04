@@ -416,7 +416,6 @@ export function Programadas() {
                     </td>
                     <td className="px-4 py-3 text-content">
                       {quandoLabel(a)}
-                      <span className="ml-1 text-[11px] text-muted">{a.recorrencia === 'mensal' ? '(mensal)' : '(uma vez)'}</span>
                     </td>
                     <td className="px-4 py-3">
                       <span className="rounded-md bg-surface2 px-2 py-0.5 text-xs text-content">{a.entrega === 'ia' ? `🤖 ${TIPO_INFO[a.tipo as keyof typeof TIPO_INFO]?.label ?? a.tipo}` : '✉️ Msg fixa'}</span>

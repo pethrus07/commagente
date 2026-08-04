@@ -70,10 +70,14 @@ test('a_cada_meses: mês alinhado + dia', () => {
   assert.equal(ehDia(ag, '2026-03-15'), true) // mês 2
 })
 
-test('anual: mesmo dia+mês', () => {
+test('anual: mesmo dia+mês (+ clamp 29/fev em ano não-bissexto)', () => {
   const ag = { recorrencia: 'anual', dataUnica: d('2026-01-10') }
   assert.equal(ehDia(ag, '2027-01-10'), true)
   assert.equal(ehDia(ag, '2027-01-11'), false)
+  const ag29 = { recorrencia: 'anual', dataUnica: d('2024-02-29') }
+  assert.equal(ehDia(ag29, '2027-02-28'), true) // não-bissexto → clamp p/ 28/fev
+  assert.equal(ehDia(ag29, '2028-02-29'), true) // bissexto → dia exato
+  assert.equal(ehDia(ag29, '2028-02-28'), false) // bissexto → não clampa
 })
 
 test('janela: não dispara antes do início nem depois do fim', () => {
