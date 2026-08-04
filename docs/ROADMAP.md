@@ -416,6 +416,22 @@ Custo hoje é baixíssimo (~R$0,06 numa conversa longa de 27 turnos), mas dá pr
 
 **Esforço:** médio. O grosso da esteira (chunk/embeddings/RAG/UI de Conhecimento) já existe; o novo é o fetch + extração + crawl raso + reprocessamento. Bom candidato a **quick win de alto valor** (reduz muito o atrito de "ensinar" a IA — cola o link e pronto).
 
+### 8.15 📎 Documentos por missão e campanha (anexar + a IA envia) `backlog` — pedido do Pedro (04/08)
+
+> **Anexar um documento a uma missão/campanha** (catálogo, tabela de preços, proposta, PDF da expedição, contrato) e a **IA enviar na hora certa** na conversa. Ex.: campanha de venda manda o catálogo quando o lead se interessa; missão de orçamento envia a proposta ao fechar.
+
+**O que JÁ existe (a base de envio funciona):** `enviarDocumento` (app) → **fila anti-ban** (`FilaEnvio.documento`) → `sendMedia` do Evolution → registra em `mensagens`. Testado ao vivo (PDF da Costa Doce). O adapter oficial (`cloud-api.client`) também já tem `enviarDocumento`. Ingestão de documento pro RAG existe (§8.1).
+
+**O que FALTA (a orquestração de produto — o "por missão e campanha"):**
+1. **Guardar o arquivo** — hoje a ingestão guarda só o **texto** (pro RAG), NÃO o binário. Pra reenviar, armazenar o arquivo (R2) + metadados → é a **Biblioteca de documentos** do §8.1 (a parte de store/UI que faltou).
+2. **Anexar à missão/campanha** — campo `Missao.documentos` / `Campanha.documentos` (refs à biblioteca) + **regra de envio**: "mandar junto com a 1ª mensagem" · "quando o lead pedir / pré-fechar" · "a IA decide".
+3. **A IA decidir enviar** — nova ação no structured output (`enviar_documento: <id>`); o harness enfileira na fila (o worker já suporta). Assim a IA manda o catálogo/proposta sozinha, no momento certo.
+4. **UI:** biblioteca no painel (upload/listar) + seletor de documentos no builder de missão/campanha.
+
+**Cuidados:** **mídia é o maior risco de ban** (o próprio Pedro alertou — item 8 acima) → enviar com parcimônia, contar no budget anti-ban, talvez teto de mídia/dia; validar tamanho/mimetype.
+
+**Esforço:** médio. Envio + fila + adapter já existem; o novo é o store do binário + anexo por missão/campanha + a ação da IA. **Alto valor comercial** (mandar catálogo/proposta é caso de uso central de vendas). Casa com §8.1 (biblioteca) e o §8.15 é o "degrau de saída" dela.
+
 ---
 
 > **Nota (2026-07-23):** as seções §1–§7 (mapa/matriz/fases F0–F3) são o **plano pré-construção** e ficaram **desatualizadas** — na prática F1/F2 estão quase inteiros e parte do F3 (multi-tenant) foi feita. O **status real por fatia está no [CLAUDE.md](../CLAUDE.md)**; o backlog vivo é esta §8. Ao ler as fases abaixo, tratar como histórico de intenção, não como estado atual.
