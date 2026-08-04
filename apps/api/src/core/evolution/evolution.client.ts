@@ -46,6 +46,24 @@ function mapearEstado(state?: string): StatusConexaoWa {
   return 'desconectado'
 }
 
+export type ContatoEvolution = { id?: string; remoteJid?: string; pushName?: string; name?: string }
+
+// Mapeia a resposta de /chat/findContacts → { telefone, nome }. Pura (testável sem HTTP).
+// ⚠️ Evolution v2.3.1: `id` é um CUID interno; o JID de verdade está em `remoteJid`. Em versões
+// antigas `id` ERA o JID (daí o fallback). Preferir remoteJid — senão o filtro descarta tudo (0).
+export function mapearContatosEvolution(
+  lista: ContatoEvolution[],
+): { telefone: string; nome?: string }[] {
+  return lista.flatMap((c) => {
+    const jid = c.remoteJid ?? c.id ?? ''
+    // só contatos individuais (ignora grupos @g.us, broadcast, etc.)
+    if (!jid.endsWith('@s.whatsapp.net')) return []
+    const telefone = jid.split('@')[0]?.split(':')[0] ?? ''
+    if (!telefone) return []
+    return [{ telefone, nome: c.pushName ?? c.name ?? undefined }]
+  })
+}
+
 export const evolutionClient: PortaWhatsApp = {
   async criarInstancia(instancia) {
     await req('POST', '/instance/create', {
@@ -141,18 +159,8 @@ export const evolutionClient: PortaWhatsApp = {
 
   async buscarContatos(instancia) {
     // v2: POST /chat/findContacts/{instance}. Retorna a agenda sincronizada do número.
-    const r = await req<
-      Array<{ id?: string; remoteJid?: string; pushName?: string; name?: string }>
-    >('POST', `/chat/findContacts/${instancia}`, {})
-    const lista = Array.isArray(r) ? r : []
-    return lista.flatMap((c) => {
-      const jid = c.id ?? c.remoteJid ?? ''
-      // só contatos individuais (ignora grupos @g.us, broadcast, etc.)
-      if (!jid.endsWith('@s.whatsapp.net')) return []
-      const telefone = jid.split('@')[0]?.split(':')[0] ?? ''
-      if (!telefone) return []
-      return [{ telefone, nome: c.pushName ?? c.name ?? undefined }]
-    })
+    const r = await req<ContatoEvolution[]>('POST', `/chat/findContacts/${instancia}`, {})
+    return mapearContatosEvolution(Array.isArray(r) ? r : [])
   },
 
   async baixarMidiaBase64(instancia: string, chave: ChaveMensagem) {
