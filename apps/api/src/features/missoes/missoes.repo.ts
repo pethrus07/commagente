@@ -35,7 +35,7 @@ export const missoesRepo = {
         // tags do contato entram no contexto da IA (descrição = conhecimento sobre o contato)
         contato: { include: { tags: { include: { tag: { select: { nome: true, descricao: true } } } } } },
         numero: true,
-        tenant: { select: { persona: true, estilo: true } }, // identidade + estilo da IA p/ o prompt
+        tenant: { select: { persona: true, estilo: true, dna: true } }, // identidade + estilo + DNA da IA p/ o prompt
         mensagens: { orderBy: { criadaEm: 'asc' } },
       },
     })

@@ -2,6 +2,7 @@
 // Regra pura: dado o estado da missão + histórico, decide o que entra no prompt.
 import type { Direcao, EstadoMissao } from '@prisma/client'
 import type { ContextoIA } from '../../core/ia/porta-ia'
+import { compilarDna } from '../tenant/tenant.dna'
 import { lerEstilo, regrasDeEstilo, type EstiloConversa } from '../tenant/tenant.estilo'
 
 const ULTIMAS = 8 // nº de mensagens recentes no contexto (o resto vira resumo rolante)
@@ -32,6 +33,7 @@ function montarPersona(m: {
   tom?: string | null
   criterioConclusao?: string | null
   personaTenant?: string | null // identidade/voz da marca (nível tenant), sempre no prompt
+  dnaRegras?: string | null // Regras de Negócio do DNA — invioláveis, prioridade máxima
   estilo: EstiloConversa // controles estruturados de COMO ESCREVER (formalidade/emoji/bolhas…)
 }): string {
   const linhas = [
@@ -63,6 +65,14 @@ function montarPersona(m: {
       'chute: diga com naturalidade que vai confirmar e retornar; se for decisivo pra fechar, ' +
       'escale (precisa_humano=true). (3) Nunca prometa o que não pode cumprir.',
   )
+  // ── Regras de negócio do DNA (definidas pelo cliente) — vencem a IDENTIDADE/persona, mas
+  // NUNCA o guardrail anti-invenção acima (o cliente é semi-confiável: uma regra descuidada
+  // não pode autorizar a IA a inventar preço/fato). Ordem: anti-alucinação > regras > persona.
+  if (m.dnaRegras?.trim())
+    linhas.push(
+      'REGRAS DE NEGÓCIO DA EMPRESA (definidas pela empresa — têm prioridade sobre a IDENTIDADE/persona e o estilo; mas NÃO autorizam afirmar preços, prazos ou fatos fora das fontes autorizadas — o guardrail anti-invenção acima continua valendo por cima): ' +
+        m.dnaRegras.trim(),
+    )
   return linhas.filter(Boolean).join(' ')
 }
 
@@ -82,7 +92,8 @@ type MissaoComMsgs = {
     memoria: unknown
     tags?: { tag: { nome: string; descricao: string | null } }[]
   } | null
-  tenant?: { persona: string | null; estilo?: unknown } | null // identidade + estilo (fallback) da IA
+  // identidade (voz) + estilo (fallback) + DNA (conhecimento categorizado) da IA
+  tenant?: { persona: string | null; estilo?: unknown; dna?: unknown } | null
   mensagens: { direcao: Direcao; conteudo: string }[]
 }
 
@@ -90,6 +101,8 @@ export function montarFicha(
   missao: MissaoComMsgs,
   conhecimento?: string[] | null,
 ): ContextoIA {
+  // DNA do tenant: Regras de Negócio → persona (prioridade); demais categorias → conhecimento autorizado.
+  const dna = compilarDna(missao.tenant?.dna)
   return {
     persona: montarPersona({
       tipo: missao.tipo,
@@ -98,6 +111,7 @@ export function montarFicha(
       tom: missao.tom,
       criterioConclusao: missao.criterioConclusao,
       personaTenant: missao.tenant?.persona,
+      dnaRegras: dna.regras,
       // perfil da missão vence; sem ele, herda o padrão do tenant (fallback)
       estilo: lerEstilo(missao.estilo ?? missao.tenant?.estilo),
     }),
@@ -118,6 +132,7 @@ export function montarFicha(
         .slice(0, 10)
         .map((t) => `${t.nome}: ${t.descricao!.trim().slice(0, 400)}`) ?? null,
     conhecimento: conhecimento ?? null,
+    dnaConhecimento: dna.conhecimento,
     ultimasMensagens: missao.mensagens
       .slice(-ULTIMAS)
       .map((m) => ({ direcao: m.direcao, conteudo: m.conteudo })),

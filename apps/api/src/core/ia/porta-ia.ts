@@ -27,6 +27,12 @@ export interface ContextoIA {
   caracteristicasContato?: string[] | null
   /** memória COLETIVA do tenant — conhecimento aprendido/curado (FAQ, objeções, políticas) */
   conhecimento?: string[] | null
+  /**
+   * DNA da empresa — conhecimento estruturado por categorias (empresa, produtos, preços…),
+   * já compilado e dentro do orçamento de contexto. Fonte AUTORIZADA (como `informacoes`).
+   * As Regras de Negócio do DNA entram na `persona` como regra inviolável, não aqui.
+   */
+  dnaConhecimento?: string | null
   ultimasMensagens: { direcao: 'in' | 'out'; conteudo: string }[]
 }
 
