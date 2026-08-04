@@ -1,7 +1,7 @@
 import {
-  BookOpen,
   Building2,
   CalendarClock,
+  Dna,
   LayoutDashboard,
   LifeBuoy,
   LogOut,
@@ -54,7 +54,7 @@ const ITENS: Item[] = [
   { id: 'escalados', label: 'Escalados', icon: LifeBuoy },
   { id: 'contatos', label: 'Contatos', icon: Users },
   { id: 'tags', label: 'Tags', icon: Tag },
-  { id: 'conhecimento', label: 'Conhecimento', icon: BookOpen },
+  { id: 'conhecimento', label: 'DNA & Conhecimento', icon: Dna },
   { id: 'numeros', label: 'Números', icon: Smartphone },
 ]
 

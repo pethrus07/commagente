@@ -63,6 +63,10 @@ model Tenant {
   // Estilo de conversa (JSON): controles estruturados (formalidade, emoji, abreviação,
   // travessão, bolhas) que viram regras de escrita no prompt. Ver features/tenant/tenant.estilo.
   estilo   Json?
+  // DNA (JSON): conhecimento categorizado da empresa (empresa/produtos/preços/regras/FAQ…).
+  // Renomeia a "Voz da Marca" → DNA. Defaults-first (categorias vazias não entram no prompt) +
+  // orçamento de contexto (cap por categoria). Ver features/tenant/tenant.dna. [parceiro Item 4]
+  dna      Json?
   criadoEm DateTime @default(now()) @map("criado_em")
 
   numeros   NumeroWhatsapp[]

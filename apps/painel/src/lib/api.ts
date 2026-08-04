@@ -77,14 +77,17 @@ export const api = {
   historico: (dias?: number) =>
     req<Historico>(`/stats/historico${dias ? `?dias=${dias}` : ''}`),
 
-  // configuração do tenant atual (persona/identidade + estilo de conversa da IA)
+  // configuração do tenant atual — DNA (conhecimento) + persona/voz + estilo de conversa da IA
   tenant: {
     obter: () => req<TenantConfig>('/tenant'),
     salvarPersona: (persona: string | null) =>
       req<TenantConfig>('/tenant', { method: 'PATCH', body: JSON.stringify({ persona }) }),
-    // salva persona e/ou estilo numa tacada (reflete no próximo turno)
-    salvar: (dados: { persona?: string | null; estilo?: EstiloConversa }) =>
+    // salva persona, estilo e/ou DNA numa tacada (reflete no próximo turno)
+    salvar: (dados: { persona?: string | null; estilo?: EstiloConversa; dna?: import('./dna').Dna }) =>
       req<TenantConfig>('/tenant', { method: 'PATCH', body: JSON.stringify(dados) }),
+    // salva só o DNA (mescla sobre o atual: categoria ausente = mantém; vazia = limpa)
+    salvarDna: (dna: import('./dna').Dna) =>
+      req<TenantConfig>('/tenant', { method: 'PATCH', body: JSON.stringify({ dna }) }),
   },
 
   numeros: {

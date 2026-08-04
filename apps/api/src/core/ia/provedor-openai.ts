@@ -69,10 +69,19 @@ export const provedorOpenai: ProvedorIA = {
       ctx.conhecimento && ctx.conhecimento.length > 0
         ? `BASE DE CONHECIMENTO da empresa (aprendida com atendimentos anteriores — use quando ajudar; conta como fonte autorizada junto com as INFORMAÇÕES AUTORIZADAS):\n- ${ctx.conhecimento.join('\n- ')}`
         : ''
-    // Bloco de informações AUTORIZADAS (guardrail): é o único que pode virar afirmação.
+    // DNA da empresa (conhecimento estruturado por categorias definido pelo cliente)
+    const dna = ctx.dnaConhecimento?.trim()
+      ? `DNA DA EMPRESA (conhecimento estruturado sobre a empresa — use quando ajudar; conta como fonte autorizada junto com as INFORMAÇÕES AUTORIZADAS):\n${ctx.dnaConhecimento.trim()}`
+      : ''
+    // Bloco de informações AUTORIZADAS (guardrail). Fontes autorizadas = estas + DNA + base de
+    // conhecimento. Sem informações por-missão, mas COM DNA/base, elas ainda são fonte válida —
+    // não negue tudo (senão a IA se recusaria a usar o DNA que o cliente preencheu).
+    const temOutraFonte = !!ctx.dnaConhecimento?.trim() || (ctx.conhecimento?.length ?? 0) > 0
     const informacoes = ctx.informacoes?.trim()
-      ? `INFORMAÇÕES AUTORIZADAS (a ÚNICA fonte de fatos que você pode afirmar sobre a empresa/oferta):\n${ctx.informacoes.trim()}`
-      : 'INFORMAÇÕES AUTORIZADAS: nenhuma foi fornecida. Portanto NÃO afirme NENHUM fato sobre a empresa/oferta — se perguntarem qualquer coisa, diga que vai confirmar e retornar, ou escale (precisa_humano=true).'
+      ? `INFORMAÇÕES AUTORIZADAS (fonte de fatos que você pode afirmar sobre a empresa/oferta — junto com o DNA DA EMPRESA e a BASE DE CONHECIMENTO):\n${ctx.informacoes.trim()}`
+      : temOutraFonte
+        ? 'INFORMAÇÕES AUTORIZADAS: nenhuma específica desta missão — use o DNA DA EMPRESA e a BASE DE CONHECIMENTO acima como fonte de fatos. Para o que não estiver em NENHUMA dessas fontes, não invente: diga que vai confirmar e retornar, ou escale.'
+        : 'INFORMAÇÕES AUTORIZADAS: nenhuma foi fornecida. Portanto NÃO afirme NENHUM fato sobre a empresa/oferta — se perguntarem qualquer coisa, diga que vai confirmar e retornar, ou escale (precisa_humano=true).'
     const sistema = [
       ctx.persona,
       `Estado atual da missão: ${ctx.estadoAtual}.`,
@@ -81,8 +90,9 @@ export const provedorOpenai: ProvedorIA = {
       memoria,
       caracteristicas,
       conhecimento,
+      dna,
       informacoes,
-      'REGRA CRÍTICA (anti-alucinação): só afirme informações que estejam EXPLICITAMENTE nas INFORMAÇÕES AUTORIZADAS ou na BASE DE CONHECIMENTO acima. Para QUALQUER detalhe que não esteja lá — preço, política de quartos, tamanhos/medidas, formas de pagamento, datas específicas, disponibilidade, qualquer condição operacional — NÃO invente e NÃO improvise. O PADRÃO nesses casos é RESPONDER de forma natural que você vai confirmar esse detalhe com a equipe e já retorna, e SEGUIR conduzindo a conversa rumo ao objetivo (precisa_humano=FALSE). Use precisa_humano=true SOMENTE quando um humano realmente precisa agir/decidir — ex.: negociar preço ou condição, reclamação, pedido fora do escopo da missão — NÃO para toda pergunta cuja resposta você não tem. Nunca pause a missão só porque falta um dado informativo; apenas diga que confirma e continue.',
+      'REGRA CRÍTICA (anti-alucinação): só afirme informações que estejam EXPLICITAMENTE nas INFORMAÇÕES AUTORIZADAS, na BASE DE CONHECIMENTO ou no DNA DA EMPRESA acima. Para QUALQUER detalhe que não esteja lá — preço, política de quartos, tamanhos/medidas, formas de pagamento, datas específicas, disponibilidade, qualquer condição operacional — NÃO invente e NÃO improvise. O PADRÃO nesses casos é RESPONDER de forma natural que você vai confirmar esse detalhe com a equipe e já retorna, e SEGUIR conduzindo a conversa rumo ao objetivo (precisa_humano=FALSE). Use precisa_humano=true SOMENTE quando um humano realmente precisa agir/decidir — ex.: negociar preço ou condição, reclamação, pedido fora do escopo da missão — NÃO para toda pergunta cuja resposta você não tem. Nunca pause a missão só porque falta um dado informativo; apenas diga que confirma e continue.',
       'Responda SOMENTE em JSON válido, sem markdown, no formato exato:',
       `{"resposta": "texto curto e humano no estilo pedido (WhatsApp); se o COMO ESCREVER pedir várias mensagens, coloque cada uma numa linha separada com \\n dentro deste mesmo campo", "novo_estado": "${ESTADOS_SAIDA}", "categoria": "string ou null", "fatos_novos": {objeto com o que você descobriu SOBRE ESTE LEAD, ou {}}, "precisa_humano": true|false, "motivo_escala": "string ou null", "aprendizado_sugerido": "uma lição GERAL e reutilizável p/ atendimentos futuros da empresa (NÃO dados de um lead), ou null", "resultado": "SÓ ao concluir a missão (novo_estado=concluida): resumo curto do desfecho (ex.: 'reunião agendada quinta 15h', 'pagamento confirmado'); senão null"}`,
       'Conduza a conversa rumo ao objetivo, com naturalidade. Se o lead pedir algo que você não pode resolver, use precisa_humano=true.',

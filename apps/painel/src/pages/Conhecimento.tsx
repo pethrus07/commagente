@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { BookOpen, Bot, Check, FileUp, Pencil, Plus, Sparkles, Trash2, X } from 'lucide-react'
+import { BookOpen, Bot, Check, Dna as DnaIcon, FileUp, Pencil, Plus, ShieldAlert, Sparkles, Trash2, X } from 'lucide-react'
 import { EstiloControles } from '../components/EstiloControles'
 import { api } from '../lib/api'
+import { CATEGORIAS_DNA, type Dna } from '../lib/dna'
 import { ESTILO_PADRAO } from '../lib/estilos-conversa'
 import { toast } from '../lib/toast'
 import type { Conhecimento as Item, EstiloConversa } from '../lib/types'
@@ -88,6 +89,83 @@ const CHIPS_PERSONA = [
   'Sempre termine com uma pergunta.',
 ]
 
+// Card "DNA da empresa" (nível TENANT): o conhecimento categorizado que a IA usa e pode afirmar.
+// Defaults-first: preencha só o que importa (categoria vazia não entra no prompt). Regras de
+// Negócio têm prioridade máxima. Conteúdo longo (catálogo inteiro) vai pra Base de conhecimento.
+function DnaCategorias() {
+  const [dna, setDna] = useState<Dna>({})
+  const [carregando, setCarregando] = useState(true)
+  const [salvando, setSalvando] = useState(false)
+
+  useEffect(() => {
+    api.tenant
+      .obter()
+      .then((c) => setDna(c.dna ?? {}))
+      .catch((e) => toast((e as Error).message, 'erro'))
+      .finally(() => setCarregando(false))
+  }, [])
+
+  const preenchidas = CATEGORIAS_DNA.filter((c) => dna[c.chave]?.trim()).length
+
+  const salvar = async () => {
+    setSalvando(true)
+    try {
+      // manda todas as chaves (vazias limpam) — o backend mescla e descarta as vazias
+      const payload = Object.fromEntries(
+        CATEGORIAS_DNA.map((c) => [c.chave, dna[c.chave]?.trim() || '']),
+      ) as Dna
+      const atualizado = await api.tenant.salvarDna(payload)
+      setDna(atualizado.dna ?? {})
+      toast('DNA salvo — vale já no próximo turno da IA.', 'ok')
+    } catch (e) {
+      toast((e as Error).message, 'erro')
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  return (
+    <Card className="p-5">
+      <div className="mb-4 flex items-center gap-2.5">
+        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-emerald-500/15 text-emerald-400"><DnaIcon className="h-4 w-4" /></div>
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold text-content">DNA da empresa <span className="text-[11px] font-normal text-subtle">({preenchidas}/{CATEGORIAS_DNA.length} preenchidas)</span></h3>
+          <p className="text-[11px] text-muted">O que a IA sabe e pode afirmar sobre o seu negócio. Preencha só o que importa — o resto é opcional.</p>
+        </div>
+      </div>
+
+      {carregando ? (
+        <div className="grid place-items-center py-6"><Spinner className="h-5 w-5" /></div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {CATEGORIAS_DNA.map((c) => (
+              <div key={c.chave} className={cn('rounded-xl border p-3', c.prioridade ? 'border-amber-500/40 bg-amber-500/[0.05] md:col-span-2' : 'border-line')}>
+                <label className="mb-1 flex items-center gap-1.5 text-xs font-medium text-content">
+                  {c.prioridade && <ShieldAlert className="h-3.5 w-3.5 text-amber-500" />}
+                  {c.titulo}
+                  {c.prioridade && <span className="rounded-full bg-amber-500/20 px-1.5 text-[10px] font-medium text-amber-700 dark:text-amber-300">prioridade</span>}
+                </label>
+                <textarea
+                  value={dna[c.chave] ?? ''}
+                  onChange={(e) => setDna((d) => ({ ...d, [c.chave]: e.target.value }))}
+                  rows={c.prioridade ? 3 : 2}
+                  placeholder={c.dica}
+                  className={cn(campo, 'resize-none text-[13px]')}
+                />
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 flex items-center justify-between gap-3">
+            <p className="text-[11px] leading-snug text-subtle">A IA usa isto como <b>fonte autorizada</b> (pode afirmar). As <b>Regras de negócio</b> vencem tudo — nem a persona as contorna.</p>
+            <Button onClick={salvar} loading={salvando}>Salvar DNA</Button>
+          </div>
+        </>
+      )}
+    </Card>
+  )
+}
+
 // Card "Identidade & Estilo da IA" (nível TENANT): a voz da marca (persona) + o estilo PADRÃO
 // da casa. É o FALLBACK — cada missão pode ter o seu perfil próprio (Assistente de missão);
 // quando a missão não define, herda este. Reflete no próximo turno.
@@ -127,8 +205,8 @@ function ConfigIA() {
       <div className="mb-4 flex items-center gap-2.5">
         <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-indigo-500/15 text-indigo-300"><Bot className="h-4 w-4" /></div>
         <div>
-          <h3 className="text-sm font-semibold text-content">Identidade &amp; estilo da IA <span className="text-[11px] font-normal text-subtle">(padrão da casa)</span></h3>
-          <p className="text-[11px] text-muted">O jeito padrão de falar em <b>todas</b> as missões. Cada missão pode ter o seu próprio perfil — quando não tem, herda este.</p>
+          <h3 className="text-sm font-semibold text-content">Voz &amp; estilo da IA <span className="text-[11px] font-normal text-subtle">(padrão da casa)</span></h3>
+          <p className="text-[11px] text-muted">Como a IA <b>fala</b> em todas as missões (o DNA acima é o que ela <b>sabe</b>). Cada missão pode ter o seu perfil — quando não tem, herda este.</p>
         </div>
       </div>
 
@@ -233,9 +311,11 @@ export function Conhecimento() {
 
   return (
     <div className="space-y-6">
+      {/* 🧬 DNA da IA — o que ela SABE (categorias) + como ela FALA (voz & estilo) */}
+      <DnaCategorias />
       <ConfigIA />
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted">O que a IA aprende com as conversas e com os seus documentos. Ela consulta os aprovados ao responder.</p>
+        <p className="text-sm text-muted">Base de conhecimento: o que a IA aprende com as conversas e com os seus documentos (consultada por relevância). Para catálogos longos, use aqui — o DNA é o resumo essencial.</p>
         <div className="flex gap-2">
           <Button variant="ghost" onClick={() => fileRef.current?.click()} loading={importando}><FileUp className="h-4 w-4" /> Importar documento</Button>
           <Button onClick={() => setModal({})}><Plus className="h-4 w-4" /> Novo</Button>

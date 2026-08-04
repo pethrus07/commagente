@@ -268,10 +268,11 @@ export interface EstiloConversa {
   bolhas: boolean
 }
 
-// configuração do tenant atual — persona/identidade (voz da marca) + estilo de conversa (fallback)
+// configuração do tenant atual — DNA (conhecimento) + persona/voz + estilo de conversa (fallback)
 export interface TenantConfig {
   id: string
   nome: string
   persona: string | null
   estilo: EstiloConversa
+  dna: import('./dna').Dna // conhecimento categorizado da empresa (só as categorias preenchidas)
 }
