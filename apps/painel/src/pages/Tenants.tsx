@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Building2, LogIn, Plus, Users, X } from 'lucide-react'
+import { Building2, LogIn, Plus, Users, Wallet, X } from 'lucide-react'
 import { api } from '../lib/api'
 import type { TenantSel } from '../lib/auth'
 import { toast } from '../lib/toast'
@@ -106,6 +106,9 @@ export function Tenants({ onVerTenant }: { onVerTenant: (t: TenantSel) => void }
               </div>
               <div className="mt-3 flex items-center gap-1.5 text-xs text-muted">
                 <Users className="h-3.5 w-3.5" /> {t.totalUsuarios} usuário{t.totalUsuarios === 1 ? '' : 's'}
+              </div>
+              <div className={cn('mt-1.5 flex items-center gap-1.5 text-xs', t.custoAlto ? 'font-medium text-rose-300' : 'text-muted')} title="Custo de IA acumulado (OpenAI). Alerta quando passa do teto — protege a key compartilhada.">
+                <Wallet className="h-3.5 w-3.5" /> IA: R$ {t.custoBrl.toFixed(2)}{t.custoAlto && ' · ⚠️ alto'}
               </div>
               <Button variant="ghost" className="mt-4 w-full" onClick={() => onVerTenant({ id: t.id, nome: t.nome })}>
                 <LogIn className="h-4 w-4" /> Abrir painel deste cliente
