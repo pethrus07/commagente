@@ -319,7 +319,7 @@ Custo hoje é baixíssimo (~R$0,06 numa conversa longa de 27 turnos), mas dá pr
 | 1 | **Tags Inteligentes** (tag com *descrição que vira contexto pra IA*) | 🟡 parcial | §8.6 (tags existem); falta descrição-como-conhecimento |
 | 2 | **Apelido dos números** (nome por chip em todo lugar) | 🔴 novo (simples) | `NumeroWhatsapp.apelido` + UI |
 | 3 | **Recorrências completas** (diário/a-cada-X/semanal/anual/dias-úteis…) | 🟡 base pronta | expandir `Agendamento` (hoje só uma-vez/mensal — dor exata do parceiro) |
-| 4 | **DNA** (renomear "Voz da Marca" + 12 categorias c/ arquivos) | 🟡 parcial | persona+Conhecimento+RAG+DOC existem; falta reorganizar/renomear |
+| 4 | **DNA** (renomear "Voz da Marca" + categorias) | 🟢 **FEITO** (§8.13) | `Tenant.dna` 10 categorias, defaults-first + orçamento de contexto; deployado prod |
 | 5 | **DNA do Contato** (Perfil/Comunicação/Histórico/Observações) | 🟡 parcial | memória do contato (MEM-1) existe; falta estruturar/editar |
 | 6 | **Relatórios Inteligentes** (Analítico + Executivo/IA + chat da campanha) | 🟢 **núcleo FEITO** (§8.9) | falta o **chat da campanha** + indicadores ricos |
 | 7 | **Central de Inteligência** (chat global sobre TODA a base) | 🔴 novo, grande | épico próprio; relaciona a §8.10 |
@@ -350,8 +350,9 @@ Custo hoje é baixíssimo (~R$0,06 numa conversa longa de 27 turnos), mas dá pr
 - ➡️ Entregável: tags inteligentes + agendamento completo no ar, custo sob controle.
 
 **Fase 2 — "A fundação (DNA) + começar o oficial":**
-- 🧠 **#4 DNA** (categorias + rename "Voz da Marca"→DNA) — **defaults-first + orçamento de contexto**
-- 🧠 **#5 DNA do Contato** (monta sobre o #4)
+- ✅ **#4 DNA** (categorias + rename "Voz da Marca"→DNA) — **FEITO e no prod** (§8.13): defaults-first + orçamento de contexto, Regras de Negócio prioritárias sem furar o anti-invenção.
+- 🧠 **#5 DNA do Contato** (monta sobre o #4) — **próximo**
+- 🧠 **#1 Tags-como-contexto** já entregue na Fase 1 (reaproveita o padrão de categorias do DNA)
 - 🛞 **Piloto da API oficial no suporte reativo** (Evolution `cloudapi`) — mata o "aguardando" + zero ban; precisa creds Meta do parceiro (escada `docs/escada-api-oficial.md`)
 - ➡️ Entregável: DNA base funcionando + 1 tenant respondendo pelo oficial (reativo).
 
@@ -365,6 +366,24 @@ Custo hoje é baixíssimo (~R$0,06 numa conversa longa de 27 turnos), mas dá pr
 - 🧠 **#7 Central de Inteligência** (chat global — começar por consultas estruturadas, não "pergunte qualquer coisa")
 - 🧠 **#8 Tutorial/mascote** (adoção/suporte)
 - **#11 Multiagente = EMERGE das features** (narrativa de venda, não é fase de build)
+
+### 8.13 🧬 DNA do tenant (#4) — ENTREGUE `2026-08-04` `prod`
+
+> A **fundação** da visão do parceiro. Renomeia "Voz da Marca" → **DNA** e organiza o conhecimento da empresa em **categorias nomeadas**, respeitando os dois contras que a §8.11 mandou gerenciar: **config-rica × usuário-simples** e **mais-contexto ≠ mais-inteligente**.
+
+**Modelo:** `Tenant.dna` (JSON, migration aditiva `20260804160000_tenant_dna`). Persona (voz) e estilo seguem separados — o DNA é o que a IA **sabe** (conhecimento), a persona é como ela **fala**. 10 categorias: empresa, produtos, preços, público-alvo, diferenciais, processo comercial, FAQ/objeções, glossário, casos de sucesso, **regras de negócio**.
+
+**Os dois cuidados centrais (decisão de arquitetura):**
+- **defaults-first** — categoria vazia não existe pro prompt. Sem formulário gigante obrigatório; preenche só o que importa. `definirDna` com semântica de **PATCH/merge** (salvar uma categoria não apaga as outras).
+- **orçamento de contexto** — cap por categoria (1200) + total (6000, contando rótulos); conteúdo longo (catálogo) continua na Base de Conhecimento (RAG por relevância). O DNA é o **resumo estruturado sempre-presente**, não um despejo.
+
+**Injeção no prompt (2 pontos):** Regras de Negócio → bloco inviolável na persona, **prioridade sobre a identidade/estilo mas NUNCA sobre o guardrail anti-invenção de preço/fato** (o cliente é semi-confiável; uma regra descuidada não pode furar a proteção). Demais categorias → "DNA DA EMPRESA", **fonte autorizada** (a IA pode afirmar). O fallback de "informações autorizadas" passou a reconhecer o DNA como fonte (senão a IA recusaria o próprio DNA do cliente).
+
+**Painel:** aba "Conhecimento" → **"DNA & Conhecimento"** (ícone de DNA); card das 10 categorias (Regras de Negócio destacada, `X/10 preenchidas`); persona reenquadrada como **"Voz & estilo"**.
+
+**Qualidade:** typecheck + build + **19 testes unitários** (6 do DNA) + **integração real contra Postgres** (round-trip + merge + compilação no prompt) + **revisão adversarial** (0 P0/P1; 3 P2 de qualidade-de-prompt **todos corrigidos**) + **smoke no prod** (login→GET→PATCH→persiste→limpa sem resíduo) + **conferência visual**. Deploy: `b1a2d1e`/`57697d0`.
+
+**Fundação para:** #5 (DNA do Contato — mesmas categorias por contato), #9 (DNA hierárquico Herdar/Combinar/Substituir — mesmas categorias em 4 níveis), #10 (Assistente com DNA próprio).
 
 ---
 
