@@ -2,6 +2,7 @@
 // Regra pura: dado o estado da missão + histórico, decide o que entra no prompt.
 import type { Direcao, EstadoMissao } from '@prisma/client'
 import type { ContextoIA } from '../../core/ia/porta-ia'
+import { compilarDnaContato } from '../contatos/contato.dna'
 import { compilarDna } from '../tenant/tenant.dna'
 import { lerEstilo, regrasDeEstilo, type EstiloConversa } from '../tenant/tenant.estilo'
 
@@ -90,6 +91,7 @@ type MissaoComMsgs = {
   fatos: unknown
   contato?: {
     memoria: unknown
+    dna?: unknown // DNA do contato (perfil/comunicação/histórico/observações)
     tags?: { tag: { nome: string; descricao: string | null } }[]
   } | null
   // identidade (voz) + estilo (fallback) + DNA (conhecimento categorizado) da IA
@@ -131,6 +133,8 @@ export function montarFicha(
         .filter((t) => t.descricao?.trim())
         .slice(0, 10)
         .map((t) => `${t.nome}: ${t.descricao!.trim().slice(0, 400)}`) ?? null,
+    // DNA do contato: personalização sobre a pessoa (não é fonte de fato)
+    dnaContato: compilarDnaContato(missao.contato?.dna),
     conhecimento: conhecimento ?? null,
     dnaConhecimento: dna.conhecimento,
     ultimasMensagens: missao.mensagens

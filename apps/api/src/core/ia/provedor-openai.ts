@@ -64,6 +64,10 @@ export const provedorOpenai: ProvedorIA = {
       ctx.caracteristicasContato && ctx.caracteristicasContato.length > 0
         ? `CARACTERÍSTICAS deste contato (tags — considere na abordagem; é conhecimento SOBRE A PESSOA, não autoriza inventar preço/fato):\n- ${ctx.caracteristicasContato.join('\n- ')}`
         : ''
+    // DNA DESTE CONTATO (perfil/comunicação/histórico/observações) — personalização sobre a pessoa
+    const dnaContato = ctx.dnaContato?.trim()
+      ? `DNA DESTE CONTATO (o que sabemos sobre a pessoa — use pra PERSONALIZAR a abordagem e o tom; é conhecimento SOBRE A PESSOA, NÃO autoriza inventar preço/fato):\n${ctx.dnaContato.trim()}`
+      : ''
     // Memória COLETIVA do tenant (conhecimento aprendido/curado)
     const conhecimento =
       ctx.conhecimento && ctx.conhecimento.length > 0
@@ -89,6 +93,7 @@ export const provedorOpenai: ProvedorIA = {
       fatos,
       memoria,
       caracteristicas,
+      dnaContato,
       conhecimento,
       dna,
       informacoes,

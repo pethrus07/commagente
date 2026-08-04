@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Download, Plus, Search, Smartphone, Tag as TagIcon, Trash2, Upload, Users, X } from 'lucide-react'
+import { Download, IdCard, Plus, Search, Smartphone, Tag as TagIcon, Trash2, Upload, Users, X } from 'lucide-react'
 import { api } from '../lib/api'
+import { CATEGORIAS_DNA_CONTATO, type DnaContato } from '../lib/dna'
 import { toast } from '../lib/toast'
 import type { ContatoResumo, Numero, Tag, TagResumo } from '../lib/types'
-import { Button, Card, EmptyState, Spinner, tempoRelativo } from '../lib/ui'
+import { Button, Card, EmptyState, Spinner, cn, tempoRelativo } from '../lib/ui'
 
 const campo =
   'w-full rounded-xl border border-line bg-surface2 px-4 py-2 text-sm text-content placeholder:text-subtle focus:border-indigo-500/50 focus:outline-none'
@@ -220,8 +221,76 @@ function AdicionarTag({ tags, jaTem, onAplicar }: { tags: TagResumo[]; jaTem: st
   )
 }
 
+// Modal "Perfil (DNA) do contato": conhecimento sobre a PESSOA (perfil/comunicação/histórico/
+// observações). Personalização — a IA usa pra ajustar o tom, mas não autoriza inventar fato.
+function PerfilContatoModal({ contatoId, nome, onFechar }: { contatoId: string; nome: string | null; onFechar: () => void }) {
+  const [dna, setDna] = useState<DnaContato | null>(null)
+  const [salvando, setSalvando] = useState(false)
+
+  useEffect(() => {
+    api.contatos
+      .obter(contatoId)
+      .then((c) => setDna(c.dna ?? {}))
+      .catch((e) => { toast((e as Error).message, 'erro'); onFechar() })
+  }, [contatoId, onFechar])
+
+  const salvar = async () => {
+    if (!dna) return
+    setSalvando(true)
+    try {
+      const payload = Object.fromEntries(
+        CATEGORIAS_DNA_CONTATO.map((c) => [c.chave, dna[c.chave]?.trim() || '']),
+      ) as DnaContato
+      await api.contatos.salvarDna(contatoId, payload)
+      toast('Perfil salvo — a IA personaliza já no próximo turno.', 'ok')
+      onFechar()
+    } catch (e) {
+      toast((e as Error).message, 'erro')
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 backdrop-blur-sm">
+      <Card className="w-full max-w-lg p-6">
+        <div className="mb-1 flex items-center justify-between">
+          <h3 className="flex items-center gap-2 font-semibold text-content"><IdCard className="h-5 w-5 text-indigo-300" /> Perfil (DNA) do contato</h3>
+          <button onClick={onFechar} className="text-subtle hover:text-content"><X className="h-5 w-5" /></button>
+        </div>
+        <p className="mb-4 text-[11px] text-muted"><b className="text-content">{nome ?? 'Sem nome'}</b> — o que a IA sabe sobre a pessoa pra personalizar. Preencha só o que ajudar; é personalização, não autoriza inventar preço/fato.</p>
+        {dna === null ? (
+          <div className="grid place-items-center py-8"><Spinner className="h-5 w-5" /></div>
+        ) : (
+          <>
+            <div className="space-y-3">
+              {CATEGORIAS_DNA_CONTATO.map((c) => (
+                <div key={c.chave}>
+                  <label className="mb-1 block text-xs font-medium text-content">{c.titulo}</label>
+                  <textarea
+                    value={dna[c.chave] ?? ''}
+                    onChange={(e) => setDna((d) => ({ ...(d ?? {}), [c.chave]: e.target.value }))}
+                    rows={2}
+                    placeholder={c.dica}
+                    className={cn(campo, 'resize-none text-[13px]')}
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <Button variant="ghost" onClick={onFechar}>Cancelar</Button>
+              <Button onClick={salvar} loading={salvando}>Salvar perfil</Button>
+            </div>
+          </>
+        )}
+      </Card>
+    </div>
+  )
+}
+
 export function Contatos() {
   const [contatos, setContatos] = useState<ContatoResumo[] | null>(null)
+  const [perfil, setPerfil] = useState<{ id: string; nome: string | null } | null>(null)
   const [tags, setTags] = useState<TagResumo[]>([])
   const [busca, setBusca] = useState('')
   const [filtroTag, setFiltroTag] = useState<string | null>(null)
@@ -403,7 +472,10 @@ export function Contatos() {
                       <div className="grid h-8 w-8 place-items-center rounded-lg bg-surface2 text-xs font-semibold text-content">
                         {(c.nome ?? '#').slice(0, 2).toUpperCase()}
                       </div>
-                      <span className="font-medium text-content">{c.nome ?? <span className="text-muted">sem nome</span>}</span>
+                      <button onClick={() => setPerfil({ id: c.id, nome: c.nome })} className="group flex items-center gap-1.5 font-medium text-content hover:text-indigo-300" title="Abrir perfil (DNA) do contato">
+                        {c.nome ?? <span className="text-muted group-hover:text-indigo-300">sem nome</span>}
+                        <IdCard className="h-3.5 w-3.5 text-subtle opacity-0 transition group-hover:opacity-100" />
+                      </button>
                       {c.optOut && <span className="rounded bg-rose-500/15 px-1.5 text-[10px] font-medium text-rose-300">opt-out</span>}
                     </div>
                   </td>
@@ -431,6 +503,7 @@ export function Contatos() {
       {modal === 'novo' && <NovoContatoModal onFechar={(criou) => { setModal(null); if (criou) carregar() }} />}
       {modal === 'whatsapp' && <ImportarWhatsAppModal onFechar={(imp) => { setModal(null); if (imp) carregar() }} />}
       {modal === 'tags' && <TagsModal tags={tags} onFechar={(mudou) => { setModal(null); if (mudou) carregar() }} />}
+      {perfil && <PerfilContatoModal contatoId={perfil.id} nome={perfil.nome} onFechar={() => setPerfil(null)} />}
     </div>
   )
 }

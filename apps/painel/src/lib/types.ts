@@ -117,6 +117,18 @@ export interface ContatoResumo {
   tags: Tag[]
 }
 
+// detalhe de um contato (inclui o DNA — conhecimento sobre a pessoa)
+export interface ContatoDetalhe {
+  id: string
+  nome: string | null
+  telefone: string
+  origem: string | null
+  optOut: boolean
+  criadoEm: string
+  dna: import('./dna').DnaContato
+  tags: Tag[]
+}
+
 export interface ImportResultado {
   criados: number
   atualizados: number

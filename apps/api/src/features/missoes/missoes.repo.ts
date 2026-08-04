@@ -33,7 +33,7 @@ export const missoesRepo = {
       where: { id },
       include: {
         // tags do contato entram no contexto da IA (descrição = conhecimento sobre o contato)
-        contato: { include: { tags: { include: { tag: { select: { nome: true, descricao: true } } } } } },
+        contato: { include: { tags: { include: { tag: { select: { nome: true, descricao: true } } } } } }, // memoria/dna vêm no include completo
         numero: true,
         tenant: { select: { persona: true, estilo: true, dna: true } }, // identidade + estilo + DNA da IA p/ o prompt
         mensagens: { orderBy: { criadaEm: 'asc' } },

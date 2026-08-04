@@ -210,6 +210,13 @@ export const api = {
 
   contatos: {
     listar: () => req<ContatoResumo[]>('/contatos'),
+    obter: (id: string) => req<import('./types').ContatoDetalhe>(`/contatos/${id}`),
+    // salva o DNA do contato (mescla sobre o atual: categoria ausente = mantém; vazia = limpa)
+    salvarDna: (id: string, dna: import('./dna').DnaContato) =>
+      req<{ dna: import('./dna').DnaContato }>(`/contatos/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ dna }),
+      }),
     criar: (data: { nome?: string; telefone: string }) =>
       req<ContatoResumo>('/contatos', { method: 'POST', body: JSON.stringify(data) }),
     importar: (contatos: { nome?: string; telefone: string }[]) =>

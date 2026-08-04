@@ -1,8 +1,10 @@
-// ⚙️ Aplicação — contatos (o "C" do CRM): listar, criar, importar (CSV/WhatsApp), exportar.
+// ⚙️ Aplicação — contatos (o "C" do CRM): listar, criar, importar (CSV/WhatsApp), exportar, DNA.
+import { Prisma } from '@prisma/client'
 import { conferirDono, tenantAtual } from '../../core/contexto'
 import { db } from '../../core/db'
 import { ErroHttp } from '../../core/erros'
 import { whatsapp } from '../../core/evolution'
+import { type DnaContato, dnaContatoSchema, lerDnaContato } from './contato.dna'
 
 function normalizarTelefone(t: string): string {
   return (t ?? '').replace(/\D/g, '')
@@ -28,6 +30,39 @@ export async function listarContatos() {
     totalMissoes: c._count.missoes,
     tags: c.tags.map((ct) => ct.tag),
   }))
+}
+
+// detalhe de um contato (inclui o DNA) — com checagem de dono (anti-IDOR).
+export async function obterContato(id: string) {
+  const c = await db.contato.findUnique({
+    where: { id },
+    include: { tags: { include: { tag: { select: { id: true, nome: true, cor: true } } } } },
+  })
+  if (!c) throw new ErroHttp(404, 'Contato não encontrado')
+  await conferirDono(c.tenantId)
+  return {
+    id: c.id,
+    nome: c.nome,
+    telefone: c.telefone,
+    origem: c.origem,
+    optOut: c.optOut,
+    criadoEm: c.criadoEm,
+    dna: lerDnaContato(c.dna), // só as categorias preenchidas
+    tags: c.tags.map((ct) => ct.tag),
+  }
+}
+
+// grava o DNA do contato com semântica de PATCH/merge (categoria ausente = mantém; vazia = limpa).
+// Anti-IDOR: só grava se o contato for do tenant da requisição. {} → não muda nada.
+export async function definirDnaContato(id: string, patch: unknown): Promise<DnaContato> {
+  const atual = await db.contato.findUnique({ where: { id }, select: { tenantId: true, dna: true } })
+  if (!atual) throw new ErroHttp(404, 'Contato não encontrado')
+  await conferirDono(atual.tenantId)
+  const mesclado = { ...lerDnaContato(atual.dna), ...dnaContatoSchema.partial().parse(patch ?? {}) }
+  const limpo = lerDnaContato(mesclado) // descarta categorias que ficaram vazias
+  const valor = Object.keys(limpo).length ? (limpo as unknown as Prisma.InputJsonValue) : Prisma.JsonNull
+  await db.contato.update({ where: { id }, data: { dna: valor } })
+  return limpo
 }
 
 export async function criarContato(input: { nome?: string; telefone: string }) {

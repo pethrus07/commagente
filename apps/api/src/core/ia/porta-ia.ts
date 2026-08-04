@@ -25,6 +25,12 @@ export interface ContextoIA {
    * Camada COMPLEMENTAR de conhecimento — considere, mas não substitui persona/informações.
    */
   caracteristicasContato?: string[] | null
+  /**
+   * DNA DESTE CONTATO — conhecimento estruturado sobre a pessoa (perfil/comunicação/
+   * histórico/observações), já compilado. PERSONALIZAÇÃO, não fonte de fato: use pra ajustar
+   * a abordagem; NÃO autoriza afirmar preço/fato (o guardrail anti-invenção segue valendo).
+   */
+  dnaContato?: string | null
   /** memória COLETIVA do tenant — conhecimento aprendido/curado (FAQ, objeções, políticas) */
   conhecimento?: string[] | null
   /**
