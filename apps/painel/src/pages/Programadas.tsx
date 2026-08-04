@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { CalendarClock, Pause, Pencil, Play, Plus, Trash2, Upload, Wallet, X } from 'lucide-react'
 import { api } from '../lib/api'
-import { TIPO_INFO, TIPOS_MISSAO } from '../lib/estados'
+import { TIPO_INFO, TIPOS_MISSAO, rotuloNumero } from '../lib/estados'
 import { toast } from '../lib/toast'
 import type { Agendamento, Numero } from '../lib/types'
 import { Button, Card, EmptyState, Spinner, cn } from '../lib/ui'
@@ -288,7 +288,7 @@ function NovoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
             <label className="mb-1 block text-xs text-muted">Número (chip)</label>
             <select value={form.numeroId} onChange={(e) => setForm({ ...form, numeroId: e.target.value })} className={campo}>
               {numeros.length === 0 && <option value="">— nenhum número —</option>}
-              {numeros.map((n) => (<option key={n.id} value={n.id} className="bg-slate-900">+{n.telefone} ({n.statusConexao})</option>))}
+              {numeros.map((n) => (<option key={n.id} value={n.id} className="bg-slate-900">{rotuloNumero(n)}{n.apelido ? ` · +${n.telefone}` : ''} ({n.statusConexao})</option>))}
             </select>
           </div>
           <div>

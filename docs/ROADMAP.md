@@ -430,7 +430,29 @@ Custo hoje é baixíssimo (~R$0,06 numa conversa longa de 27 turnos), mas dá pr
 
 **Cuidados:** **mídia é o maior risco de ban** (o próprio Pedro alertou — item 8 acima) → enviar com parcimônia, contar no budget anti-ban, talvez teto de mídia/dia; validar tamanho/mimetype.
 
+**⚠️ Manter SIMPLES (pedido do Pedro, 04/08):** o fluxo comum — anexar 1 documento e a IA mandar — tem que ser óbvio, 2 cliques. Nada de configuração pesada; regras avançadas (quando enviar, condições) ficam opcionais e escondidas.
+
 **Esforço:** médio. Envio + fila + adapter já existem; o novo é o store do binário + anexo por missão/campanha + a ação da IA. **Alto valor comercial** (mandar catálogo/proposta é caso de uso central de vendas). Casa com §8.1 (biblioteca) e o §8.15 é o "degrau de saída" dela.
+
+### 8.16 🎯 Segmentação simples: audiência de campanha + tags em massa `backlog` — pedido do Pedro (04/08)
+
+> Com o sistema de tags melhor (descrição-como-contexto), **atribuir pessoas a uma campanha** e **marcar tags em vários contatos** precisam ficar mais simples e centrados em TAG. Hoje a campanha vai, no geral, pra uma **tag inteira** — a experiência tem que girar em torno disso.
+
+**Hoje (o que existe):** `SeletorContatos` já faz (a) contatos avulsos e (b) "toda a tag" (o servidor resolve o segmento). Marcar tag em vários contatos existe via seleção múltipla + barra de ação em massa (`aplicarEmLote`).
+
+**A melhorar — audiência de campanha:**
+- Foco em **tag como público**: escolher 1+ tags direto, com **contador ao vivo** ("312 contatos, 8 opt-out excluídos").
+- **Combinar tags** (união / interseção — "clientes E inadimplentes") e **excluir** ("todos da tag X, menos a Y").
+- Adicionar/remover avulsos por cima do segmento, com **preview da lista final**.
+- (futuro) salvar segmentos reutilizáveis.
+
+**A simplificar — tags em massa:**
+- Selecionar todos os **filtrados** de uma vez e aplicar/remover **múltiplas tags** numa tacada.
+- Taguear direto a partir da busca/resultado, sem entrar contato a contato.
+
+**Princípio:** **manter simples** — o caminho comum (mandar pra uma tag) = 2 cliques; o poder (combinar/excluir) é opcional e não polui. Alto valor (é o gesto que gerente/parceiro mais repete).
+
+**Nota (feito 04/08):** o **apelido do número** agora aparece em TODOS os seletores de disparo — Campanhas e Missão já mostravam; **Programadas** estava mostrando só o número → corrigido (`rotuloNumero`). Basta nomear o chip em Números pra ele aparecer.
 
 ---
 
