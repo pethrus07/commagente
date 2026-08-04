@@ -157,7 +157,7 @@ function DnaCategorias() {
             ))}
           </div>
           <div className="mt-4 flex items-center justify-between gap-3">
-            <p className="text-[11px] leading-snug text-subtle">A IA usa isto como <b>fonte autorizada</b> (pode afirmar). As <b>Regras de negócio</b> vencem tudo — nem a persona as contorna.</p>
+            <p className="text-[11px] leading-snug text-subtle">A IA usa isto como <b>fonte autorizada</b> (pode afirmar). As <b>Regras de negócio</b> vencem a persona — mas nunca autorizam inventar preço/fato.</p>
             <Button onClick={salvar} loading={salvando}>Salvar DNA</Button>
           </div>
         </>

@@ -29,7 +29,7 @@ const TITULOS: Record<Page, { t: string; s: string }> = {
   escalados: { t: 'Escalados', s: 'Conversas que a IA entregou pra você' },
   contatos: { t: 'Contatos', s: 'Leads e clientes (CRM)' },
   tags: { t: 'Tags', s: 'Rótulos que viram conhecimento pra IA sobre o contato' },
-  conhecimento: { t: 'Conhecimento', s: 'Memória coletiva — o que a IA aprende' },
+  conhecimento: { t: 'DNA & Conhecimento', s: 'O que a IA sabe sobre a empresa — e o que aprende com as conversas' },
   numeros: { t: 'Números', s: 'Chips conectados via Evolution' },
   tenants: { t: 'Tenants', s: 'Clientes da plataforma' },
 }
