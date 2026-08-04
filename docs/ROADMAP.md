@@ -320,7 +320,7 @@ Custo hoje é baixíssimo (~R$0,06 numa conversa longa de 27 turnos), mas dá pr
 | 2 | **Apelido dos números** (nome por chip em todo lugar) | 🔴 novo (simples) | `NumeroWhatsapp.apelido` + UI |
 | 3 | **Recorrências completas** (diário/a-cada-X/semanal/anual/dias-úteis…) | 🟡 base pronta | expandir `Agendamento` (hoje só uma-vez/mensal — dor exata do parceiro) |
 | 4 | **DNA** (renomear "Voz da Marca" + categorias) | 🟢 **FEITO** (§8.13) | `Tenant.dna` 10 categorias, defaults-first + orçamento de contexto; deployado prod |
-| 5 | **DNA do Contato** (Perfil/Comunicação/Histórico/Observações) | 🟡 parcial | memória do contato (MEM-1) existe; falta estruturar/editar |
+| 5 | **DNA do Contato** (Perfil/Comunicação/Histórico/Observações) | 🟢 **FEITO** (§8.13) | `Contato.dna` 4 categorias, personalização (não fato); deployado prod |
 | 6 | **Relatórios Inteligentes** (Analítico + Executivo/IA + chat da campanha) | 🟢 **núcleo FEITO** (§8.9) | falta o **chat da campanha** + indicadores ricos |
 | 7 | **Central de Inteligência** (chat global sobre TODA a base) | 🔴 novo, grande | épico próprio; relaciona a §8.10 |
 | 8 | **Tutorial Inteligente** (mascote guia a UI) | 🔴 novo (front-heavy) | adoção/suporte |
@@ -351,7 +351,7 @@ Custo hoje é baixíssimo (~R$0,06 numa conversa longa de 27 turnos), mas dá pr
 
 **Fase 2 — "A fundação (DNA) + começar o oficial":**
 - ✅ **#4 DNA** (categorias + rename "Voz da Marca"→DNA) — **FEITO e no prod** (§8.13): defaults-first + orçamento de contexto, Regras de Negócio prioritárias sem furar o anti-invenção.
-- 🧠 **#5 DNA do Contato** (monta sobre o #4) — **próximo**
+- ✅ **#5 DNA do Contato** (monta sobre o #4) — **FEITO e no prod** (§8.13): `Contato.dna` 4 categorias (perfil/comunicação/histórico/observações) como PERSONALIZAÇÃO (não fonte de fato); anti-IDOR fechado; validado ao vivo (a IA muda o tom por contato).
 - 🧠 **#1 Tags-como-contexto** já entregue na Fase 1 (reaproveita o padrão de categorias do DNA)
 - 🛞 **Piloto da API oficial no suporte reativo** (Evolution `cloudapi`) — mata o "aguardando" + zero ban; precisa creds Meta do parceiro (escada `docs/escada-api-oficial.md`)
 - ➡️ Entregável: DNA base funcionando + 1 tenant respondendo pelo oficial (reativo).
@@ -384,6 +384,17 @@ Custo hoje é baixíssimo (~R$0,06 numa conversa longa de 27 turnos), mas dá pr
 **Qualidade:** typecheck + build + **19 testes unitários** (6 do DNA) + **integração real contra Postgres** (round-trip + merge + compilação no prompt) + **revisão adversarial** (0 P0/P1; 3 P2 de qualidade-de-prompt **todos corrigidos**) + **smoke no prod** (login→GET→PATCH→persiste→limpa sem resíduo) + **conferência visual**. Deploy: `b1a2d1e`/`57697d0`.
 
 **Fundação para:** #5 (DNA do Contato — mesmas categorias por contato), #9 (DNA hierárquico Herdar/Combinar/Substituir — mesmas categorias em 4 níveis), #10 (Assistente com DNA próprio).
+
+#### DNA do Contato (#5) — ENTREGUE `2026-08-04` `prod`
+
+> Segundo nível do DNA, montado sobre o #4. `Contato.dna` (JSON, migration `20260804180000_contato_dna`) com 4 categorias: **perfil, comunicação, histórico, observações**. Papel diferente do DNA do tenant: aqui é **PERSONALIZAÇÃO** (como tratar a pessoa), **NÃO fonte de fato** — renderizado como "DNA DESTE CONTATO", igual às características de tag; o guardrail anti-invenção de preço/fato continua valendo por cima.
+
+- **Mesma disciplina do #4:** defaults-first + orçamento de contexto (cap por categoria 600 / total 1600 — menor, é sobre uma pessoa). `definirDnaContato` com PATCH/merge.
+- **Segurança:** `obterContato`/`definirDnaContato` com `conferirDono` (anti-IDOR) — outro tenant recebe 404 e não vaza existência (P2-a da revisão alinhou a mensagem). **Nenhum caminho automático escreve `contato.dna`** (só admin autenticado) → o contato não-confiável do WhatsApp não injeta no próprio DNA.
+- **Painel:** clicar no nome do contato abre o modal "Perfil (DNA) do contato" com as 4 categorias.
+- **Validado ao vivo (IA real):** mesma mensagem com/sem DNA do contato — sem DNA a resposta é genérica; **com** DNA ela fica objetiva (respeita "odeia rodeios"), vai direto ao ponto e cita a "frota" (do perfil), mantendo o preço correto do DNA do tenant. Verde: 24 unit (5 do contato) + integração (round-trip + merge + **anti-IDOR** + prompt) + revisão adversarial (0 P0/P1) + funcional prod + visual. Deploy `ae65733`.
+
+**Próximo:** #9 (DNA hierárquico) une tenant + campanha + missão + contato num modelo de herança Herdar/Combinar/Substituir — o padrão de categorias e o orçamento de contexto já estão provados em dois níveis.
 
 ---
 
