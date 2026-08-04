@@ -59,6 +59,11 @@ export const provedorOpenai: ProvedorIA = {
       ctx.memoriaContato && Object.keys(ctx.memoriaContato).length > 0
         ? `Memória deste contato (de conversas anteriores — use para personalizar): ${JSON.stringify(ctx.memoriaContato)}.`
         : ''
+    // Características do contato vindas das TAGS (camada complementar sobre a pessoa)
+    const caracteristicas =
+      ctx.caracteristicasContato && ctx.caracteristicasContato.length > 0
+        ? `CARACTERÍSTICAS deste contato (tags — considere na abordagem; é conhecimento SOBRE A PESSOA, não autoriza inventar preço/fato):\n- ${ctx.caracteristicasContato.join('\n- ')}`
+        : ''
     // Memória COLETIVA do tenant (conhecimento aprendido/curado)
     const conhecimento =
       ctx.conhecimento && ctx.conhecimento.length > 0
@@ -74,6 +79,7 @@ export const provedorOpenai: ProvedorIA = {
       ctx.resumo ? `Resumo da conversa até aqui: ${ctx.resumo}.` : '',
       fatos,
       memoria,
+      caracteristicas,
       conhecimento,
       informacoes,
       'REGRA CRÍTICA (anti-alucinação): só afirme informações que estejam EXPLICITAMENTE nas INFORMAÇÕES AUTORIZADAS ou na BASE DE CONHECIMENTO acima. Para QUALQUER detalhe que não esteja lá — preço, política de quartos, tamanhos/medidas, formas de pagamento, datas específicas, disponibilidade, qualquer condição operacional — NÃO invente e NÃO improvise. O PADRÃO nesses casos é RESPONDER de forma natural que você vai confirmar esse detalhe com a equipe e já retorna, e SEGUIR conduzindo a conversa rumo ao objetivo (precisa_humano=FALSE). Use precisa_humano=true SOMENTE quando um humano realmente precisa agir/decidir — ex.: negociar preço ou condição, reclamação, pedido fora do escopo da missão — NÃO para toda pergunta cuja resposta você não tem. Nunca pause a missão só porque falta um dado informativo; apenas diga que confirma e continue.',

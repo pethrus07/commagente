@@ -3,9 +3,9 @@ import type { StatusConexao } from '@prisma/client'
 import { db } from '../../core/db'
 
 export const numerosRepo = {
-  criar(tenantId: string, telefone: string, instanciaEvolution: string) {
+  criar(tenantId: string, telefone: string, instanciaEvolution: string, apelido?: string | null) {
     return db.numeroWhatsapp.create({
-      data: { tenantId, telefone, instanciaEvolution },
+      data: { tenantId, telefone, instanciaEvolution, apelido: apelido || null },
     })
   },
 
@@ -30,6 +30,7 @@ export const numerosRepo = {
   atualizarConfig(
     id: string,
     data: {
+      apelido?: string | null
       janelaInicio?: string
       janelaFim?: string
       budgetDiario?: number

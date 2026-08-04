@@ -24,7 +24,8 @@ test('ativa suporte reativo e desliga pela página de Números', async ({ page }
   // desliga pelo modal de config (anti-bloqueio) — deixa o número limpo.
   // (getByRole button evita casar o selo de Saúde, cujo title contém "anti-bloqueio")
   await page.getByRole('button', { name: 'Anti-bloqueio' }).first().click()
-  await expect(page.getByRole('heading', { name: /Anti-bloqueio/ })).toBeVisible()
+  // o header do modal virou o apelido/telefone do número (item 2); confirma pelo subtítulo estável
+  await expect(page.getByText(/ritmo humano do chip/)).toBeVisible()
   await page.getByRole('button', { name: /Suporte reativo/ }).click()
   await page.getByRole('button', { name: 'Salvar' }).click()
   await expect(page.getByText('Configuração salva.')).toBeVisible()

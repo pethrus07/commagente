@@ -8,7 +8,26 @@ import { jitterMs } from '../fila/fila.dominio'
 import { filaRepo } from '../fila/fila.repo'
 import { missoesRepo } from '../missoes/missoes.repo'
 import { agendamentosRepo } from './agendamentos.repo'
-import { cicloRef, ehDiaDeDisparo, ymd } from './agendamentos.dominio'
+import { cicloRef, ehDiaDeDisparo, horarioJaChegou, ymd } from './agendamentos.dominio'
+
+// tipos de recorrência suportados. [parceiro Item 3]
+const RECORRENCIAS = [
+  'uma_vez',
+  'diario',
+  'dias_uteis',
+  'fim_de_semana',
+  'semanal',
+  'a_cada_dias',
+  'a_cada_semanas',
+  'mensal',
+  'a_cada_meses',
+  'anual',
+] as const
+const USA_DIA_MES = ['mensal', 'a_cada_meses']
+const USA_DATA_UNICA = ['uma_vez', 'anual']
+const USA_DIAS_SEMANA = ['semanal', 'a_cada_semanas']
+const USA_INTERVALO = ['a_cada_dias', 'a_cada_semanas', 'a_cada_meses']
+const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/
 
 export interface DefAgendamento {
   numeroId: string
@@ -19,9 +38,15 @@ export interface DefAgendamento {
   criterioConclusao?: string
   tom?: string
   informacoes?: string
-  recorrencia: 'uma_vez' | 'mensal'
+  recorrencia: string // validado contra RECORRENCIAS
   diaDoMes?: number
-  dataUnica?: string // "YYYY-MM-DD"
+  dataUnica?: string // "YYYY-MM-DD" (uma_vez / anual)
+  intervalo?: number // a_cada_dias/semanas/meses
+  diasSemana?: number[] // 0-6 (semanal/a_cada_semanas)
+  horario?: string // HH:mm
+  dataInicio?: string // "YYYY-MM-DD"
+  dataFim?: string // "YYYY-MM-DD"
+  maxExecucoes?: number
   entrega: 'ia' | 'fixa'
   mensagemFixa?: string
   rotulo?: string
@@ -36,16 +61,29 @@ function parseDataUnica(s?: string): Date | null {
 }
 
 function validarBase(def: DefAgendamento) {
-  if (def.recorrencia !== 'uma_vez' && def.recorrencia !== 'mensal')
-    throw new ErroHttp(400, 'recorrencia inválida (uma_vez | mensal).')
+  if (!(RECORRENCIAS as readonly string[]).includes(def.recorrencia))
+    throw new ErroHttp(400, 'Recorrência inválida.')
   if (def.entrega !== 'ia' && def.entrega !== 'fixa')
     throw new ErroHttp(400, 'entrega inválida (ia | fixa).')
   if (def.entrega === 'fixa' && !def.mensagemFixa?.trim())
     throw new ErroHttp(400, 'Mensagem fixa é obrigatória quando a entrega é "fixa".')
   if (def.entrega === 'ia' && !def.objetivo?.trim())
     throw new ErroHttp(400, 'Objetivo é obrigatório quando a entrega é "IA".')
-  if (def.recorrencia === 'uma_vez' && !def.dataUnica)
-    throw new ErroHttp(400, 'dataUnica é obrigatória para agendamento de uma vez.')
+  if (USA_DATA_UNICA.includes(def.recorrencia) && !def.dataUnica)
+    throw new ErroHttp(400, 'Informe a data para este tipo de recorrência.')
+  if (USA_INTERVALO.includes(def.recorrencia) && (!def.intervalo || def.intervalo < 1))
+    throw new ErroHttp(400, 'Informe o intervalo (a cada X) ≥ 1.')
+  if (USA_DIAS_SEMANA.includes(def.recorrencia) && !(def.diasSemana && def.diasSemana.length > 0))
+    throw new ErroHttp(400, 'Escolha ao menos um dia da semana.')
+  if (def.diasSemana && def.diasSemana.some((d) => d < 0 || d > 6))
+    throw new ErroHttp(400, 'Dias da semana inválidos (0-6).')
+  if (def.horario && !HHMM.test(def.horario))
+    throw new ErroHttp(400, 'Horário inválido (use HH:mm).')
+  if (
+    def.maxExecucoes !== undefined &&
+    (!Number.isInteger(def.maxExecucoes) || def.maxExecucoes < 1)
+  )
+    throw new ErroHttp(400, 'Máximo de execuções deve ser ≥ 1.')
 }
 
 function diaValido(dia?: number): boolean {
@@ -70,8 +108,15 @@ function montarDados(
     tom: def.tom?.trim() || null,
     informacoes: def.informacoes?.trim() || null,
     recorrencia: def.recorrencia,
-    diaDoMes: def.recorrencia === 'mensal' ? diaDoMes : null,
-    dataUnica: def.recorrencia === 'uma_vez' ? parseDataUnica(def.dataUnica) : null,
+    diaDoMes: USA_DIA_MES.includes(def.recorrencia) ? diaDoMes : null,
+    dataUnica: USA_DATA_UNICA.includes(def.recorrencia) ? parseDataUnica(def.dataUnica) : null,
+    intervalo: USA_INTERVALO.includes(def.recorrencia) ? def.intervalo ?? null : null,
+    diasSemana: USA_DIAS_SEMANA.includes(def.recorrencia) ? def.diasSemana?.join(',') || null : null,
+    horario: def.horario?.trim() || null,
+    // "a cada X" precisa de uma âncora; sem data de início informada, começa hoje.
+    dataInicio: parseDataUnica(def.dataInicio) ?? (USA_INTERVALO.includes(def.recorrencia) ? new Date() : null),
+    dataFim: parseDataUnica(def.dataFim),
+    maxExecucoes: def.maxExecucoes ?? null,
     entrega: def.entrega,
     mensagemFixa: def.entrega === 'fixa' ? def.mensagemFixa?.trim() || null : null,
     rotulo: def.rotulo?.trim() || null,
@@ -100,7 +145,7 @@ export async function criarAgendamento(input: DefAgendamento & { telefone: strin
   const tenantId = await tenantAtual()
   await conferirNumero(input.numeroId, tenantId)
   validarBase(input)
-  if (input.recorrencia === 'mensal' && !diaValido(input.diaDoMes))
+  if (USA_DIA_MES.includes(input.recorrencia) && !diaValido(input.diaDoMes))
     throw new ErroHttp(400, 'diaDoMes deve ser um número de 1 a 31.')
   const telefone = input.telefone.replace(/\D/g, '')
   if (telefone.length < 8) throw new ErroHttp(400, 'Telefone inválido.')
@@ -123,7 +168,7 @@ export async function criarAgendamentosEmLote(
       continue
     }
     let dia: number | null = null
-    if (input.recorrencia === 'mensal') {
+    if (USA_DIA_MES.includes(input.recorrencia)) {
       dia = c.dia ?? input.diaDoMes ?? null
       if (!diaValido(dia ?? undefined)) {
         ignorados++
@@ -232,10 +277,12 @@ export async function processarDevidos(agora = new Date()) {
     const ref = cicloRef(ag, hoje)
     if (ag.ultimoCicloRef === ref) continue // idempotência: já disparou este ciclo
     if (ag.pularCicloRef === ref) {
-      // pago/pulado neste ciclo → consome o ciclo sem disparar
-      await agendamentosRepo.marcarDisparado(ag.id, ref, agora)
+      // pago/pulado neste ciclo → consome o ciclo SEM disparar e SEM contar execução
+      await agendamentosRepo.atualizar(ag.id, { ultimoCicloRef: ref })
       continue
     }
+    // horário do dia ainda não chegou → deixa pro próximo tick (não marca, não perde)
+    if (!horarioJaChegou(ag.horario, agora)) continue
     try {
       await dispararAgendamento(ag)
     } catch (e) {
@@ -243,7 +290,9 @@ export async function processarDevidos(agora = new Date()) {
       continue // não marca → tenta de novo no próximo tick
     }
     await agendamentosRepo.marcarDisparado(ag.id, ref, agora)
-    if (ag.recorrencia === 'uma_vez') await agendamentosRepo.desativar(ag.id)
+    // para automaticamente: uma_vez, ou atingiu o máximo de execuções
+    if (ag.recorrencia === 'uma_vez' || (ag.maxExecucoes != null && ag.execucoes + 1 >= ag.maxExecucoes))
+      await agendamentosRepo.desativar(ag.id)
   }
 }
 
@@ -254,6 +303,7 @@ export async function dispararAgora(id: string) {
   await conferirDono(ag.tenantId)
   await dispararAgendamento(ag)
   await agendamentosRepo.marcarDisparado(ag.id, cicloRef(ag, ymd(new Date())), new Date())
-  if (ag.recorrencia === 'uma_vez') await agendamentosRepo.desativar(ag.id)
+  if (ag.recorrencia === 'uma_vez' || (ag.maxExecucoes != null && ag.execucoes + 1 >= ag.maxExecucoes))
+    await agendamentosRepo.desativar(ag.id)
   return { ok: true }
 }

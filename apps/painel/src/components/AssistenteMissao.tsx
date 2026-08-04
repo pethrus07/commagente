@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft, ArrowRight, Check, Rocket, Sparkles, X } from 'lucide-react'
 import { api } from '../lib/api'
+import { rotuloNumero } from '../lib/estados'
 import { ESTILO_PADRAO } from '../lib/estilos-conversa'
 import { MODELOS, type ModeloMissao } from '../lib/modelos-missao'
 import { toast } from '../lib/toast'
@@ -214,7 +215,7 @@ export function AssistenteMissao({ onFechar }: { onFechar: (criou: boolean) => v
                   <select value={form.numeroId} onChange={(e) => setForm({ ...form, numeroId: e.target.value })} className={campo}>
                     {numeros.length === 0 && <option value="">— nenhum número —</option>}
                     {numeros.map((n) => (
-                      <option key={n.id} value={n.id} className="bg-slate-900">+{n.telefone} ({n.statusConexao})</option>
+                      <option key={n.id} value={n.id} className="bg-slate-900">{rotuloNumero(n)}{n.apelido ? ` · +${n.telefone}` : ''} ({n.statusConexao})</option>
                     ))}
                   </select>
                 </div>
@@ -256,7 +257,7 @@ export function AssistenteMissao({ onFechar }: { onFechar: (criou: boolean) => v
                   {form.tom && <li><span className="text-muted">Tom:</span> {form.tom}</li>}
                   {form.criterioConclusao && <li><span className="text-muted">Conclui quando:</span> {form.criterioConclusao}</li>}
                   <li><span className="text-muted">Modo:</span> {form.modo === 'auto' ? '⚡ Auto (envia sozinha)' : '👁️ Co-pilot (você aprova)'}</li>
-                  <li><span className="text-muted">Envio por:</span> {numeroSel ? `+${numeroSel.telefone}` : '—'}</li>
+                  <li><span className="text-muted">Envio por:</span> {numeroSel ? rotuloNumero(numeroSel) : '—'}</li>
                   <li><span className="text-muted">Contatos:</span> {contatos.length > 0 ? `${contatos.length} — uma conversa por contato` : ehSuporte && reativo ? '🛟 reativo — atende quem entrar em contato' : <span className="text-subtle">nenhum ainda</span>}</li>
                 </ul>
               </div>

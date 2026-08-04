@@ -11,6 +11,11 @@ export const TIPO_INFO: Record<TipoMissao, { label: string; emoji: string }> = {
 }
 export const TIPOS_MISSAO = Object.keys(TIPO_INFO) as TipoMissao[]
 
+// rótulo amigável de um número: o apelido se houver, senão o telefone (com +)
+export function rotuloNumero(n: { apelido?: string | null; telefone: string }): string {
+  return n.apelido?.trim() || `+${n.telefone}`
+}
+
 // espelho da máquina de estados do domínio (transições válidas → mostra ações e valida o drag)
 export const TRANSICOES: Record<EstadoMissao, EstadoMissao[]> = {
   configurada: ['na_fila', 'descartada', 'arquivada'],

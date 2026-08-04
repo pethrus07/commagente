@@ -15,12 +15,13 @@ export async function listarTags() {
     id: t.id,
     nome: t.nome,
     cor: t.cor,
+    descricao: t.descricao,
     total: t._count.contatos,
     criadoEm: t.criadoEm,
   }))
 }
 
-export async function criarTag(input: { nome: string; cor?: string }) {
+export async function criarTag(input: { nome: string; cor?: string; descricao?: string | null }) {
   const tenantId = await tenantAtual()
   const nome = input.nome.trim()
   if (!nome) throw new ErroHttp(400, 'Nome da tag é obrigatório.')
@@ -28,7 +29,26 @@ export async function criarTag(input: { nome: string; cor?: string }) {
     where: { tenantId_nome: { tenantId, nome } },
   })
   if (existente) return existente // idempotente: já existe, devolve
-  return db.tag.create({ data: { tenantId, nome, cor: input.cor ?? null } })
+  return db.tag.create({
+    data: { tenantId, nome, cor: input.cor ?? null, descricao: input.descricao?.trim() || null },
+  })
+}
+
+// edita nome/cor/descrição da tag (a descrição é o conhecimento que a IA usa)
+export async function editarTag(
+  id: string,
+  patch: { nome?: string; cor?: string | null; descricao?: string | null },
+) {
+  const tag = await carregarTagDono(id)
+  const data: { nome?: string; cor?: string | null; descricao?: string | null } = {}
+  if (patch.nome !== undefined) {
+    const nome = patch.nome.trim()
+    if (!nome) throw new ErroHttp(400, 'Nome da tag é obrigatório.')
+    data.nome = nome
+  }
+  if (patch.cor !== undefined) data.cor = patch.cor
+  if (patch.descricao !== undefined) data.descricao = patch.descricao?.trim() || null
+  return db.tag.update({ where: { id: tag.id }, data })
 }
 
 async function carregarTagDono(id: string) {

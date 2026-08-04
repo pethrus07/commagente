@@ -34,7 +34,7 @@ export const agendamentosRepo = {
   marcarDisparado(id: string, cicloRef: string, quando: Date) {
     return db.agendamento.update({
       where: { id },
-      data: { ultimoCicloRef: cicloRef, ultimoDisparoEm: quando },
+      data: { ultimoCicloRef: cicloRef, ultimoDisparoEm: quando, execucoes: { increment: 1 } },
     })
   },
 

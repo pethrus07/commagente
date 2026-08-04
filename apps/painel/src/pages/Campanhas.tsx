@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { BarChart3, Download, FileText, Megaphone, Plus, Send, Sparkles, UserPlus, X } from 'lucide-react'
 import { SeletorContatos } from '../components/SeletorContatos'
 import { api } from '../lib/api'
-import { TIPO_INFO, TIPOS_MISSAO, descreverDisparo } from '../lib/estados'
+import { TIPO_INFO, TIPOS_MISSAO, descreverDisparo, rotuloNumero } from '../lib/estados'
 import { toast } from '../lib/toast'
 import type { CampanhaResumo, Numero, RelatorioCampanha } from '../lib/types'
 import { Button, Card, EmptyState, Spinner, cn, tempoRelativo } from '../lib/ui'
@@ -94,7 +94,7 @@ function NovaCampanhaModal({ onFechar }: { onFechar: (criou: boolean) => void })
             <label className="mb-1 block text-xs text-muted">Número (chip)</label>
             <select value={form.numeroId} onChange={(e) => setForm({ ...form, numeroId: e.target.value })} className={campo}>
               {numeros.length === 0 && <option value="">— nenhum número —</option>}
-              {numeros.map((n) => (<option key={n.id} value={n.id} className="bg-slate-900">+{n.telefone} ({n.statusConexao})</option>))}
+              {numeros.map((n) => (<option key={n.id} value={n.id} className="bg-slate-900">{rotuloNumero(n)}{n.apelido ? ` · +${n.telefone}` : ''} ({n.statusConexao})</option>))}
             </select>
           </div>
           <div>

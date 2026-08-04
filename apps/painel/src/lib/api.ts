@@ -89,10 +89,10 @@ export const api = {
 
   numeros: {
     listar: () => req<Numero[]>('/numeros'),
-    cadastrar: (telefone: string) =>
+    cadastrar: (telefone: string, apelido?: string) =>
       req<Numero>('/numeros', {
         method: 'POST',
-        body: JSON.stringify({ telefone }),
+        body: JSON.stringify({ telefone, apelido: apelido?.trim() || undefined }),
       }),
     conectar: (id: string) =>
       req<QrResposta>(`/numeros/${id}/conectar`, {
@@ -104,6 +104,7 @@ export const api = {
     editar: (
       id: string,
       patch: {
+        apelido?: string | null
         janelaInicio?: string
         janelaFim?: string
         budgetDiario?: number
@@ -183,9 +184,15 @@ export const api = {
       criterioConclusao?: string
       tom?: string
       informacoes?: string
-      recorrencia: 'uma_vez' | 'mensal'
+      recorrencia: string
       diaDoMes?: number
       dataUnica?: string
+      intervalo?: number
+      diasSemana?: number[]
+      horario?: string
+      dataInicio?: string
+      dataFim?: string
+      maxExecucoes?: number
       entrega: 'ia' | 'fixa'
       mensagemFixa?: string
       rotulo?: string
@@ -232,8 +239,10 @@ export const api = {
 
   tags: {
     listar: () => req<TagResumo[]>('/tags'),
-    criar: (data: { nome: string; cor?: string }) =>
+    criar: (data: { nome: string; cor?: string; descricao?: string | null }) =>
       req<Tag>('/tags', { method: 'POST', body: JSON.stringify(data) }),
+    editar: (id: string, patch: { nome?: string; cor?: string | null; descricao?: string | null }) =>
+      req<Tag>(`/tags/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
     remover: (id: string) => req(`/tags/${id}`, { method: 'DELETE' }),
     aplicarEmLote: (id: string, contatoIds: string[]) =>
       req<{ aplicados: number }>(`/tags/${id}/contatos`, { method: 'POST', body: JSON.stringify({ contatoIds }) }),

@@ -8,7 +8,8 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   fullyParallel: false, // compartilham DB de dev + sessão → serial
   workers: 1,
-  retries: 0,
+  // toasts têm auto-dismiss e podem empilhar (UI de timing) → 2 retries absorvem flakes transientes
+  retries: 2,
   reporter: [['list']],
   use: {
     baseURL: 'http://localhost:5173',

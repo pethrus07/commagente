@@ -16,6 +16,7 @@ import {
 
 function ConfigModal({ numero, onFechar }: { numero: Numero; onFechar: (salvou: boolean) => void }) {
   const [form, setForm] = useState({
+    apelido: numero.apelido ?? '',
     janelaInicio: numero.janelaInicio,
     janelaFim: numero.janelaFim,
     budgetDiario: String(numero.budgetDiario),
@@ -35,6 +36,7 @@ function ConfigModal({ numero, onFechar }: { numero: Numero; onFechar: (salvou: 
     setSalvando(true)
     try {
       await api.numeros.editar(numero.id, {
+        apelido: form.apelido.trim() || null,
         janelaInicio: form.janelaInicio,
         janelaFim: form.janelaFim,
         budgetDiario: budget,
@@ -75,11 +77,15 @@ function ConfigModal({ numero, onFechar }: { numero: Numero; onFechar: (salvou: 
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 backdrop-blur-sm">
       <Card className="w-full max-w-md p-6">
         <div className="mb-1 flex items-center justify-between">
-          <h3 className="font-semibold text-content">Anti-bloqueio · +{numero.telefone}</h3>
+          <h3 className="font-semibold text-content">{numero.apelido || `+${numero.telefone}`}</h3>
           <button onClick={() => onFechar(false)} className="text-muted hover:text-content"><X className="h-5 w-5" /></button>
         </div>
-        <p className="mb-5 text-xs text-muted">Ritmo humano do chip. Comece conservador em número novo.</p>
+        <p className="mb-5 text-xs text-muted">{numero.apelido ? `+${numero.telefone} · ` : ''}Identidade e ritmo humano do chip. Comece conservador em número novo.</p>
         <div className="space-y-3">
+          <div>
+            <label className="mb-1 block text-xs text-muted">Apelido (identificação na plataforma)</label>
+            <input value={form.apelido} onChange={(e) => setForm({ ...form, apelido: e.target.value })} placeholder="Ex.: Comercial, João, Vendas SP" maxLength={60} className={campo} />
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-xs text-muted">Janela — início</label>
@@ -235,6 +241,7 @@ function SaudeBadge({ saude }: { saude: SaudeNumero }) {
 export function Numeros() {
   const [numeros, setNumeros] = useState<Numero[] | null>(null)
   const [novo, setNovo] = useState('')
+  const [novoApelido, setNovoApelido] = useState('')
   const [salvando, setSalvando] = useState(false)
   const [conectar, setConectar] = useState<Numero | null>(null)
   const [configurar, setConfigurar] = useState<Numero | null>(null)
@@ -254,8 +261,9 @@ export function Numeros() {
     if (novo.trim().length < 8) return toast('Telefone inválido (use DDI+DDD).', 'erro')
     setSalvando(true)
     try {
-      await api.numeros.cadastrar(novo.replace(/\D/g, ''))
+      await api.numeros.cadastrar(novo.replace(/\D/g, ''), novoApelido)
       setNovo('')
+      setNovoApelido('')
       toast('Número cadastrado.', 'ok')
       carregar()
     } catch (e) {
@@ -269,8 +277,16 @@ export function Numeros() {
     <div className="space-y-6">
       <Card className="p-5">
         <label className="text-sm font-medium text-content">Cadastrar novo número (chip)</label>
-        <p className="mb-3 mt-0.5 text-xs text-muted">Use um chip dedicado/aquecido — DDI+DDD (ex.: 5583999998888).</p>
-        <div className="flex gap-2">
+        <p className="mb-3 mt-0.5 text-xs text-muted">Use um chip dedicado/aquecido — DDI+DDD (ex.: 5583999998888). O apelido é opcional e vira a identificação em toda a plataforma.</p>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <input
+            value={novoApelido}
+            onChange={(e) => setNovoApelido(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && cadastrar()}
+            placeholder="Apelido (ex.: Comercial, João)"
+            maxLength={60}
+            className="rounded-xl border border-line bg-surface2 px-4 py-2 text-sm text-content placeholder:text-subtle focus:border-indigo-500/50 focus:outline-none sm:w-56"
+          />
           <input
             value={novo}
             onChange={(e) => setNovo(e.target.value)}
@@ -300,8 +316,8 @@ export function Numeros() {
                       <Smartphone className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="font-medium text-content">+{n.telefone}</p>
-                      <p className="text-xs text-muted">{n.instanciaEvolution}</p>
+                      <p className="font-medium text-content">{n.apelido || `+${n.telefone}`}</p>
+                      <p className="text-xs text-muted">{n.apelido ? `+${n.telefone}` : n.instanciaEvolution}</p>
                     </div>
                   </div>
                   <Badge className={info.badge}>

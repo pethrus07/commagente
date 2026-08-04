@@ -140,6 +140,7 @@ model NumeroWhatsapp {
   id                 String        @id @default(uuid()) @db.Uuid
   tenantId           String        @map("tenant_id") @db.Uuid
   telefone           String
+  apelido            String? // nome/apelido do número (ex.: "Comercial", "João") — identificação amigável
   instanciaEvolution String        @map("instancia_evolution")
   statusConexao      StatusConexao @default(desconectado) @map("status_conexao")
   aquecimentoEstagio Int           @default(1) @map("aquecimento_estagio")
@@ -204,11 +205,14 @@ model Contato {
 // Tag (rótulo) de contato — segmentação do CRM. Permite disparar missão/campanha
 // para "todos da tag X" (ex.: costa-doce, lead-quente, inadimplente).
 model Tag {
-  id       String   @id @default(uuid()) @db.Uuid
-  tenantId String   @map("tenant_id") @db.Uuid
-  nome     String
-  cor      String? // hex opcional p/ o chip no painel
-  criadoEm DateTime @default(now()) @map("criado_em")
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  nome      String
+  cor       String? // hex opcional p/ o chip no painel
+  // Descrição = CONHECIMENTO pra IA: injetada no contexto de toda conversa com um contato
+  // que tenha esta tag (camada complementar, não substitui persona/informações). [parceiro Item 1]
+  descricao String?
+  criadoEm  DateTime @default(now()) @map("criado_em")
 
   tenant   Tenant       @relation(fields: [tenantId], references: [id])
   contatos ContatoTag[]
@@ -248,10 +252,18 @@ model Agendamento {
   tom               String?
   informacoes       String?
 
-  // agendamento
-  recorrencia  String    @default("mensal") // 'uma_vez' | 'mensal'
-  diaDoMes     Int?      @map("dia_do_mes") // 1-31 (mensal); dia curto → cai no último dia do mês
-  dataUnica    DateTime? @map("data_unica") // 'uma_vez'
+  // agendamento — recorrencia: uma_vez | diario | dias_uteis | fim_de_semana | semanal |
+  // a_cada_dias | a_cada_semanas | mensal | a_cada_meses | anual  [parceiro Item 3]
+  recorrencia  String    @default("mensal")
+  diaDoMes     Int?      @map("dia_do_mes") // 1-31 (mensal/a_cada_meses); dia curto → último dia do mês
+  dataUnica    DateTime? @map("data_unica") // uma_vez (a data) | anual (dia+mês de referência)
+  intervalo    Int?      // a_cada_dias/semanas/meses: o "X" (a cada X)
+  diasSemana   String?   @map("dias_semana") // semanal/a_cada_semanas: CSV de 0-6 (0=domingo), ex.: "1,3,5"
+  horario      String?   // HH:mm — só dispara a partir desse horário no dia (opcional)
+  dataInicio   DateTime? @map("data_inicio") // âncora dos ciclos "a cada X" + não dispara antes
+  dataFim      DateTime? @map("data_fim") // não dispara depois (opcional)
+  maxExecucoes Int?      @map("max_execucoes") // para automaticamente após N disparos (opcional)
+  execucoes    Int       @default(0) // contador de disparos efetivados
   entrega      String    @default("ia") // 'ia' (conduz) | 'fixa' (só envia o texto)
   mensagemFixa String?   @map("mensagem_fixa")
   rotulo       String? // agrupador opcional (ex.: "Mensalidade")

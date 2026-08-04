@@ -20,6 +20,11 @@ export interface ContextoIA {
   fatos?: Record<string, unknown> | null
   /** memória INDIVIDUAL do contato — o que já sabemos dele de interações anteriores */
   memoriaContato?: Record<string, unknown> | null
+  /**
+   * Características do contato vindas das TAGS (ex.: "Cliente VIP: atenção máxima").
+   * Camada COMPLEMENTAR de conhecimento — considere, mas não substitui persona/informações.
+   */
+  caracteristicasContato?: string[] | null
   /** memória COLETIVA do tenant — conhecimento aprendido/curado (FAQ, objeções, políticas) */
   conhecimento?: string[] | null
   ultimasMensagens: { direcao: 'in' | 'out'; conteudo: string }[]
