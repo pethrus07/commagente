@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { BookOpen, Bot, Check, Dna as DnaIcon, FileText, FileUp, Pencil, Plus, ShieldAlert, Sparkles, Trash2, X } from 'lucide-react'
 import { EstiloControles } from '../components/EstiloControles'
 import { api } from '../lib/api'
-import { CATEGORIAS_DNA, type Dna } from '../lib/dna'
+import { CATEGORIAS_DNA, type ChaveDna, type Dna } from '../lib/dna'
 import { ESTILO_PADRAO } from '../lib/estilos-conversa'
 import { toast } from '../lib/toast'
 import type { Conhecimento as Item, EstiloConversa } from '../lib/types'
@@ -108,7 +108,13 @@ function DnaCategorias({ itens, onMudou }: { itens: Item[]; onMudou: () => void 
   }, [])
 
   const docsDe = (chave: string) => itens.filter((i) => i.status === 'aprovado' && i.categoria === chave)
-  const preenchidas = CATEGORIAS_DNA.filter((c) => dna[c.chave]?.trim() || docsDe(c.chave).length).length
+  const cheia = (chave: ChaveDna) => !!dna[chave]?.trim() || docsDe(chave).length > 0
+  const preenchidas = CATEGORIAS_DNA.filter((c) => cheia(c.chave)).length
+  // "força do DNA" — nota de configuração (tipo Google Ads) pra guiar o cliente a preencher o que importa
+  const PESO: Record<string, number> = { empresa: 18, produtos: 16, precos: 16, regrasNegocio: 12, publicoAlvo: 10, diferenciais: 8, processoComercial: 8, faq: 6, casosSucesso: 4, glossario: 2 }
+  const score = CATEGORIAS_DNA.reduce((s, c) => s + (cheia(c.chave) ? PESO[c.chave] ?? 0 : 0), 0)
+  const faltando = CATEGORIAS_DNA.filter((c) => (PESO[c.chave] ?? 0) >= 10 && !cheia(c.chave))
+  const corScore = score >= 75 ? 'bg-emerald-500' : score >= 40 ? 'bg-amber-500' : 'bg-rose-500'
 
   const salvar = async () => {
     setSalvando(true)
@@ -162,6 +168,26 @@ function DnaCategorias({ itens, onMudou }: { itens: Item[]; onMudou: () => void 
         <div className="grid place-items-center py-6"><Spinner className="h-5 w-5" /></div>
       ) : (
         <>
+          {/* Força do DNA — nota de configuração + o que falta (guia o cliente) */}
+          <div className="mb-4 rounded-xl border border-line bg-surface2 p-3">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-xs font-medium text-content">Força do DNA</span>
+              <span className="font-mono text-xs text-muted">{score}/100</span>
+            </div>
+            <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-line">
+              <div className={cn('h-full rounded-full transition-all', corScore)} style={{ width: score + '%' }} />
+            </div>
+            {faltando.length > 0 ? (
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                <span className="text-[11px] text-subtle">Falta o essencial:</span>
+                {faltando.map((c) => (
+                  <span key={c.chave} className="rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-300">{c.titulo}</span>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-2 text-[11px] text-emerald-500">✓ O essencial está preenchido — a IA tem base sólida pra atender.</p>
+            )}
+          </div>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {CATEGORIAS_DNA.map((c) => {
               const docs = docsDe(c.chave)
