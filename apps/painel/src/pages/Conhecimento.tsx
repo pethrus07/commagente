@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { BookOpen, Bot, Check, Dna as DnaIcon, FileText, FileUp, Pencil, Plus, ShieldAlert, Sparkles, Trash2, X } from 'lucide-react'
+import { BookOpen, Bot, Check, Dna as DnaIcon, FileText, FileUp, Paperclip, Pencil, Plus, ShieldAlert, Sparkles, Trash2, X } from 'lucide-react'
 import { EstiloControles } from '../components/EstiloControles'
 import { api } from '../lib/api'
 import { CATEGORIAS_DNA, type ChaveDna, type Dna } from '../lib/dna'
 import { ESTILO_PADRAO } from '../lib/estilos-conversa'
 import { toast } from '../lib/toast'
-import type { Conhecimento as Item, EstiloConversa } from '../lib/types'
+import type { Conhecimento as Item, EstiloConversa, Midia } from '../lib/types'
 import { Button, Card, EmptyState, Spinner, cn, tempoRelativo } from '../lib/ui'
 
 const campo =
@@ -310,6 +310,69 @@ function ConfigIA() {
   )
 }
 
+// Biblioteca de mídia (§8.15): arquivos "bonitos" (catálogo, tabela de preço, PDF) que a IA
+// pode ENVIAR ao contato no momento certo. A IA decide sozinha (não é regra rígida).
+function BibliotecaMidia() {
+  const [midias, setMidias] = useState<Midia[] | null>(null)
+  const [subindo, setSubindo] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  const carregar = () => api.midia.listar().then(setMidias).catch((e) => toast((e as Error).message, 'erro'))
+  useEffect(() => { carregar() }, [])
+
+  const onArquivo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setSubindo(true)
+    try {
+      const base64 = await lerBase64(file)
+      const nome = file.name.replace(/\.[^.]+$/, '')
+      await api.midia.subir({ nome, mimetype: file.type || 'application/octet-stream', base64 })
+      toast(`"${nome}" na biblioteca.`, 'ok')
+      carregar()
+    } catch (err) {
+      toast((err as Error).message, 'erro')
+    } finally {
+      setSubindo(false)
+    }
+  }
+  const excluir = async (id: string) => { try { await api.midia.excluir(id); carregar() } catch (e) { toast((e as Error).message, 'erro') } }
+  const fmt = (n: number) => (n < 1024 * 1024 ? `${Math.round(n / 1024)} KB` : `${(n / 1024 / 1024).toFixed(1)} MB`)
+
+  return (
+    <Card className="p-5">
+      <div className="mb-4 flex items-center gap-2.5">
+        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-emerald-500/15 text-emerald-400"><Paperclip className="h-4 w-4" /></div>
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold text-content">Biblioteca de mídia</h3>
+          <p className="text-[11px] text-muted">Arquivos que a IA pode <b>enviar</b> (catálogo, tabela de preço, apresentação) — ela decide o momento certo, sozinha.</p>
+        </div>
+      </div>
+      <input ref={fileRef} type="file" accept=".pdf,.png,.jpg,.jpeg,.docx" onChange={onArquivo} className="hidden" />
+      {midias === null ? (
+        <div className="grid place-items-center py-6"><Spinner className="h-5 w-5" /></div>
+      ) : (
+        <div className="space-y-2">
+          {midias.length === 0 && <p className="text-[11px] text-subtle">Nenhum arquivo ainda. Suba o catálogo, a tabela de preços, uma apresentação…</p>}
+          {midias.map((m) => (
+            <div key={m.id} className="flex items-center gap-3 rounded-lg border border-line bg-surface2 px-3 py-2">
+              <FileText className="h-4 w-4 shrink-0 text-emerald-400" />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm text-content">{m.nome}</p>
+                <p className="text-[11px] text-subtle">{m.mimetype} · {fmt(m.tamanho)}</p>
+              </div>
+              <button onClick={() => excluir(m.id)} className="grid h-8 w-8 place-items-center rounded-lg text-subtle hover:bg-surface hover:text-rose-500" title="Remover"><Trash2 className="h-4 w-4" /></button>
+            </div>
+          ))}
+          <Button variant="ghost" onClick={() => fileRef.current?.click()} loading={subindo}><FileUp className="h-4 w-4" /> Subir arquivo</Button>
+        </div>
+      )}
+      <p className="mt-3 text-[11px] text-subtle">A IA envia no momento certo (quando o lead se interessa; não logo de cara, não repete). Mídia pesa no anti-bloqueio — use com parcimônia.</p>
+    </Card>
+  )
+}
+
 export function Conhecimento() {
   const [itens, setItens] = useState<Item[] | null>(null)
   const [modal, setModal] = useState<{ inicial?: Item } | null>(null)
@@ -381,6 +444,7 @@ export function Conhecimento() {
       {/* 🧬 DNA da IA — o que ela SABE (categorias + documentos) + como ela FALA (voz & estilo) */}
       <DnaCategorias itens={itens} onMudou={carregar} />
       <ConfigIA />
+      <BibliotecaMidia />
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted">Base geral (sem categoria): conhecimento solto e o que a IA aprende com as conversas. Prefira anexar os documentos dentro da categoria certa do DNA acima.</p>
         <div className="flex gap-2">
