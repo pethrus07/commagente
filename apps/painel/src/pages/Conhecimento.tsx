@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { BookOpen, Bot, Check, Dna as DnaIcon, FileUp, Pencil, Plus, ShieldAlert, Sparkles, Trash2, X } from 'lucide-react'
+import { BookOpen, Bot, Check, Dna as DnaIcon, FileText, FileUp, Pencil, Plus, ShieldAlert, Sparkles, Trash2, X } from 'lucide-react'
 import { EstiloControles } from '../components/EstiloControles'
 import { api } from '../lib/api'
 import { CATEGORIAS_DNA, type Dna } from '../lib/dna'
@@ -92,10 +92,12 @@ const CHIPS_PERSONA = [
 // Card "DNA da empresa" (nível TENANT): o conhecimento categorizado que a IA usa e pode afirmar.
 // Defaults-first: preencha só o que importa (categoria vazia não entra no prompt). Regras de
 // Negócio têm prioridade máxima. Conteúdo longo (catálogo inteiro) vai pra Base de conhecimento.
-function DnaCategorias() {
+function DnaCategorias({ itens, onMudou }: { itens: Item[]; onMudou: () => void }) {
   const [dna, setDna] = useState<Dna>({})
   const [carregando, setCarregando] = useState(true)
   const [salvando, setSalvando] = useState(false)
+  const [importCat, setImportCat] = useState<string | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     api.tenant
@@ -105,7 +107,8 @@ function DnaCategorias() {
       .finally(() => setCarregando(false))
   }, [])
 
-  const preenchidas = CATEGORIAS_DNA.filter((c) => dna[c.chave]?.trim()).length
+  const docsDe = (chave: string) => itens.filter((i) => i.status === 'aprovado' && i.categoria === chave)
+  const preenchidas = CATEGORIAS_DNA.filter((c) => dna[c.chave]?.trim() || docsDe(c.chave).length).length
 
   const salvar = async () => {
     setSalvando(true)
@@ -124,37 +127,74 @@ function DnaCategorias() {
     }
   }
 
+  const pedirImport = (chave: string) => { setImportCat(chave); fileRef.current?.click() }
+  const onArquivo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file || !importCat) return
+    try {
+      const base64 = await lerBase64(file)
+      const ent = await api.conhecimento.importarDocumento({ nomeArquivo: file.name, mimetype: file.type || 'application/octet-stream', base64, categoria: importCat })
+      toast(`"${ent.titulo}" anexado.`, 'ok')
+      onMudou()
+    } catch (err) {
+      toast((err as Error).message, 'erro')
+    } finally {
+      setImportCat(null)
+    }
+  }
+  const removerDoc = async (id: string) => {
+    try { await api.conhecimento.excluir(id); onMudou() } catch (e) { toast((e as Error).message, 'erro') }
+  }
+
   return (
     <Card className="p-5">
       <div className="mb-4 flex items-center gap-2.5">
         <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-emerald-500/15 text-emerald-400"><DnaIcon className="h-4 w-4" /></div>
         <div className="min-w-0">
           <h3 className="text-sm font-semibold text-content">DNA da empresa <span className="text-[11px] font-normal text-subtle">({preenchidas}/{CATEGORIAS_DNA.length} preenchidas)</span></h3>
-          <p className="text-[11px] text-muted">O que a IA sabe e pode afirmar sobre o seu negócio. Preencha só o que importa — o resto é opcional.</p>
+          <p className="text-[11px] text-muted">O que a IA sabe e pode afirmar. Escreva um resumo <b>e/ou</b> anexe documentos em cada categoria (o texto vira o essencial; o documento inteiro fica consultável por relevância).</p>
         </div>
       </div>
 
+      <input ref={fileRef} type="file" accept=".pdf,.docx,.txt,.md" onChange={onArquivo} className="hidden" />
       {carregando ? (
         <div className="grid place-items-center py-6"><Spinner className="h-5 w-5" /></div>
       ) : (
         <>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            {CATEGORIAS_DNA.map((c) => (
-              <div key={c.chave} className={cn('rounded-xl border p-3', c.prioridade ? 'border-amber-500/40 bg-amber-500/[0.05] md:col-span-2' : 'border-line')}>
-                <label className="mb-1 flex items-center gap-1.5 text-xs font-medium text-content">
-                  {c.prioridade && <ShieldAlert className="h-3.5 w-3.5 text-amber-500" />}
-                  {c.titulo}
-                  {c.prioridade && <span className="rounded-full bg-amber-500/20 px-1.5 text-[10px] font-medium text-amber-700 dark:text-amber-300">prioridade</span>}
-                </label>
-                <textarea
-                  value={dna[c.chave] ?? ''}
-                  onChange={(e) => setDna((d) => ({ ...d, [c.chave]: e.target.value }))}
-                  rows={c.prioridade ? 3 : 2}
-                  placeholder={c.dica}
-                  className={cn(campo, 'resize-none text-[13px]')}
-                />
-              </div>
-            ))}
+            {CATEGORIAS_DNA.map((c) => {
+              const docs = docsDe(c.chave)
+              return (
+                <div key={c.chave} className={cn('rounded-xl border p-3', c.prioridade ? 'border-amber-500/40 bg-amber-500/[0.05] md:col-span-2' : 'border-line')}>
+                  <label className="mb-1 flex items-center gap-1.5 text-xs font-medium text-content">
+                    {c.prioridade && <ShieldAlert className="h-3.5 w-3.5 text-amber-500" />}
+                    {c.titulo}
+                    {c.prioridade && <span className="rounded-full bg-amber-500/20 px-1.5 text-[10px] font-medium text-amber-700 dark:text-amber-300">prioridade</span>}
+                  </label>
+                  <textarea
+                    value={dna[c.chave] ?? ''}
+                    onChange={(e) => setDna((d) => ({ ...d, [c.chave]: e.target.value }))}
+                    rows={c.prioridade ? 3 : 2}
+                    placeholder={c.dica}
+                    className={cn(campo, 'resize-none text-[13px]')}
+                  />
+                  {/* documentos anexados a esta categoria */}
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                    {docs.map((d) => (
+                      <span key={d.id} className="inline-flex items-center gap-1 rounded-lg border border-line bg-surface2 px-2 py-0.5 text-[11px] text-muted" title={d.titulo}>
+                        <FileText className="h-3 w-3 text-emerald-400" />
+                        <span className="max-w-[140px] truncate">{d.titulo}</span>
+                        <button onClick={() => removerDoc(d.id)} className="opacity-60 hover:text-rose-400 hover:opacity-100"><X className="h-3 w-3" /></button>
+                      </span>
+                    ))}
+                    <button onClick={() => pedirImport(c.chave)} className="inline-flex items-center gap-1 rounded-lg border border-dashed border-line px-2 py-0.5 text-[11px] text-subtle transition hover:border-emerald-500/40 hover:text-content">
+                      <FileUp className="h-3 w-3" /> documento
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
           </div>
           <div className="mt-4 flex items-center justify-between gap-3">
             <p className="text-[11px] leading-snug text-subtle">A IA usa isto como <b>fonte autorizada</b> (pode afirmar). As <b>Regras de negócio</b> vencem a persona — mas nunca autorizam inventar preço/fato.</p>
@@ -281,7 +321,8 @@ export function Conhecimento() {
     const l = itens ?? []
     return {
       sugeridos: l.filter((i) => i.status === 'sugerido'),
-      aprovados: l.filter((i) => i.status === 'aprovado'),
+      // só os SEM categoria — os categorizados aparecem dentro do DNA, na sua categoria
+      aprovados: l.filter((i) => i.status === 'aprovado' && !i.categoria),
     }
   }, [itens])
 
@@ -311,11 +352,11 @@ export function Conhecimento() {
 
   return (
     <div className="space-y-6">
-      {/* 🧬 DNA da IA — o que ela SABE (categorias) + como ela FALA (voz & estilo) */}
-      <DnaCategorias />
+      {/* 🧬 DNA da IA — o que ela SABE (categorias + documentos) + como ela FALA (voz & estilo) */}
+      <DnaCategorias itens={itens} onMudou={carregar} />
       <ConfigIA />
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted">Base de conhecimento: o que a IA aprende com as conversas e com os seus documentos (consultada por relevância). Para catálogos longos, use aqui — o DNA é o resumo essencial.</p>
+        <p className="text-sm text-muted">Base geral (sem categoria): conhecimento solto e o que a IA aprende com as conversas. Prefira anexar os documentos dentro da categoria certa do DNA acima.</p>
         <div className="flex gap-2">
           <Button variant="ghost" onClick={() => fileRef.current?.click()} loading={importando}><FileUp className="h-4 w-4" /> Importar documento</Button>
           <Button onClick={() => setModal({})}><Plus className="h-4 w-4" /> Novo</Button>
