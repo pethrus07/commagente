@@ -1,6 +1,7 @@
 // 🖥️ Apresentação — rotas da base de conhecimento (memória coletiva).
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
+import { CHAVES_DNA } from '../tenant/tenant.dna'
 import {
   criarConhecimento,
   definirStatusConhecimento,
@@ -10,7 +11,8 @@ import {
   listarConhecimento,
 } from './conhecimento.caso-uso'
 
-const categoria = z.string().max(40).nullish() // chave do DNA (empresa/produtos/...) ou null = geral
+// só uma chave conhecida do DNA (empresa/produtos/...) ou null = base geral — evita doc órfão no painel
+const categoria = z.enum([...CHAVES_DNA] as [string, ...string[]]).nullish()
 const corpoCriar = z.object({
   titulo: z.string().min(1),
   conteudo: z.string().min(1),

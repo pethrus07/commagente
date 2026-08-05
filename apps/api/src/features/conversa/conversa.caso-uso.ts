@@ -294,15 +294,20 @@ async function executarTurno(missaoId: string) {
   // Best-effort: nunca derruba o turno (a mensagem já foi enfileirada); só envia mídia do próprio tenant.
   if (saida.enviar_midia) {
     try {
-      const doc = await midiaParaEnvio(saida.enviar_midia, missao.tenantId)
+      // trava DETERMINÍSTICA (não confia só no prompt): não reenvia a MESMA mídia nesta missão
+      const enviadas = await db.evento.findMany({ where: { missaoId, tipo: 'midia_enviada' }, select: { dados: true } })
+      const jaMandou = enviadas.some((e) => (e.dados as { midiaId?: string } | null)?.midiaId === saida.enviar_midia)
+      const doc = jaMandou ? null : await midiaParaEnvio(saida.enviar_midia, missao.tenantId)
       if (doc) {
         await filaRepo.enfileirar({
           tenantId: missao.tenantId,
           missaoId,
           contatoId: missao.contatoId,
-          payload: { numeroId: missao.numeroId, telefone: missao.contato.telefone, documento: doc, tipo: 'conversa' },
-          agendadoPara: new Date(Date.now() + jitterMs('conversa') + 4000), // chega logo depois da mensagem
+          // MESMO `tipo` do texto: num opener frio a mídia também passa pelo gate de janela/budget (anti-ban)
+          payload: { numeroId: missao.numeroId, telefone: missao.contato.telefone, documento: doc, tipo },
+          agendadoPara: new Date(Date.now() + jitterMs(tipo) + 4000), // chega logo depois da mensagem
         })
+        await db.evento.create({ data: { tenantId: missao.tenantId, missaoId, tipo: 'midia_enviada', dados: { midiaId: saida.enviar_midia } } })
       }
     } catch (e) {
       console.error('[conversa] enfileirar mídia falhou (best-effort):', (e as Error)?.message)

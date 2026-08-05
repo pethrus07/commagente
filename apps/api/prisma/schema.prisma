@@ -419,6 +419,7 @@ model Mensagem {
 
   @@unique([tenantId, providerMsgId]) // idempotência: não grava a mesma mensagem 2× (NULLs são distintos)
   @@index([missaoId, criadaEm])
+  @@index([tenantId, criadaEm]) // monitoramento ao vivo (§8.10): msgs de hoje / última por tenant sem full-scan
   @@map("mensagens")
 }
 
