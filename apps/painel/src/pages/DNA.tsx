@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Check, ChevronRight, Dna as DnaIcon, FileText, FileUp, Plus, ShieldAlert, Sparkles, Trash2, X } from 'lucide-react'
+import { Check, ChevronRight, Dna as DnaIcon, FileText, FileUp, Plus, ShieldAlert, Sparkles, X } from 'lucide-react'
 import { api } from '../lib/api'
 import { CATEGORIAS_DNA, type CategoriaDna, type Dna as DnaTipo } from '../lib/dna'
 import { toast } from '../lib/toast'
@@ -20,7 +20,8 @@ const PESO: Record<string, number> = { empresa: 18, produtos: 16, precos: 16, re
 function LeitorDoc({ item, onFechar }: { item: Item; onFechar: () => void }) {
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 backdrop-blur-sm" onClick={onFechar}>
-      <Card className="flex max-h-[80vh] w-full max-w-2xl flex-col p-0" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-2xl" onClick={(e) => e.stopPropagation()}>
+      <Card className="flex max-h-[80vh] w-full flex-col p-0">
         <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3">
           <h3 className="flex items-center gap-2 truncate font-semibold text-content"><FileText className="h-4 w-4 shrink-0 text-emerald-400" /> {item.titulo}</h3>
           <button onClick={onFechar} className="text-subtle hover:text-content"><X className="h-5 w-5" /></button>
@@ -32,6 +33,7 @@ function LeitorDoc({ item, onFechar }: { item: Item; onFechar: () => void }) {
           {item.origem === 'documento' ? '📄 de documento' : item.origem === 'ia' ? '🤖 aprendido pela IA' : '✍️ escrito à mão'} · a IA consulta este conteúdo por relevância.
         </div>
       </Card>
+      </div>
     </div>
   )
 }
