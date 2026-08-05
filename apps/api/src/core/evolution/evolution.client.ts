@@ -128,19 +128,27 @@ export const evolutionClient: PortaWhatsApp = {
   },
 
   async enviarDocumento(instancia, telefone, doc) {
-    // v2: POST /message/sendMedia/{instance} com mediatype 'document' e media em base64.
-    const r = await req<{ key?: { id?: string } }>(
-      'POST',
-      `/message/sendMedia/${instancia}`,
-      {
+    // v2: POST /message/sendMedia/{instance}. O mediatype vem do mimetype: imagem chega inline,
+    // áudio como nota de voz, vídeo como vídeo — só o resto (PDF/planilha/etc.) vai como documento.
+    const mime = doc.mimetype ?? 'application/pdf'
+    const audio = mime.startsWith('audio/')
+    const mediatype = mime.startsWith('image/') ? 'image' : audio ? 'audio' : mime.startsWith('video/') ? 'video' : 'document'
+    if (audio) {
+      // áudio tem endpoint próprio (nota de voz tocável) — sem fileName/caption
+      const r = await req<{ key?: { id?: string } }>('POST', `/message/sendWhatsAppAudio/${instancia}`, {
         number: telefone,
-        mediatype: 'document',
-        mimetype: doc.mimetype ?? 'application/pdf',
-        media: doc.base64,
-        fileName: doc.nomeArquivo,
-        caption: doc.legenda,
-      },
-    )
+        audio: doc.base64,
+      })
+      return { providerMsgId: r.key?.id ?? '' }
+    }
+    const r = await req<{ key?: { id?: string } }>('POST', `/message/sendMedia/${instancia}`, {
+      number: telefone,
+      mediatype,
+      mimetype: mime,
+      media: doc.base64,
+      fileName: doc.nomeArquivo,
+      caption: doc.legenda,
+    })
     return { providerMsgId: r.key?.id ?? '' }
   },
 
