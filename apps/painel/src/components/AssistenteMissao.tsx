@@ -9,6 +9,7 @@ import type { EstiloConversa, Numero } from '../lib/types'
 import { Button, Card, cn } from '../lib/ui'
 import { EstiloControles } from './EstiloControles'
 import { SeletorContatos } from './SeletorContatos'
+import { SeletorMidia } from './SeletorMidia'
 
 const campo =
   'w-full rounded-xl border border-line bg-surface2 px-4 py-2 text-sm text-content placeholder:text-subtle focus:border-indigo-500/50 focus:outline-none'
@@ -34,6 +35,7 @@ export function AssistenteMissao({ onFechar }: { onFechar: (criou: boolean) => v
     informacoesDica: 'Preços, prazos e condições REAIS que a IA pode afirmar.',
   })
   const [contatos, setContatos] = useState<Contato[]>([])
+  const [midiaIds, setMidiaIds] = useState<string[]>([]) // biblioteca curada desta missão (§9 Fase A)
   const [estilo, setEstilo] = useState<EstiloConversa>(ESTILO_PADRAO) // perfil de conversa da missão
   const [reativo, setReativo] = useState(false)
   const [salvando, setSalvando] = useState(false)
@@ -94,6 +96,7 @@ export function AssistenteMissao({ onFechar }: { onFechar: (criou: boolean) => v
           criterioConclusao: form.criterioConclusao.trim() || undefined,
           tom: form.tom.trim() || undefined,
           informacoes: form.informacoes.trim() || undefined,
+          midiaIds: midiaIds.length ? midiaIds : undefined, // mídias curadas (vazio → toda a biblioteca)
           estilo, // perfil de conversa desta missão (personalizado se ajustado)
           contatos,
         })
@@ -190,6 +193,11 @@ export function AssistenteMissao({ onFechar }: { onFechar: (criou: boolean) => v
                 <textarea value={form.informacoes} onChange={(e) => setForm({ ...form, informacoes: e.target.value })} rows={3} placeholder={form.informacoesDica} className={cn(campo, 'resize-none')} />
                 <p className="mt-1 text-[11px] leading-snug text-muted">🛡️ A IA só afirma o que estiver aqui. Fora disso, ela confirma ou escala — nunca inventa.</p>
               </div>
+              {/* Mídias desta missão — a IA envia quando o lead demonstrar interesse (§9 Fase A) */}
+              <div>
+                <label className="mb-1 block text-xs text-muted">📎 Mídias disponíveis nesta missão</label>
+                <SeletorMidia valor={midiaIds} onChange={setMidiaIds} dica="Nada marcado → a IA pode enviar qualquer item da sua biblioteca quando fizer sentido." />
+              </div>
               {/* Perfil de conversa — vem do modelo, ajustável (→ personalizado, salvo na missão) */}
               <div className="rounded-xl border border-line bg-surface/40 p-3">
                 <div className="mb-2 flex items-center justify-between">
@@ -257,6 +265,7 @@ export function AssistenteMissao({ onFechar }: { onFechar: (criou: boolean) => v
                   {form.tom && <li><span className="text-muted">Tom:</span> {form.tom}</li>}
                   {form.criterioConclusao && <li><span className="text-muted">Conclui quando:</span> {form.criterioConclusao}</li>}
                   <li><span className="text-muted">Modo:</span> {form.modo === 'auto' ? '⚡ Auto (envia sozinha)' : '👁️ Co-pilot (você aprova)'}</li>
+                  <li><span className="text-muted">Mídias:</span> {midiaIds.length > 0 ? `${midiaIds.length} anexada${midiaIds.length === 1 ? '' : 's'} — só essas` : 'toda a biblioteca disponível'}</li>
                   <li><span className="text-muted">Envio por:</span> {numeroSel ? rotuloNumero(numeroSel) : '—'}</li>
                   <li><span className="text-muted">Contatos:</span> {contatos.length > 0 ? `${contatos.length} — uma conversa por contato` : ehSuporte && reativo ? '🛟 reativo — atende quem entrar em contato' : <span className="text-subtle">nenhum ainda</span>}</li>
                 </ul>

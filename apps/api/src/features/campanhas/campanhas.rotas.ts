@@ -35,6 +35,7 @@ const corpoCriar = z
     criterioConclusao: z.string().optional(),
     tom: z.string().optional(),
     informacoes: z.string().optional(),
+    midiaIds: z.array(z.string().uuid()).optional(), // biblioteca curada (§9 Fase A)
     estilo: estiloSchema.optional(),
     ...alvo,
   })

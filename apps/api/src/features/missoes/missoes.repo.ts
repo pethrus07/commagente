@@ -14,6 +14,7 @@ export const missoesRepo = {
     criterioConclusao?: string
     tom?: string
     informacoes?: string
+    midiaIds?: string[] // biblioteca curada desta missão (vazio → toda a biblioteca do tenant)
     estilo?: Prisma.InputJsonValue // perfil de conversa desta missão (null → herda tenant)
     templateId?: string
     campanhaId?: string

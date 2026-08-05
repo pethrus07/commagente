@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { BarChart3, Download, FileText, Megaphone, Plus, Send, Sparkles, UserPlus, X } from 'lucide-react'
 import { SeletorContatos } from '../components/SeletorContatos'
+import { SeletorMidia } from '../components/SeletorMidia'
 import { api } from '../lib/api'
 import { TIPO_INFO, TIPOS_MISSAO, descreverDisparo, rotuloNumero } from '../lib/estados'
 import { toast } from '../lib/toast'
@@ -15,6 +16,7 @@ function NovaCampanhaModal({ onFechar }: { onFechar: (criou: boolean) => void })
   const [form, setForm] = useState({ nome: '', numeroId: '', tipo: 'vender', modo: 'auto', objetivo: '', criterioConclusao: '', tom: '', informacoes: '' })
   const [contatos, setContatos] = useState<{ telefone: string; nome?: string }[]>([])
   const [tagAlvo, setTagAlvo] = useState<string | null>(null)
+  const [midiaIds, setMidiaIds] = useState<string[]>([]) // biblioteca curada da campanha (§9 Fase A)
   const [dispararAgora, setDispararAgora] = useState(true)
   const [salvando, setSalvando] = useState(false)
 
@@ -42,6 +44,7 @@ function NovaCampanhaModal({ onFechar }: { onFechar: (criou: boolean) => void })
         criterioConclusao: form.criterioConclusao.trim() || undefined,
         tom: form.tom.trim() || undefined,
         informacoes: form.informacoes.trim() || undefined,
+        midiaIds: midiaIds.length ? midiaIds : undefined, // herdada por cada missão da campanha
         ...(tagAlvo ? { tagId: tagAlvo } : { contatos }),
       })
       if (dispararAgora) {
@@ -108,6 +111,10 @@ function NovaCampanhaModal({ onFechar }: { onFechar: (criou: boolean) => void })
           <div>
             <label className="mb-1 block text-xs text-muted">Informações autorizadas (opcional)</label>
             <textarea value={form.informacoes} onChange={(e) => setForm({ ...form, informacoes: e.target.value })} rows={2} placeholder="Preços/prazos REAIS que a IA pode afirmar" className={cn(campo, 'resize-none')} />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-muted">📎 Mídias da campanha (opcional)</label>
+            <SeletorMidia valor={midiaIds} onChange={setMidiaIds} dica="Nada marcado → a IA pode enviar qualquer item da biblioteca em cada conversa." />
           </div>
           <div className="border-t border-line pt-3">
             <SeletorContatos onChange={setContatos} onAlvoTag={setTagAlvo} />

@@ -137,7 +137,12 @@ async function executarTurno(missaoId: string) {
     .map((m) => m.conteudo)
     .join(' ')
   const conhecimento = await conhecimentoRelevante(missao.tenantId, consulta)
-  const midias = await midiasDoTenant(missao.tenantId) // biblioteca: o que a IA pode enviar
+  // biblioteca disponível à IA: se a missão/campanha CUROU mídias (midiaIds), a IA só enxerga
+  // essas (foco); se não curou nada (vazio), toda a biblioteca do tenant fica à disposição. [§9 Fase A]
+  const biblioteca = await midiasDoTenant(missao.tenantId)
+  const midias = missao.midiaIds.length
+    ? biblioteca.filter((m) => missao.midiaIds.includes(m.id))
+    : biblioteca
   const ctx = montarFicha(missao, conhecimento, midias)
 
   // 2) chama a IA e 3) VALIDA o contrato (guardrail — nunca confia cego no modelo).

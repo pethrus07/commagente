@@ -19,6 +19,7 @@ type DadosMissao = {
   criterioConclusao?: string
   tom?: string
   informacoes?: string
+  midiaIds?: string[] // biblioteca curada da missão (vazio → toda a biblioteca do tenant)
   estilo?: unknown // perfil de conversa da missão (formalidade/emoji/bolhas…); validado na rota
   campanhaId?: string
 }
@@ -80,6 +81,7 @@ export async function criarMissaoEmLote(
       criterioConclusao: input.criterioConclusao,
       tom: input.tom,
       informacoes: input.informacoes,
+      midiaIds: input.midiaIds ?? [],
       estilo: (input.estilo ?? undefined) as Prisma.InputJsonValue | undefined,
       campanhaId: input.campanhaId,
     })

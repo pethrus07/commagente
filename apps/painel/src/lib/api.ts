@@ -147,6 +147,7 @@ export const api = {
       criterioConclusao?: string
       tom?: string
       informacoes?: string
+      midiaIds?: string[] // biblioteca curada da campanha (herdada por cada missão)
       estilo?: EstiloConversa // perfil de conversa da campanha (herdado por cada missão)
       contatos?: { telefone: string; nome?: string }[]
       tagId?: string // dispara pra TODOS os contatos da tag (resolvido no servidor)
@@ -198,10 +199,11 @@ export const api = {
       maxExecucoes?: number
       entrega: 'ia' | 'fixa'
       mensagemFixa?: string
+      midiaIds?: string[] // anexos do disparo (ex.: boleto)
       rotulo?: string
       contatos: { telefone: string; nome?: string; dia?: number }[]
     }) => req<{ criados: number; ignorados: number }>('/agendamentos/lote', { method: 'POST', body: JSON.stringify(data) }),
-    editar: (id: string, patch: { diaDoMes?: number; ativo?: boolean; mensagemFixa?: string; objetivo?: string; tom?: string; informacoes?: string; rotulo?: string }) =>
+    editar: (id: string, patch: { diaDoMes?: number; ativo?: boolean; mensagemFixa?: string; objetivo?: string; tom?: string; informacoes?: string; midiaIds?: string[]; rotulo?: string }) =>
       req<Agendamento>(`/agendamentos/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
     pular: (id: string) => req<Agendamento>(`/agendamentos/${id}/pular`, { method: 'POST', body: '{}' }),
     disparar: (id: string) => req(`/agendamentos/${id}/disparar`, { method: 'POST', body: '{}' }),
@@ -313,6 +315,7 @@ export const api = {
       criterioConclusao?: string
       tom?: string
       informacoes?: string
+      midiaIds?: string[] // biblioteca curada da missão
       estilo?: EstiloConversa
       contatos?: { telefone: string; nome?: string }[]
       tagId?: string

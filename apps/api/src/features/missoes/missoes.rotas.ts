@@ -20,6 +20,7 @@ import {
 
 const tipoMissao = z.enum(['vender', 'qualificar', 'orcar', 'cobrar', 'suporte', 'outro'])
 const modoMissao = z.enum(['auto', 'copilot'])
+const midiaIds = z.array(z.string().uuid()).optional() // biblioteca curada (§9 Fase A)
 
 const corpoCriar = z.object({
   telefone: z.string().min(8),
@@ -31,6 +32,7 @@ const corpoCriar = z.object({
   criterioConclusao: z.string().optional(),
   tom: z.string().optional(),
   informacoes: z.string().optional(),
+  midiaIds,
   estilo: estiloSchema.optional(),
   nomeContato: z.string().optional(),
 })
@@ -58,6 +60,7 @@ const corpoLote = z
     criterioConclusao: z.string().optional(),
     tom: z.string().optional(),
     informacoes: z.string().optional(),
+    midiaIds,
     estilo: estiloSchema.optional(),
     contatos: z
       .array(z.object({ telefone: z.string().min(8), nome: z.string().optional() }))

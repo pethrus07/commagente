@@ -17,6 +17,7 @@ type DefCampanha = {
   criterioConclusao?: string
   tom?: string
   informacoes?: string
+  midiaIds?: string[] // biblioteca curada da campanha (herdada por cada missão dela)
   estilo?: unknown // perfil de conversa da campanha (validado na rota); herdado por cada missão
 }
 
@@ -88,6 +89,7 @@ export async function criarCampanha(input: DefCampanha & Alvo) {
       criterioConclusao: input.criterioConclusao,
       tom: input.tom,
       informacoes: input.informacoes,
+      midiaIds: input.midiaIds ?? [],
       estilo: (input.estilo ?? undefined) as Prisma.InputJsonValue | undefined,
     },
   })
@@ -228,6 +230,7 @@ function dispararDaCampanha(
     criterioConclusao: string | null
     tom: string | null
     informacoes: string | null
+    midiaIds?: string[]
     estilo?: Prisma.JsonValue
   },
   alvo: Alvo,
@@ -241,6 +244,7 @@ function dispararDaCampanha(
     criterioConclusao: campanha.criterioConclusao ?? undefined,
     tom: campanha.tom ?? undefined,
     informacoes: campanha.informacoes ?? undefined,
+    midiaIds: campanha.midiaIds ?? [],
     estilo: campanha.estilo ?? undefined,
     campanhaId: campanha.id,
     contatos: alvo.contatos,

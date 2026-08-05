@@ -6,6 +6,7 @@ import { ErroHttp } from '../../core/erros'
 import { processarTurno } from '../conversa/conversa.caso-uso'
 import { jitterMs } from '../fila/fila.dominio'
 import { filaRepo } from '../fila/fila.repo'
+import { midiaParaEnvio } from '../midia/midia.caso-uso'
 import { missoesRepo } from '../missoes/missoes.repo'
 import { agendamentosRepo } from './agendamentos.repo'
 import { cicloRef, ehDiaDeDisparo, horarioJaChegou, ymd } from './agendamentos.dominio'
@@ -38,6 +39,7 @@ export interface DefAgendamento {
   criterioConclusao?: string
   tom?: string
   informacoes?: string
+  midiaIds?: string[] // anexos do disparo (ex.: boleto): IA oferece / entrega fixa manda junto
   recorrencia: string // validado contra RECORRENCIAS
   diaDoMes?: number
   dataUnica?: string // "YYYY-MM-DD" (uma_vez / anual)
@@ -107,6 +109,7 @@ function montarDados(
     criterioConclusao: def.criterioConclusao?.trim() || null,
     tom: def.tom?.trim() || null,
     informacoes: def.informacoes?.trim() || null,
+    midiaIds: def.midiaIds ?? [],
     recorrencia: def.recorrencia,
     diaDoMes: USA_DIA_MES.includes(def.recorrencia) ? diaDoMes : null,
     dataUnica: USA_DATA_UNICA.includes(def.recorrencia) ? parseDataUnica(def.dataUnica) : null,
@@ -192,6 +195,7 @@ export async function editarAgendamento(
     informacoes?: string
     criterioConclusao?: string
     mensagemFixa?: string
+    midiaIds?: string[]
     rotulo?: string
   },
 ) {
@@ -241,6 +245,7 @@ async function dispararAgendamento(ag: NonNullable<AgComContato>) {
     criterioConclusao: ag.criterioConclusao ?? undefined,
     tom: ag.tom ?? undefined,
     informacoes: ag.informacoes ?? undefined,
+    midiaIds: ag.midiaIds, // no ramo 'ia', a IA passa a oferecer só estas mídias
   }
   if (ag.entrega === 'fixa') {
     // mensagem fixa: cria a missão com a IA pausada (humano trata respostas) e enfileira o texto
@@ -252,6 +257,23 @@ async function dispararAgendamento(ag: NonNullable<AgComContato>) {
       payload: { numeroId: ag.numeroId, telefone: ag.contato.telefone, texto: ag.mensagemFixa ?? ag.objetivo, tipo: 'novo' },
       agendadoPara: new Date(Date.now() + jitterMs('novo')),
     })
+    // anexos do disparo (ex.: boleto): entrega fixa não usa IA, então enfileira a mídia LOGO após
+    // o texto. Best-effort: um anexo que falha não derruba o disparo (o texto já foi). [§9 Fase A]
+    for (const midiaId of ag.midiaIds) {
+      try {
+        const doc = await midiaParaEnvio(midiaId, ag.tenantId)
+        if (!doc) continue
+        await filaRepo.enfileirar({
+          tenantId: ag.tenantId,
+          missaoId: missao.id,
+          contatoId: ag.contatoId,
+          payload: { numeroId: ag.numeroId, telefone: ag.contato.telefone, documento: doc, tipo: 'novo' },
+          agendadoPara: new Date(Date.now() + jitterMs('novo') + 4000), // chega logo depois do texto
+        })
+      } catch (e) {
+        console.error('[agendamento] anexar mídia fixa falhou (ignorado):', (e as Error)?.message)
+      }
+    }
     // best-effort: um erro aqui NÃO pode subir (o texto já foi enfileirado). Se subisse,
     // processarDevidos não marcaria o ciclo e re-disparava no próximo tick → cobrança 2×. [P1]
     await db.evento

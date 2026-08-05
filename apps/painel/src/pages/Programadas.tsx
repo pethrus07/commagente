@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { CalendarClock, Pause, Pencil, Play, Plus, Trash2, Upload, Wallet, X } from 'lucide-react'
+import { SeletorMidia } from '../components/SeletorMidia'
 import { api } from '../lib/api'
 import { TIPO_INFO, TIPOS_MISSAO, rotuloNumero } from '../lib/estados'
 import { toast } from '../lib/toast'
@@ -84,6 +85,7 @@ function quandoLabel(a: Agendamento): string {
 function NovoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
   const [numeros, setNumeros] = useState<Numero[]>([])
   const [salvando, setSalvando] = useState(false)
+  const [midiaIds, setMidiaIds] = useState<string[]>([]) // anexos do disparo (ex.: boleto) — §9 Fase A
   const fileRef = useRef<HTMLInputElement>(null)
   const [form, setForm] = useState({
     recorrencia: 'mensal' as string,
@@ -157,6 +159,7 @@ function NovoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
         maxExecucoes: form.maxExecucoes ? Number(form.maxExecucoes) : undefined,
         entrega: form.entrega,
         mensagemFixa: form.entrega === 'fixa' ? form.mensagemFixa.trim() : undefined,
+        midiaIds: midiaIds.length ? midiaIds : undefined, // vai junto no disparo (fixa) / IA oferece
         rotulo: form.rotulo.trim() || undefined,
         contatos,
       })
@@ -284,6 +287,16 @@ function NovoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
               <p className="mt-1 text-[11px] leading-snug text-muted">Se o cliente responder, cai pra você (a IA fica de fora nesse modo).</p>
             </div>
           )}
+          <div>
+            <label className="mb-1 block text-xs text-muted">📎 Anexos do disparo (opcional)</label>
+            <SeletorMidia
+              valor={midiaIds}
+              onChange={setMidiaIds}
+              dica={form.entrega === 'fixa'
+                ? 'Nada marcado → só o texto é enviado. Marque um boleto/arquivo pra ir junto no disparo.'
+                : 'Nada marcado → a IA pode enviar qualquer item da biblioteca; marque pra restringir a estes.'}
+            />
+          </div>
           <div>
             <label className="mb-1 block text-xs text-muted">Número (chip)</label>
             <select value={form.numeroId} onChange={(e) => setForm({ ...form, numeroId: e.target.value })} className={campo}>

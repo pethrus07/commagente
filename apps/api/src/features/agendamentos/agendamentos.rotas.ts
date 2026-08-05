@@ -34,6 +34,7 @@ const def = {
   criterioConclusao: z.string().optional(),
   tom: z.string().optional(),
   informacoes: z.string().optional(),
+  midiaIds: z.array(z.string().uuid()).optional(), // anexos do disparo (§9 Fase A)
   recorrencia,
   diaDoMes: z.number().int().min(1).max(31).optional(),
   dataUnica: z.string().optional(),
@@ -63,6 +64,7 @@ const corpoEditar = z.object({
   informacoes: z.string().optional(),
   criterioConclusao: z.string().optional(),
   mensagemFixa: z.string().optional(),
+  midiaIds: z.array(z.string().uuid()).optional(),
   rotulo: z.string().optional(),
 })
 const paramsId = z.object({ id: z.string().uuid() })
