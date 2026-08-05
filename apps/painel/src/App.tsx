@@ -125,7 +125,7 @@ export default function App() {
             {/* key por tenant: trocar de tenant remonta e recarrega as páginas */}
             <main key={tenantSel?.id ?? 'padrao'} className="flex-1 overflow-y-auto p-4 md:p-8">
               {rota.page === 'tenants' && <Tenants onVerTenant={trocarTenant} />}
-              {rota.page === 'dashboard' && <Dashboard />}
+              {rota.page === 'dashboard' && <Dashboard onIr={(p) => setRota({ page: p })} />}
               {rota.page === 'numeros' && <Numeros />}
               {rota.page === 'contatos' && <Contatos />}
               {rota.page === 'tags' && <Tags />}

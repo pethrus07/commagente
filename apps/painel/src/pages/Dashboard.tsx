@@ -2,15 +2,19 @@ import { useEffect, useState } from 'react'
 import {
   Activity,
   AlertTriangle,
+  ArrowRight,
   CheckCircle2,
+  Dna,
   LifeBuoy,
   MessageSquare,
   Smartphone,
+  Sparkles,
   Target,
   Trophy,
   Users,
   XCircle,
 } from 'lucide-react'
+import type { Page } from '../components/Sidebar'
 import { api } from '../lib/api'
 import { TIPO_INFO } from '../lib/estados'
 import { toast } from '../lib/toast'
@@ -83,6 +87,12 @@ function Atividade({ hist }: { hist: Historico }) {
       </div>
       <p className="mb-5 text-xs text-subtle">Mensagens por dia (enviadas + recebidas).</p>
 
+      {tot.mensagens === 0 && tot.missoes === 0 ? (
+        <div className="grid h-32 place-items-center rounded-xl border border-dashed border-line text-center">
+          <p className="px-4 text-sm text-subtle">Sem atividade ainda. Assim que a IA começar a conversar, o movimento dos últimos {dias.length} dias aparece aqui.</p>
+        </div>
+      ) : (
+        <>
       <div className="flex h-32 items-end gap-1">
         {dias.map((d) => {
           const h = Math.round((d.mensagens / max) * 100)
@@ -104,6 +114,8 @@ function Atividade({ hist }: { hist: Historico }) {
         <span>{rotulo(dias[0]?.data ?? '')}</span>
         <span>{rotulo(dias[dias.length - 1]?.data ?? '')}</span>
       </div>
+        </>
+      )}
 
       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <MiniTot icon={MessageSquare} cor="text-sky-400" n={tot.mensagens} label="mensagens" />
@@ -127,7 +139,46 @@ function MiniTot({ icon: Icon, cor, n, label }: { icon: typeof Activity; cor: st
   )
 }
 
-export function Dashboard() {
+// Passos guiados p/ o 1º acesso (tenant vazio) — tira o usuário do "dashboard com zeros".
+function ComecePorAqui({ onIr }: { onIr: (p: Page) => void }) {
+  const passos: { icon: typeof Smartphone; titulo: string; texto: string; page: Page }[] = [
+    { icon: Smartphone, titulo: 'Conecte um número', texto: 'Ligue um chip via Evolution pra IA poder conversar.', page: 'numeros' },
+    { icon: Dna, titulo: 'Preencha o DNA', texto: 'Diga o que a IA sabe e pode afirmar sobre a empresa.', page: 'dna' },
+    { icon: Target, titulo: 'Crie a 1ª missão', texto: 'Escolha um objetivo e deixe a IA abrir a conversa.', page: 'missoes' },
+  ]
+  return (
+    <Card className="border-indigo-500/25 bg-indigo-500/[0.06] p-5">
+      <div className="mb-4 flex items-center gap-2">
+        <Sparkles className="h-4 w-4 text-indigo-300" />
+        <h2 className="text-sm font-semibold text-content">Comece por aqui</h2>
+        <span className="text-xs text-subtle">3 passos pra colocar a IA pra rodar</span>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-3">
+        {passos.map((p, i) => (
+          <button
+            key={p.page}
+            onClick={() => onIr(p.page)}
+            className="group flex flex-col rounded-xl border border-line bg-surface p-4 text-left transition hover:border-indigo-500/40"
+          >
+            <div className="mb-2 flex items-center justify-between">
+              <span className="grid h-8 w-8 place-items-center rounded-lg bg-indigo-500/15 text-indigo-300">
+                <p.icon className="h-4 w-4" />
+              </span>
+              <span className="text-[11px] font-medium text-subtle">passo {i + 1}</span>
+            </div>
+            <p className="text-sm font-medium text-content">{p.titulo}</p>
+            <p className="mt-0.5 text-[11px] leading-snug text-muted">{p.texto}</p>
+            <span className="mt-2 inline-flex items-center gap-1 text-[11px] font-medium text-indigo-400 group-hover:gap-1.5">
+              ir <ArrowRight className="h-3 w-3" />
+            </span>
+          </button>
+        ))}
+      </div>
+    </Card>
+  )
+}
+
+export function Dashboard({ onIr }: { onIr: (p: Page) => void }) {
   const [stats, setStats] = useState<Stats | null>(null)
   const [hist, setHist] = useState<Historico | null>(null)
   const [carregando, setCarregando] = useState(true)
@@ -169,9 +220,12 @@ export function Dashboard() {
     (stats.missoesPorEstado.na_fila ?? 0) +
     (stats.missoesPorEstado.escalada ?? 0)
   const maxEstado = Math.max(1, ...Object.values(stats.missoesPorEstado))
+  // 1º acesso: sem número e sem missão → mostra o caminho guiado em vez de zeros soltos
+  const primeiroAcesso = stats.numeros.total === 0 && stats.totalMissoes === 0
 
   return (
     <div className="space-y-6">
+      {primeiroAcesso && <ComecePorAqui onIr={onIr} />}
       {stats.alertas?.length > 0 && (
         <div className="space-y-2">
           {stats.alertas.map((a, i) => (

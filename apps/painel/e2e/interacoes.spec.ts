@@ -16,19 +16,38 @@ test('DNA: lista clicável abre o editor focado de categoria', async ({ page }, 
   await page.screenshot({ path: shot(info, 'dna-editor-categoria.png') })
 })
 
-test('Campanha: builder mostra o DNA por categoria (3 modos) + a biblioteca', async ({ page }, info) => {
+test('Campanha: wizard em passos (Definição → Personalização → Contatos)', async ({ page }, info) => {
   await login(page)
+  // pré-requisito: um número. Cria via API se o tenant não tiver nenhum (idempotente entre projetos).
+  const token = await page.evaluate(() => localStorage.getItem('zap_token'))
+  const auth = { authorization: `Bearer ${token}` }
+  const ns = await (await page.request.get('/api/numeros', { headers: auth })).json().catch(() => [])
+  if (!Array.isArray(ns) || ns.length === 0) {
+    await page.request.post('/api/numeros', { headers: auth, data: { telefone: '5599000009999', apelido: 'E2E' } })
+  }
+
   await navegar(page, 'Campanhas')
   await page.getByRole('button', { name: /Nova campanha/ }).first().click()
   await expect(page.getByRole('heading', { name: 'Nova campanha' })).toBeVisible()
-  // expande o "DNA desta campanha" (§9 Fase B)
-  await page.getByRole('button', { name: /DNA desta campanha/ }).click()
-  await page.waitForTimeout(250)
-  // aparece o toggle Herdar/Combinar/Substituir por categoria
-  await expect(page.getByRole('button', { name: 'Substituir' }).first()).toBeVisible()
-  // e o seletor de mídia da campanha
+  // passo 1 — o stepper (Definição/Personalização/Contatos)
+  await expect(page.getByText('Definição', { exact: true })).toBeVisible()
+  await expect(page.getByText('Personalização', { exact: true })).toBeVisible()
+  await page.screenshot({ path: shot(info, 'campanha-wizard-1-definicao'), fullPage: true })
+
+  await page.getByPlaceholder(/Cobrança julho/).fill('Campanha E2E')
+  await page.getByPlaceholder(/O que a IA deve fazer/).fill('Apresentar e agendar')
+  await page.getByRole('button', { name: 'Avançar' }).click()
+
+  // passo 2 — personalização: mídia + DNA por categoria (3 modos)
   await expect(page.getByText(/Mídias da campanha/)).toBeVisible()
-  await page.screenshot({ path: shot(info, 'campanha-builder-dna-midia.png'), fullPage: true })
+  await page.getByRole('button', { name: /DNA desta campanha/ }).click()
+  await expect(page.getByRole('button', { name: 'Substituir' }).first()).toBeVisible()
+  await page.screenshot({ path: shot(info, 'campanha-wizard-2-personalizacao'), fullPage: true })
+
+  // passo 3 — contatos + resumo
+  await page.getByRole('button', { name: 'Avançar' }).click()
+  await expect(page.getByText('Resumo')).toBeVisible()
+  await page.screenshot({ path: shot(info, 'campanha-wizard-3-contatos'), fullPage: true })
 })
 
 test('mobile: hambúrguer abre o drawer da sidebar', async ({ page }, info) => {

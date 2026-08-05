@@ -13,7 +13,10 @@ import { Button, Card, EmptyState, Spinner, cn, tempoRelativo } from '../lib/ui'
 const campo =
   'w-full rounded-xl border border-line bg-surface2 px-4 py-2 text-sm text-content placeholder:text-subtle focus:border-indigo-500/50 focus:outline-none'
 
+const PASSOS_CAMPANHA = ['Definição', 'Personalização', 'Contatos'] as const
+
 function NovaCampanhaModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
+  const [passo, setPasso] = useState(0)
   const [numeros, setNumeros] = useState<Numero[]>([])
   const [form, setForm] = useState({ nome: '', numeroId: '', tipo: 'vender', modo: 'auto', objetivo: '', criterioConclusao: '', tom: '', informacoes: '' })
   const [contatos, setContatos] = useState<{ telefone: string; nome?: string }[]>([])
@@ -22,6 +25,14 @@ function NovaCampanhaModal({ onFechar }: { onFechar: (criou: boolean) => void })
   const [dna, setDna] = useState<CamadaDna>({}) // camada de DNA da campanha (§9 Fase B)
   const [dispararAgora, setDispararAgora] = useState(true)
   const [salvando, setSalvando] = useState(false)
+
+  // valida o passo 1 antes de avançar (mesmos campos obrigatórios do submit)
+  const avancar = () => {
+    if (!form.nome.trim()) return toast('Dê um nome à campanha.', 'erro')
+    if (!form.numeroId) return toast('Escolha um número.', 'erro')
+    if (!form.objetivo.trim()) return toast('Descreva o objetivo.', 'erro')
+    setPasso((p) => p + 1)
+  }
 
   useEffect(() => {
     api.numeros.listar().then((ns) => {
@@ -65,76 +76,132 @@ function NovaCampanhaModal({ onFechar }: { onFechar: (criou: boolean) => void })
     }
   }
 
+  const numeroSel = numeros.find((n) => n.id === form.numeroId)
+  const alvoTxt = tagAlvo ? 'toda a tag' : contatos.length ? `${contatos.length} contato${contatos.length === 1 ? '' : 's'}` : 'nenhum ainda'
+
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 backdrop-blur-sm">
-      <Card className="max-h-[90vh] w-full max-w-lg overflow-y-auto p-6">
-        <div className="mb-5 flex items-center justify-between">
-          <h3 className="font-semibold text-content">Nova campanha</h3>
+      <Card className="flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden p-0">
+        {/* cabeçalho + stepper (mesmo padrão do assistente de missão) */}
+        <div className="flex items-center justify-between border-b border-line px-6 py-4">
+          <div className="flex items-center gap-2">
+            <Megaphone className="h-5 w-5 text-indigo-300" />
+            <h3 className="font-semibold text-content">Nova campanha</h3>
+          </div>
           <button onClick={() => onFechar(false)} className="text-muted hover:text-content"><X className="h-5 w-5" /></button>
         </div>
-        <div className="space-y-3">
-          <div>
-            <label className="mb-1 block text-xs text-muted">Nome da campanha</label>
-            <input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} placeholder="Ex.: Cobrança julho · Prospecção fornecedores" className={campo} />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs text-muted">Tipo</label>
-            <div className="flex flex-wrap gap-1.5">
-              {TIPOS_MISSAO.map((t) => (
-                <button key={t} onClick={() => setForm({ ...form, tipo: t })} className={cn('rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 ring-inset transition', form.tipo === t ? 'bg-indigo-500/20 text-indigo-200 ring-indigo-500/40' : 'text-muted ring-line hover:text-content')}>
-                  {TIPO_INFO[t].emoji} {TIPO_INFO[t].label}
-                </button>
-              ))}
+        <div className="flex items-center gap-2 px-6 py-3">
+          {PASSOS_CAMPANHA.map((nome, i) => (
+            <div key={nome} className="flex items-center gap-2">
+              <span className={cn('flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-semibold transition', i < passo ? 'bg-indigo-500 text-white' : i === passo ? 'bg-indigo-500/20 text-indigo-200 ring-1 ring-indigo-500/50' : 'bg-surface2 text-muted')}>
+                {i + 1}
+              </span>
+              <span className={cn('text-xs font-medium', i === passo ? 'text-content' : 'text-muted')}>{nome}</span>
+              {i < PASSOS_CAMPANHA.length - 1 && <span className="mx-1 h-px w-6 bg-surface2" />}
             </div>
-          </div>
-          <div>
-            <label className="mb-1 block text-xs text-muted">Modo</label>
-            <div className="flex gap-1.5">
-              {(['auto', 'copilot'] as const).map((md) => (
-                <button key={md} onClick={() => setForm({ ...form, modo: md })} className={cn('flex-1 rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 ring-inset transition', form.modo === md ? 'bg-indigo-500/20 text-indigo-200 ring-indigo-500/40' : 'text-muted ring-line hover:text-content')}>
-                  {md === 'auto' ? '⚡ Auto' : '👁️ Co-pilot'}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <label className="mb-1 block text-xs text-muted">Número (chip)</label>
-            <select value={form.numeroId} onChange={(e) => setForm({ ...form, numeroId: e.target.value })} className={campo}>
-              {numeros.length === 0 && <option value="">— nenhum número —</option>}
-              {numeros.map((n) => (<option key={n.id} value={n.id} className="bg-slate-900">{rotuloNumero(n)}{n.apelido ? ` · +${n.telefone}` : ''} ({n.statusConexao})</option>))}
-            </select>
-          </div>
-          <div>
-            <label className="mb-1 block text-xs text-muted">Objetivo</label>
-            <input value={form.objetivo} onChange={(e) => setForm({ ...form, objetivo: e.target.value })} placeholder="O que a IA deve fazer em cada conversa" className={campo} />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs text-muted">Critério de conclusão (opcional)</label>
-            <input value={form.criterioConclusao} onChange={(e) => setForm({ ...form, criterioConclusao: e.target.value })} placeholder="Ex.: pagamento confirmado" className={campo} />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs text-muted">Informações autorizadas (opcional)</label>
-            <textarea value={form.informacoes} onChange={(e) => setForm({ ...form, informacoes: e.target.value })} rows={2} placeholder="Preços/prazos REAIS que a IA pode afirmar" className={cn(campo, 'resize-none')} />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs text-muted">📎 Mídias da campanha (opcional)</label>
-            <SeletorMidia valor={midiaIds} onChange={setMidiaIds} dica="Nada marcado → a IA pode enviar qualquer item da biblioteca em cada conversa." />
-          </div>
-          <EditorDnaCamada valor={dna} onChange={setDna} nivel="campanha" heranca="empresa" />
-          <div className="border-t border-line pt-3">
-            <SeletorContatos onChange={setContatos} onAlvoTag={setTagAlvo} />
-          </div>
-          <label className="flex cursor-pointer items-start gap-2 rounded-xl bg-surface2 p-3 text-sm">
-            <input type="checkbox" checked={dispararAgora} onChange={(e) => setDispararAgora(e.target.checked)} className="mt-0.5 h-4 w-4 accent-indigo-500" />
-            <span>
-              <span className="font-medium text-content">Disparar agora</span>
-              <span className="block text-xs text-muted">A IA já abre as conversas (no ritmo anti-bloqueio). Desmarque para só montar a campanha e disparar depois.</span>
-            </span>
-          </label>
+          ))}
         </div>
-        <div className="mt-5 flex justify-end gap-2">
-          <Button variant="ghost" onClick={() => onFechar(false)}>Cancelar</Button>
-          <Button onClick={criar} loading={salvando}>{dispararAgora ? `Criar e disparar${tagAlvo ? ' (toda a tag)' : contatos.length ? ` (${contatos.length})` : ''}` : 'Criar campanha'}</Button>
+
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-6 pb-4">
+          {/* PASSO 1 — Definição */}
+          {passo === 0 && (
+            <>
+              <div>
+                <label className="mb-1 block text-xs text-muted">Nome da campanha</label>
+                <input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} placeholder="Ex.: Cobrança julho · Prospecção fornecedores" className={campo} autoFocus />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-muted">Tipo</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {TIPOS_MISSAO.map((t) => (
+                    <button key={t} onClick={() => setForm({ ...form, tipo: t })} className={cn('rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 ring-inset transition', form.tipo === t ? 'bg-indigo-500/20 text-indigo-200 ring-indigo-500/40' : 'text-muted ring-line hover:text-content')}>
+                      {TIPO_INFO[t].emoji} {TIPO_INFO[t].label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs text-muted">Modo</label>
+                  <div className="flex gap-1.5">
+                    {(['auto', 'copilot'] as const).map((md) => (
+                      <button key={md} onClick={() => setForm({ ...form, modo: md })} className={cn('flex-1 rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 ring-inset transition', form.modo === md ? 'bg-indigo-500/20 text-indigo-200 ring-indigo-500/40' : 'text-muted ring-line hover:text-content')}>
+                        {md === 'auto' ? '⚡ Auto' : '👁️ Co-pilot'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-muted">Número (chip)</label>
+                  <select value={form.numeroId} onChange={(e) => setForm({ ...form, numeroId: e.target.value })} className={campo}>
+                    {numeros.length === 0 && <option value="">— nenhum número —</option>}
+                    {numeros.map((n) => (<option key={n.id} value={n.id} className="bg-slate-900">{rotuloNumero(n)}{n.apelido ? ` · +${n.telefone}` : ''} ({n.statusConexao})</option>))}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-muted">Objetivo</label>
+                <input value={form.objetivo} onChange={(e) => setForm({ ...form, objetivo: e.target.value })} placeholder="O que a IA deve fazer em cada conversa" className={campo} />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-muted">Critério de conclusão (opcional)</label>
+                <input value={form.criterioConclusao} onChange={(e) => setForm({ ...form, criterioConclusao: e.target.value })} placeholder="Ex.: pagamento confirmado" className={campo} />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-muted">Informações autorizadas (opcional)</label>
+                <textarea value={form.informacoes} onChange={(e) => setForm({ ...form, informacoes: e.target.value })} rows={2} placeholder="Preços/prazos REAIS que a IA pode afirmar" className={cn(campo, 'resize-none')} />
+                <p className="mt-1 text-[11px] leading-snug text-muted">🛡️ A IA só afirma o que estiver aqui. Fora disso, confirma ou escala.</p>
+              </div>
+            </>
+          )}
+
+          {/* PASSO 2 — Personalização (mídia + DNA da campanha) */}
+          {passo === 1 && (
+            <>
+              <div>
+                <label className="mb-1 block text-xs text-muted">📎 Mídias da campanha (opcional)</label>
+                <SeletorMidia valor={midiaIds} onChange={setMidiaIds} dica="Nada marcado → a IA pode enviar qualquer item da biblioteca em cada conversa." />
+              </div>
+              <EditorDnaCamada valor={dna} onChange={setDna} nivel="campanha" heranca="empresa" />
+              <p className="text-[11px] leading-snug text-subtle">Tudo aqui é opcional — sem mexer, a campanha herda o DNA e a biblioteca da empresa.</p>
+            </>
+          )}
+
+          {/* PASSO 3 — Contatos + disparo + resumo */}
+          {passo === 2 && (
+            <>
+              <SeletorContatos onChange={setContatos} onAlvoTag={setTagAlvo} />
+              <label className="flex cursor-pointer items-start gap-2 rounded-xl bg-surface2 p-3 text-sm">
+                <input type="checkbox" checked={dispararAgora} onChange={(e) => setDispararAgora(e.target.checked)} className="mt-0.5 h-4 w-4 accent-indigo-500" />
+                <span>
+                  <span className="font-medium text-content">Disparar agora</span>
+                  <span className="block text-xs text-muted">A IA já abre as conversas (no ritmo anti-bloqueio). Desmarque para só montar a campanha e disparar depois.</span>
+                </span>
+              </label>
+              <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/[0.06] p-4">
+                <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-indigo-300/80"><Send className="h-3.5 w-3.5" /> Resumo</p>
+                <ul className="space-y-1.5 text-sm text-content">
+                  <li><span className="text-muted">Nome:</span> {form.nome || <span className="text-subtle">—</span>}</li>
+                  <li><span className="text-muted">Objetivo:</span> {form.objetivo || <span className="text-subtle">—</span>}</li>
+                  <li><span className="text-muted">Envio por:</span> {numeroSel ? rotuloNumero(numeroSel) : '—'}</li>
+                  {(midiaIds.length > 0 || Object.keys(dna).length > 0) && (
+                    <li><span className="text-muted">Camadas:</span> {[midiaIds.length && `${midiaIds.length} mídia${midiaIds.length === 1 ? '' : 's'}`, Object.keys(dna).length && `DNA próprio (${Object.keys(dna).length})`].filter(Boolean).join(' · ')}</li>
+                  )}
+                  <li><span className="text-muted">Alvo:</span> {alvoTxt}</li>
+                </ul>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* rodapé — navegação */}
+        <div className="flex items-center justify-between border-t border-line px-6 py-4">
+          <Button variant="ghost" onClick={() => (passo === 0 ? onFechar(false) : setPasso(passo - 1))}>{passo === 0 ? 'Cancelar' : 'Voltar'}</Button>
+          {passo < 2 ? (
+            <Button onClick={() => (passo === 0 ? avancar() : setPasso(passo + 1))}>Avançar</Button>
+          ) : (
+            <Button onClick={criar} loading={salvando}>{dispararAgora ? `Criar e disparar${tagAlvo ? ' (toda a tag)' : contatos.length ? ` (${contatos.length})` : ''}` : 'Criar campanha'}</Button>
+          )}
         </div>
       </Card>
     </div>
@@ -435,7 +502,7 @@ export function Campanhas() {
                 <div className="mt-3 flex gap-2">
                   <Button variant="ghost" className="flex-1" onClick={() => setRelatorio(c)}><FileText className="h-4 w-4" /> Relatório</Button>
                   <Button variant="ghost" className="flex-1" onClick={() => setAdd(c)}><UserPlus className="h-4 w-4" /> Contatos</Button>
-                  <Button variant="ghost" onClick={() => setDnaCamp(c)} title="DNA desta campanha"><Dna className="h-4 w-4" /></Button>
+                  <Button variant="ghost" onClick={() => setDnaCamp(c)} title="DNA desta campanha"><Dna className="h-4 w-4" /> DNA</Button>
                 </div>
               </Card>
             )
