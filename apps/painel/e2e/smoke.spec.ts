@@ -4,6 +4,7 @@ import { login, navegar, slug } from './helpers'
 // Todas as abas do painel (rótulo na sidebar → título no header).
 const PAGINAS: { label: string; titulo: string | RegExp }[] = [
   { label: 'Dashboard', titulo: 'Dashboard' },
+  { label: 'Inteligência', titulo: 'Inteligência' },
   { label: 'Missões', titulo: 'Missões' },
   { label: 'Campanhas', titulo: 'Campanhas' },
   { label: 'Programadas', titulo: 'Programadas' },
