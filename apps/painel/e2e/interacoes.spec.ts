@@ -29,23 +29,21 @@ test('Campanha: wizard em passos (Definição → Personalização → Contatos)
   await navegar(page, 'Campanhas')
   await page.getByRole('button', { name: /Nova campanha/ }).first().click()
   await expect(page.getByRole('heading', { name: 'Nova campanha' })).toBeVisible()
-  // passo 1 — o stepper (Definição/Personalização/Contatos)
-  await expect(page.getByText('Definição', { exact: true })).toBeVisible()
-  await expect(page.getByText('Personalização', { exact: true })).toBeVisible()
-  await page.screenshot({ path: shot(info, 'campanha-wizard-1-definicao'), fullPage: true })
+  // passo 1 — Modelo (mesmo padrão do assistente de missão)
+  await expect(page.getByText('Modelo', { exact: true })).toBeVisible()
+  await expect(page.getByText('Ajustar', { exact: true })).toBeVisible()
+  await page.screenshot({ path: shot(info, 'campanha-wizard-1-modelo'), fullPage: true })
+  await page.getByRole('button', { name: /Prospecção/ }).click() // escolhe um modelo → vai pro Ajustar
 
+  // passo 2 — Ajustar: nome + config (objetivo pré-preenchido) + mídia + DNA + perfil
   await page.getByPlaceholder(/Cobrança julho/).fill('Campanha E2E')
-  await page.getByPlaceholder(/O que a IA deve fazer/).fill('Apresentar e agendar')
-  await page.getByRole('button', { name: 'Avançar' }).click()
-
-  // passo 2 — personalização: mídia + DNA por categoria (3 modos)
   await expect(page.getByText(/Mídias da campanha/)).toBeVisible()
   await page.getByRole('button', { name: /DNA desta campanha/ }).click()
   await expect(page.getByRole('button', { name: 'Substituir' }).first()).toBeVisible()
-  await page.screenshot({ path: shot(info, 'campanha-wizard-2-personalizacao'), fullPage: true })
+  await page.screenshot({ path: shot(info, 'campanha-wizard-2-ajustar'), fullPage: true })
+  await page.getByRole('button', { name: 'Avançar' }).click()
 
   // passo 3 — contatos + resumo
-  await page.getByRole('button', { name: 'Avançar' }).click()
   await expect(page.getByText('Resumo')).toBeVisible()
   await page.screenshot({ path: shot(info, 'campanha-wizard-3-contatos'), fullPage: true })
 })
