@@ -216,6 +216,7 @@ export interface Conhecimento {
   conteudo: string
   status: StatusConhecimento
   origem: string
+  categoria?: string | null
   criadoEm: string
 }
 

@@ -30,6 +30,7 @@ export const conhecimentoRepo = {
     status?: StatusConhecimento
     origem?: string
     missaoId?: string
+    categoria?: string | null
   }) {
     return db.conhecimento.create({ data })
   },

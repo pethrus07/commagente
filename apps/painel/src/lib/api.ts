@@ -260,16 +260,16 @@ export const api = {
 
   conhecimento: {
     listar: () => req<Conhecimento[]>('/conhecimento'),
-    criar: (data: { titulo: string; conteudo: string }) =>
+    criar: (data: { titulo: string; conteudo: string; categoria?: string | null }) =>
       req<Conhecimento>('/conhecimento', { method: 'POST', body: JSON.stringify(data) }),
-    importarDocumento: (data: { nomeArquivo: string; mimetype: string; base64: string }) =>
+    importarDocumento: (data: { nomeArquivo: string; mimetype: string; base64: string; categoria?: string | null }) =>
       req<Conhecimento>('/conhecimento/importar-documento', { method: 'POST', body: JSON.stringify(data) }),
     status: (id: string, status: Extract<StatusConhecimento, 'aprovado' | 'rejeitado'>) =>
       req<Conhecimento>(`/conhecimento/${id}/status`, {
         method: 'POST',
         body: JSON.stringify({ status }),
       }),
-    editar: (id: string, patch: { titulo?: string; conteudo?: string }) =>
+    editar: (id: string, patch: { titulo?: string; conteudo?: string; categoria?: string | null }) =>
       req<Conhecimento>(`/conhecimento/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
     excluir: (id: string) => req(`/conhecimento/${id}`, { method: 'DELETE' }),
   },

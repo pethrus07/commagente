@@ -82,7 +82,7 @@ export async function listarConhecimento() {
   return conhecimentoRepo.listar(await tenantAtual())
 }
 
-export async function criarConhecimento(input: { titulo: string; conteudo: string }) {
+export async function criarConhecimento(input: { titulo: string; conteudo: string; categoria?: string | null }) {
   const tenantId = await tenantAtual()
   const item = await conhecimentoRepo.criar({
     tenantId,
@@ -90,6 +90,7 @@ export async function criarConhecimento(input: { titulo: string; conteudo: strin
     conteudo: input.conteudo,
     status: 'aprovado', // criado na mão já vale
     origem: 'manual',
+    categoria: input.categoria ?? null,
   })
   reindexarBg(item.id)
   return item
@@ -107,6 +108,7 @@ export async function importarDocumento(input: {
   nomeArquivo: string
   mimetype: string
   base64: string
+  categoria?: string | null
 }) {
   const tenantId = await tenantAtual()
   const texto = await extrairTexto(input.base64, input.mimetype, input.nomeArquivo)
@@ -126,6 +128,7 @@ export async function importarDocumento(input: {
     conteudo,
     status: 'aprovado',
     origem: 'documento',
+    categoria: input.categoria ?? null,
   })
   reindexarBg(item.id)
   return item
@@ -151,12 +154,13 @@ export async function definirStatusConhecimento(
 
 export async function editarConhecimento(
   id: string,
-  patch: { titulo?: string; conteudo?: string },
+  patch: { titulo?: string; conteudo?: string; categoria?: string | null },
 ) {
   await carregarDono(id)
   const data: Prisma.ConhecimentoUpdateInput = {}
   if (patch.titulo !== undefined) data.titulo = patch.titulo
   if (patch.conteudo !== undefined) data.conteudo = patch.conteudo
+  if (patch.categoria !== undefined) data.categoria = patch.categoria
   const item = await conhecimentoRepo.atualizar(id, data)
   // conteúdo mudou → reindexa (chunks/embeddings ficam consistentes)
   if (patch.conteudo !== undefined) reindexarBg(id)

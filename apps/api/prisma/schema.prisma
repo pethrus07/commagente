@@ -93,6 +93,9 @@ model Conhecimento {
   conteudo  String
   status    StatusConhecimento @default(aprovado)
   origem    String             @default("manual") // manual | ia
+  // Categoria do DNA a que este documento pertence (empresa/produtos/precos/...); null = base geral.
+  // Unifica DNA + Conhecimento numa tela só: cada doc aparece agrupado sob sua categoria. [parceiro]
+  categoria String?
   missaoId  String?            @map("missao_id") @db.Uuid // proveniência (de onde a IA aprendeu)
   criadoEm  DateTime           @default(now()) @map("criado_em")
 

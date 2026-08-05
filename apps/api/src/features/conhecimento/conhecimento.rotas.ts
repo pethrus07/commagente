@@ -10,18 +10,22 @@ import {
   listarConhecimento,
 } from './conhecimento.caso-uso'
 
+const categoria = z.string().max(40).nullish() // chave do DNA (empresa/produtos/...) ou null = geral
 const corpoCriar = z.object({
   titulo: z.string().min(1),
   conteudo: z.string().min(1),
+  categoria,
 })
 const corpoDoc = z.object({
   nomeArquivo: z.string().min(1),
   mimetype: z.string().default('application/octet-stream'),
   base64: z.string().min(1),
+  categoria,
 })
 const corpoEditar = z.object({
   titulo: z.string().min(1).optional(),
   conteudo: z.string().min(1).optional(),
+  categoria,
 })
 const corpoStatus = z.object({ status: z.enum(['aprovado', 'rejeitado']) })
 const paramsId = z.object({ id: z.string().uuid() })
