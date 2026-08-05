@@ -18,6 +18,7 @@ type DefCampanha = {
   tom?: string
   informacoes?: string
   midiaIds?: string[] // biblioteca curada da campanha (herdada por cada missão dela)
+  dna?: unknown // camada de DNA da campanha (#9 Fase B): {categoria:{modo,texto}}; validado na rota
   estilo?: unknown // perfil de conversa da campanha (validado na rota); herdado por cada missão
 }
 
@@ -90,6 +91,7 @@ export async function criarCampanha(input: DefCampanha & Alvo) {
       tom: input.tom,
       informacoes: input.informacoes,
       midiaIds: input.midiaIds ?? [],
+      dna: (input.dna ?? undefined) as Prisma.InputJsonValue | undefined,
       estilo: (input.estilo ?? undefined) as Prisma.InputJsonValue | undefined,
     },
   })
@@ -113,6 +115,19 @@ export async function obterCampanha(id: string) {
   if (!campanha) throw new ErroHttp(404, 'Campanha não encontrada')
   await conferirDono(campanha.tenantId)
   return campanha
+}
+
+// #9 Fase B — edita a camada de DNA da campanha (reflete VIVO nas missões dela, resolvido no
+// montador a cada turno). `dna` = {categoria:{modo,texto}} já validado na rota.
+export async function editarDnaCampanha(id: string, dna: unknown) {
+  const campanha = await db.campanha.findUnique({ where: { id }, select: { tenantId: true } })
+  if (!campanha) throw new ErroHttp(404, 'Campanha não encontrada')
+  await conferirDono(campanha.tenantId)
+  return db.campanha.update({
+    where: { id },
+    data: { dna: (dna ?? undefined) as Prisma.InputJsonValue | undefined },
+    select: { id: true, dna: true },
+  })
 }
 
 /**

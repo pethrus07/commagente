@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
-import { BarChart3, Download, FileText, Megaphone, Plus, Send, Sparkles, UserPlus, X } from 'lucide-react'
+import { BarChart3, Dna, Download, FileText, Megaphone, Plus, Send, Sparkles, UserPlus, X } from 'lucide-react'
+import { EditorDnaCampanha } from '../components/EditorDnaCampanha'
 import { SeletorContatos } from '../components/SeletorContatos'
 import { SeletorMidia } from '../components/SeletorMidia'
 import { api } from '../lib/api'
+import type { CamadaDna } from '../lib/dna'
 import { TIPO_INFO, TIPOS_MISSAO, descreverDisparo, rotuloNumero } from '../lib/estados'
 import { toast } from '../lib/toast'
 import type { CampanhaResumo, Numero, RelatorioCampanha } from '../lib/types'
@@ -11,12 +13,20 @@ import { Button, Card, EmptyState, Spinner, cn, tempoRelativo } from '../lib/ui'
 const campo =
   'w-full rounded-xl border border-line bg-surface2 px-4 py-2 text-sm text-content placeholder:text-subtle focus:border-indigo-500/50 focus:outline-none'
 
+// remove categorias sem texto de fato → só manda o que muda (o backend também revalida)
+function limparCamadaDna(dna: CamadaDna): CamadaDna | undefined {
+  const out: CamadaDna = {}
+  for (const [k, v] of Object.entries(dna)) if (v?.texto.trim()) out[k as keyof CamadaDna] = { modo: v.modo, texto: v.texto.trim() }
+  return Object.keys(out).length ? out : undefined
+}
+
 function NovaCampanhaModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
   const [numeros, setNumeros] = useState<Numero[]>([])
   const [form, setForm] = useState({ nome: '', numeroId: '', tipo: 'vender', modo: 'auto', objetivo: '', criterioConclusao: '', tom: '', informacoes: '' })
   const [contatos, setContatos] = useState<{ telefone: string; nome?: string }[]>([])
   const [tagAlvo, setTagAlvo] = useState<string | null>(null)
   const [midiaIds, setMidiaIds] = useState<string[]>([]) // biblioteca curada da campanha (§9 Fase A)
+  const [dna, setDna] = useState<CamadaDna>({}) // camada de DNA da campanha (§9 Fase B)
   const [dispararAgora, setDispararAgora] = useState(true)
   const [salvando, setSalvando] = useState(false)
 
@@ -45,6 +55,7 @@ function NovaCampanhaModal({ onFechar }: { onFechar: (criou: boolean) => void })
         tom: form.tom.trim() || undefined,
         informacoes: form.informacoes.trim() || undefined,
         midiaIds: midiaIds.length ? midiaIds : undefined, // herdada por cada missão da campanha
+        dna: limparCamadaDna(dna), // camada de DNA da campanha (só categorias com texto)
         ...(tagAlvo ? { tagId: tagAlvo } : { contatos }),
       })
       if (dispararAgora) {
@@ -116,6 +127,7 @@ function NovaCampanhaModal({ onFechar }: { onFechar: (criou: boolean) => void })
             <label className="mb-1 block text-xs text-muted">📎 Mídias da campanha (opcional)</label>
             <SeletorMidia valor={midiaIds} onChange={setMidiaIds} dica="Nada marcado → a IA pode enviar qualquer item da biblioteca em cada conversa." />
           </div>
+          <EditorDnaCampanha valor={dna} onChange={setDna} />
           <div className="border-t border-line pt-3">
             <SeletorContatos onChange={setContatos} onAlvoTag={setTagAlvo} />
           </div>
@@ -299,10 +311,64 @@ function RelatorioModal({ campanha, onFechar }: { campanha: CampanhaResumo; onFe
   )
 }
 
+// #9 Fase B — ajusta a camada de DNA de uma campanha JÁ criada (reflete vivo nas missões dela).
+function EditarDnaModal({ campanha, onFechar }: { campanha: CampanhaResumo; onFechar: () => void }) {
+  const [dna, setDna] = useState<CamadaDna>({})
+  const [carregando, setCarregando] = useState(true)
+  const [salvando, setSalvando] = useState(false)
+
+  useEffect(() => {
+    api.campanhas
+      .obter(campanha.id)
+      .then((c) => setDna((c.dna as CamadaDna) ?? {}))
+      .catch((e) => toast((e as Error).message, 'erro'))
+      .finally(() => setCarregando(false))
+  }, [campanha.id])
+
+  const salvar = async () => {
+    setSalvando(true)
+    try {
+      await api.campanhas.editarDna(campanha.id, limparCamadaDna(dna) ?? {})
+      toast('DNA da campanha atualizado — vale já na próxima resposta.', 'ok')
+      onFechar()
+    } catch (e) {
+      toast((e as Error).message, 'erro')
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 backdrop-blur-sm">
+      <Card className="max-h-[90vh] w-full max-w-lg overflow-y-auto p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold text-content">DNA da campanha</h3>
+            <p className="text-xs text-muted">{campanha.nome}</p>
+          </div>
+          <button onClick={onFechar} className="text-muted hover:text-content"><X className="h-5 w-5" /></button>
+        </div>
+        {carregando ? (
+          <div className="grid place-items-center py-10"><Spinner className="h-6 w-6" /></div>
+        ) : (
+          <>
+            <EditorDnaCampanha valor={dna} onChange={setDna} />
+            <div className="mt-5 flex justify-end gap-2">
+              <Button variant="ghost" onClick={onFechar}>Cancelar</Button>
+              <Button onClick={salvar} loading={salvando}>Salvar DNA</Button>
+            </div>
+          </>
+        )}
+      </Card>
+    </div>
+  )
+}
+
 export function Campanhas() {
   const [campanhas, setCampanhas] = useState<CampanhaResumo[] | null>(null)
   const [modal, setModal] = useState(false)
   const [add, setAdd] = useState<CampanhaResumo | null>(null)
+  const [dnaCamp, setDnaCamp] = useState<CampanhaResumo | null>(null)
   const [relatorio, setRelatorio] = useState<CampanhaResumo | null>(null)
 
   const [disparando, setDisparando] = useState<string | null>(null)
@@ -365,6 +431,7 @@ export function Campanhas() {
                 <div className="mt-3 flex gap-2">
                   <Button variant="ghost" className="flex-1" onClick={() => setRelatorio(c)}><FileText className="h-4 w-4" /> Relatório</Button>
                   <Button variant="ghost" className="flex-1" onClick={() => setAdd(c)}><UserPlus className="h-4 w-4" /> Contatos</Button>
+                  <Button variant="ghost" onClick={() => setDnaCamp(c)} title="DNA desta campanha"><Dna className="h-4 w-4" /></Button>
                 </div>
               </Card>
             )
@@ -374,6 +441,7 @@ export function Campanhas() {
 
       {modal && <NovaCampanhaModal onFechar={(criou) => { setModal(false); if (criou) carregar() }} />}
       {add && <AddContatosModal campanha={add} onFechar={(a) => { setAdd(null); if (a) carregar() }} />}
+      {dnaCamp && <EditarDnaModal campanha={dnaCamp} onFechar={() => setDnaCamp(null)} />}
       {relatorio && <RelatorioModal campanha={relatorio} onFechar={() => setRelatorio(null)} />}
     </div>
   )

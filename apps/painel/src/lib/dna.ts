@@ -15,6 +15,11 @@ export const CHAVES_DNA = [
 export type ChaveDna = (typeof CHAVES_DNA)[number]
 export type Dna = Partial<Record<ChaveDna, string | null>>
 
+// ── DNA hierárquico (#9): camada que sobrescreve o DNA-base por categoria ──
+// Herdar = categoria ausente. Substituir = troca o texto. Combinar = soma ao herdado.
+export type ModoDna = 'substituir' | 'combinar'
+export type CamadaDna = Partial<Record<ChaveDna, { modo: ModoDna; texto: string }>>
+
 export interface CategoriaDna {
   chave: ChaveDna
   titulo: string

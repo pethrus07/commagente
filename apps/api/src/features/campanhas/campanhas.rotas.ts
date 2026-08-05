@@ -1,10 +1,12 @@
 // 🖥️ Apresentação — rotas de campanhas.
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
+import { dnaCamadaSchema } from '../tenant/tenant.dna'
 import { estiloSchema } from '../tenant/tenant.estilo'
 import {
   adicionarContatosCampanha,
   criarCampanha,
+  editarDnaCampanha,
   iniciarCampanha,
   listarCampanhas,
   obterCampanha,
@@ -36,6 +38,7 @@ const corpoCriar = z
     tom: z.string().optional(),
     informacoes: z.string().optional(),
     midiaIds: z.array(z.string().uuid()).optional(), // biblioteca curada (§9 Fase A)
+    dna: dnaCamadaSchema.optional(), // camada de DNA da campanha (§9 Fase B)
     estilo: estiloSchema.optional(),
     ...alvo,
   })
@@ -56,6 +59,13 @@ export async function campanhasRotas(app: FastifyInstance) {
   app.get('/campanhas/:id', async (req) => {
     const { id } = paramsId.parse(req.params)
     return obterCampanha(id)
+  })
+
+  // #9 Fase B — define/ajusta a camada de DNA da campanha (reflete vivo nas missões dela)
+  app.patch('/campanhas/:id/dna', async (req) => {
+    const { id } = paramsId.parse(req.params)
+    const dna = dnaCamadaSchema.parse(req.body ?? {})
+    return editarDnaCampanha(id, dna)
   })
 
   // RELATÓRIO consolidado da campanha (conteúdo coletado por contato + placar por estado)

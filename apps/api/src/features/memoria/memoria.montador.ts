@@ -3,7 +3,7 @@
 import type { Direcao, EstadoMissao } from '@prisma/client'
 import type { ContextoIA } from '../../core/ia/porta-ia'
 import { compilarDnaContato } from '../contatos/contato.dna'
-import { compilarDna } from '../tenant/tenant.dna'
+import { compilarDnaComCamadas } from '../tenant/tenant.dna'
 import { lerEstilo, regrasDeEstilo, type EstiloConversa } from '../tenant/tenant.estilo'
 
 const ULTIMAS = 8 // nº de mensagens recentes no contexto (o resto vira resumo rolante)
@@ -96,6 +96,8 @@ type MissaoComMsgs = {
   } | null
   // identidade (voz) + estilo (fallback) + DNA (conhecimento categorizado) da IA
   tenant?: { persona: string | null; estilo?: unknown; dna?: unknown } | null
+  // camada de DNA da campanha (#9 Fase B): sobrescreve categorias do tenant (Substituir/Combinar)
+  campanha?: { dna?: unknown } | null
   mensagens: { direcao: Direcao; conteudo: string }[]
 }
 
@@ -104,8 +106,9 @@ export function montarFicha(
   conhecimento?: string[] | null,
   midiasDisponiveis?: { id: string; nome: string }[] | null,
 ): ContextoIA {
-  // DNA do tenant: Regras de Negócio → persona (prioridade); demais categorias → conhecimento autorizado.
-  const dna = compilarDna(missao.tenant?.dna)
+  // DNA do tenant COM a camada da campanha (#9 Fase B): Regras de Negócio → persona (prioridade);
+  // demais categorias → conhecimento autorizado. Campanha pode Substituir/Combinar por categoria.
+  const dna = compilarDnaComCamadas(missao.tenant?.dna, missao.campanha?.dna)
   return {
     persona: montarPersona({
       tipo: missao.tipo,

@@ -392,6 +392,7 @@ model Campanha {
   tom               String?
   informacoes       String?
   midiaIds          String[] @default([]) @map("midia_ids") @db.Uuid // biblioteca curada da campanha (herdada por cada missão dela)
+  dna               Json? // camada de DNA da campanha (#9 Fase B): {categoria: {modo, texto}} sobrescreve o tenant
   estilo            Json? // perfil de conversa da campanha (herdado por cada missão dela)
   criadoEm          DateTime @default(now()) @map("criado_em")
 

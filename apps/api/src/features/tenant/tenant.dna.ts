@@ -82,6 +82,48 @@ export function lerDna(bruto: unknown): Dna {
   return out
 }
 
+// ── DNA hierárquico (#9): CAMADAS que sobrescrevem o DNA-base (tenant) por categoria ──
+// Uma camada (campanha, missão, contato) declara, por categoria, um MODO:
+//  • Herdar    → categoria ausente na camada (usa o nível de baixo; o padrão).
+//  • Substituir → troca o texto da categoria só nesta camada (ex.: público-alvo da campanha).
+//  • Combinar  → soma ao texto herdado (base + o desta camada).
+export type ModoDna = 'substituir' | 'combinar'
+export type CamadaDna = Partial<Record<ChaveDna, { modo: ModoDna; texto: string }>>
+
+const modoDnaEnum = z.enum(['substituir', 'combinar'])
+const campoCamada = z.object({ modo: modoDnaEnum, texto: z.string().trim().max(MAX_ARMAZENADO) }).nullish()
+export const dnaCamadaSchema = z.object(
+  Object.fromEntries(CHAVES_DNA.map((k) => [k, campoCamada])) as Record<ChaveDna, typeof campoCamada>,
+)
+
+// normaliza o JSON de uma camada → só as categorias com modo + texto de fato preenchidos.
+export function lerCamadaDna(bruto: unknown): CamadaDna {
+  const r = dnaCamadaSchema.safeParse(bruto ?? {})
+  if (!r.success) return {}
+  const out: CamadaDna = {}
+  for (const k of CHAVES_DNA) {
+    const v = r.data[k]
+    const texto = v?.texto?.trim()
+    if (v && texto) out[k] = { modo: v.modo, texto }
+  }
+  return out
+}
+
+// resolve a hierarquia: base (tenant) + camadas em ordem CRESCENTE de prioridade
+// (campanha → missão → contato). Devolve o mapa de categorias já efetivo.
+export function resolverDna(base: Dna, ...camadas: CamadaDna[]): Dna {
+  const out: Dna = { ...base }
+  for (const camada of camadas) {
+    for (const k of CHAVES_DNA) {
+      const ov = camada[k]
+      if (!ov) continue // Herdar — mantém o que veio de baixo
+      const atual = out[k]?.trim()
+      out[k] = ov.modo === 'combinar' && atual ? `${atual}\n${ov.texto}` : ov.texto
+    }
+  }
+  return out
+}
+
 export interface DnaCompilado {
   regras: string | null // Regras de Negócio → vão pro bloco de regras invioláveis (prioridade)
   conhecimento: string | null // demais categorias → fonte de conhecimento autorizada
@@ -89,7 +131,19 @@ export interface DnaCompilado {
 
 // compila o DNA armazenado no que efetivamente entra no prompt, dentro do orçamento.
 export function compilarDna(bruto: unknown): DnaCompilado {
-  const d = lerDna(bruto)
+  return compilarDnaResolvido(lerDna(bruto))
+}
+
+// compila o DNA-base do tenant JÁ com as camadas da hierarquia aplicadas (campanha, missão…).
+// As camadas chegam como JSON bruto do banco (Campanha.dna etc.) e são normalizadas aqui.
+export function compilarDnaComCamadas(baseBruto: unknown, ...camadasBruto: unknown[]): DnaCompilado {
+  const base = lerDna(baseBruto)
+  const camadas = camadasBruto.map(lerCamadaDna)
+  return compilarDnaResolvido(resolverDna(base, ...camadas))
+}
+
+// núcleo do orçamento de contexto — opera sobre um mapa de categorias JÁ resolvido.
+export function compilarDnaResolvido(d: Dna): DnaCompilado {
   const regras = d.regrasNegocio ? truncar(d.regrasNegocio, CAP_PROMPT) : null
 
   const partes: string[] = []

@@ -148,10 +148,14 @@ export const api = {
       tom?: string
       informacoes?: string
       midiaIds?: string[] // biblioteca curada da campanha (herdada por cada missão)
+      dna?: import('./dna').CamadaDna // camada de DNA da campanha (§9 Fase B)
       estilo?: EstiloConversa // perfil de conversa da campanha (herdado por cada missão)
       contatos?: { telefone: string; nome?: string }[]
       tagId?: string // dispara pra TODOS os contatos da tag (resolvido no servidor)
     }) => req<{ campanha: { id: string }; criadas: number }>('/campanhas', { method: 'POST', body: JSON.stringify(data) }),
+    editarDna: (id: string, dna: import('./dna').CamadaDna) =>
+      req<{ id: string; dna: unknown }>(`/campanhas/${id}/dna`, { method: 'PATCH', body: JSON.stringify(dna) }),
+    obter: (id: string) => req<{ id: string; nome: string; dna?: import('./dna').CamadaDna | null }>(`/campanhas/${id}`),
     adicionarContatos: (
       id: string,
       alvo: { contatos?: { telefone: string; nome?: string }[]; tagId?: string },
