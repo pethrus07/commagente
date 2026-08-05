@@ -269,6 +269,11 @@ export interface TenantResumo {
   totalUsuarios: number
   custoBrl: number // custo de IA acumulado (só super-admin)
   custoAlto: boolean // acima do teto de alerta
+  // monitoramento ao vivo (§8.10)
+  mensagensHoje: number
+  missoesAtivas: number
+  numerosConectados: number
+  ultimaAtividade: string | null
 }
 
 // estilo de conversa da IA (controles estruturados de COMO ESCREVER — o "parecer humano")

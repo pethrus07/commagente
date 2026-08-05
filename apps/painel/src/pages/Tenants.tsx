@@ -73,12 +73,19 @@ export function Tenants({ onVerTenant }: { onVerTenant: (t: TenantSel) => void }
     api.admin.tenants().then(setTenants).catch((e) => toast((e as Error).message, 'erro'))
   useEffect(() => {
     carregar()
+    const id = setInterval(carregar, 15000) // monitoramento ao vivo (§8.10): atualiza sozinho a cada 15s
+    return () => clearInterval(id)
   }, [])
 
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted">Cada tenant é um cliente com dados isolados.</p>
+        <p className="flex items-center gap-2 text-sm text-muted">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-300">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" /> ao vivo
+          </span>
+          Cada cliente com dados isolados — atualiza a cada 15s.
+        </p>
         <Button onClick={() => setModal(true)}><Plus className="h-4 w-4" /> Novo tenant</Button>
       </div>
 
@@ -103,6 +110,20 @@ export function Tenants({ onVerTenant }: { onVerTenant: (t: TenantSel) => void }
                 <Metric n={t.totalMissoes} label="missões" />
                 <Metric n={t.totalContatos} label="contatos" />
                 <Metric n={t.totalNumeros} label="números" />
+              </div>
+              {/* ao vivo (§8.10): estado atual + atividade de hoje */}
+              <div className="mt-3 rounded-lg border border-line bg-surface2 px-2.5 py-2 text-[11px]">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 font-medium text-content">
+                    <span className={cn('h-1.5 w-1.5 rounded-full', t.numerosConectados > 0 ? 'animate-pulse bg-emerald-400' : 'bg-subtle')} /> ao vivo
+                  </span>
+                  <span className="text-subtle">{t.ultimaAtividade ? `ativo ${tempoRelativo(t.ultimaAtividade)}` : 'sem atividade'}</span>
+                </div>
+                <div className="mt-1.5 flex items-center justify-between text-muted tabular-nums">
+                  <span title="chips conectados / total"><b className={cn(t.numerosConectados > 0 ? 'text-emerald-500' : 'text-subtle')}>{t.numerosConectados}</b>/{t.totalNumeros} conectados</span>
+                  <span title="mensagens hoje"><b className="text-content">{t.mensagensHoje}</b> msg hoje</span>
+                  <span title="missões em conversa / na fila"><b className="text-content">{t.missoesAtivas}</b> ativas</span>
+                </div>
               </div>
               <div className="mt-3 flex items-center gap-1.5 text-xs text-muted">
                 <Users className="h-3.5 w-3.5" /> {t.totalUsuarios} usuário{t.totalUsuarios === 1 ? '' : 's'}

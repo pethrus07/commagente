@@ -5,7 +5,9 @@ import { ErroHttp } from '../../core/erros'
 import { senha as senhaUtil } from '../../core/senha'
 
 export async function listarTenants() {
-  const [tenants, custos] = await Promise.all([
+  const inicioHoje = new Date()
+  inicioHoje.setHours(0, 0, 0, 0)
+  const [tenants, custos, msgsHoje, ativas, conectados, ultimaMsg] = await Promise.all([
     db.tenant.findMany({
       orderBy: { criadoEm: 'desc' },
       include: {
@@ -14,10 +16,19 @@ export async function listarTenants() {
     }),
     // custo de IA acumulado por tenant (protege a key da OpenAI — só super-admin vê)
     db.missao.groupBy({ by: ['tenantId'], _sum: { tokensEntrada: true, tokensSaida: true } }),
+    // ── monitoramento ao vivo (§8.10): atividade de HOJE + estado atual por tenant ──
+    db.mensagem.groupBy({ by: ['tenantId'], where: { criadaEm: { gte: inicioHoje } }, _count: true }),
+    db.missao.groupBy({ by: ['tenantId'], where: { estado: { in: ['em_conversa', 'na_fila'] } }, _count: true }),
+    db.numeroWhatsapp.groupBy({ by: ['tenantId'], where: { statusConexao: 'conectado' }, _count: true }),
+    db.mensagem.groupBy({ by: ['tenantId'], _max: { criadaEm: true } }),
   ])
   const mapaCusto = new Map(
     custos.map((c) => [c.tenantId, custoBrl(c._sum.tokensEntrada ?? 0, c._sum.tokensSaida ?? 0)]),
   )
+  const mapMsgHoje = new Map(msgsHoje.map((m) => [m.tenantId, m._count]))
+  const mapAtivas = new Map(ativas.map((m) => [m.tenantId, m._count]))
+  const mapConectados = new Map(conectados.map((n) => [n.tenantId, n._count]))
+  const mapUltima = new Map(ultimaMsg.map((m) => [m.tenantId, m._max.criadaEm]))
   return tenants.map((t) => {
     const custo = mapaCusto.get(t.id) ?? 0
     return {
@@ -30,6 +41,11 @@ export async function listarTenants() {
       totalUsuarios: t._count.usuarios,
       custoBrl: custo,
       custoAlto: custo >= TETO_CUSTO_BRL, // acima do teto → alerta
+      // ao vivo
+      mensagensHoje: (mapMsgHoje.get(t.id) as number) ?? 0,
+      missoesAtivas: (mapAtivas.get(t.id) as number) ?? 0,
+      numerosConectados: (mapConectados.get(t.id) as number) ?? 0,
+      ultimaAtividade: mapUltima.get(t.id) ?? null,
     }
   })
 }
