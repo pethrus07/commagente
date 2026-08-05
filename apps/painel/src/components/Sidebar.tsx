@@ -1,4 +1,5 @@
 import {
+  Brain,
   Building2,
   CalendarClock,
   Dna,
@@ -37,6 +38,7 @@ type Item = {
 }
 export type Page =
   | 'dashboard'
+  | 'inteligencia'
   | 'numeros'
   | 'missoes'
   | 'campanhas'
@@ -52,6 +54,7 @@ export type Page =
 const ITENS: Item[] = [
   { id: 'tenants', label: 'Tenants', icon: Building2, soSuperAdmin: true },
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'inteligencia', label: 'Inteligência', icon: Brain },
   { id: 'missoes', label: 'Missões', icon: Target },
   { id: 'campanhas', label: 'Campanhas', icon: Megaphone },
   { id: 'programadas', label: 'Programadas', icon: CalendarClock },

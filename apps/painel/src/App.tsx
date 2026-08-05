@@ -12,6 +12,7 @@ import { VozEstilo } from './pages/VozEstilo'
 import { Biblioteca } from './pages/Biblioteca'
 import { Contatos } from './pages/Contatos'
 import { Dashboard } from './pages/Dashboard'
+import { Inteligencia } from './pages/Inteligencia'
 import { Escalados } from './pages/Escalados'
 import { Login } from './pages/Login'
 import { MissaoDetalhe } from './pages/MissaoDetalhe'
@@ -25,6 +26,7 @@ type Rota = { page: Page } | { page: 'missao'; id: string }
 
 const TITULOS: Record<Page, { t: string; s: string }> = {
   dashboard: { t: 'Dashboard', s: 'Visão geral do assistente' },
+  inteligencia: { t: 'Inteligência', s: 'Pergunte qualquer coisa sobre os dados da conta' },
   missoes: { t: 'Missões', s: 'Conversas conduzidas pela IA' },
   campanhas: { t: 'Campanhas', s: 'A mesma missão disparada pra vários contatos' },
   programadas: { t: 'Programadas', s: 'Missões que disparam sozinhas na data de cada cliente' },
@@ -126,6 +128,7 @@ export default function App() {
             <main key={tenantSel?.id ?? 'padrao'} className="flex-1 overflow-y-auto p-4 md:p-8">
               {rota.page === 'tenants' && <Tenants onVerTenant={trocarTenant} />}
               {rota.page === 'dashboard' && <Dashboard onIr={(p) => setRota({ page: p })} />}
+              {rota.page === 'inteligencia' && <Inteligencia />}
               {rota.page === 'numeros' && <Numeros />}
               {rota.page === 'contatos' && <Contatos />}
               {rota.page === 'tags' && <Tags />}

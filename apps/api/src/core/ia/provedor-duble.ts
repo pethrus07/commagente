@@ -70,4 +70,12 @@ export const provedorDuble: ProvedorIA = {
       texto: `## Relatório (dublê) — ${dados.objetivo}\n\n**Total de contatos:** ${dados.total}\n**Com dados coletados:** ${comDados}\n\n**Por estado:**\n${linhasEstado || '- (nenhum)'}\n\n_(Ative IA_PROVIDER=openai para a síntese narrativa real.)_`,
     }
   },
+
+  async analisar(dados): Promise<{ texto: string }> {
+    // dublê: devolve o retrato bruto resumido (sem LLM) — grounded por construção.
+    const s = dados.snapshot as Record<string, unknown>
+    return {
+      texto: `**Pergunta:** ${dados.pergunta}\n\n_(dublê — sem IA real)_ Com base no retrato da conta:\n\n\`\`\`json\n${JSON.stringify(s, null, 2).slice(0, 1500)}\n\`\`\`\n\nAtive IA_PROVIDER=openai para a resposta em linguagem natural.`,
+    }
+  },
 }

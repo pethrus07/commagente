@@ -50,6 +50,13 @@ export interface UsoIA {
   saida: number
 }
 
+/** Pergunta do operador + retrato estruturado dos dados do tenant (Central de Inteligência #7). */
+export interface DadosAnalise {
+  pergunta: string
+  /** snapshot JSON dos dados da conta (contadores, campanhas, desfechos…) — a ÚNICA fonte da resposta */
+  snapshot: unknown
+}
+
 /** Dados agregados de uma campanha, pra IA consolidar num relatório gerencial. */
 export interface DadosSintese {
   objetivo: string
@@ -90,4 +97,6 @@ export interface ProvedorIA {
   resumir(ctx: ContextoIA): Promise<{ texto: string; uso?: UsoIA }>
   /** consolida os dados coletados numa campanha num relatório gerencial narrativo. */
   sintetizar(dados: DadosSintese): Promise<{ texto: string; uso?: UsoIA }>
+  /** responde uma pergunta em linguagem natural SÓ com base no snapshot dos dados (grounded). */
+  analisar(dados: DadosAnalise): Promise<{ texto: string; uso?: UsoIA }>
 }

@@ -282,6 +282,15 @@ export const api = {
     excluir: (id: string) => req(`/conhecimento/${id}`, { method: 'DELETE' }),
   },
 
+  // Central de Inteligência (#7) — pergunte qualquer coisa sobre os dados da conta
+  inteligencia: {
+    perguntar: (pergunta: string) =>
+      req<{ resposta: string; uso?: { entrada: number; saida: number } }>('/inteligencia/perguntar', {
+        method: 'POST',
+        body: JSON.stringify({ pergunta }),
+      }),
+  },
+
   // biblioteca de mídia (§8.15) — arquivos que a IA pode enviar
   midia: {
     listar: () => req<import('./types').Midia[]>('/midia'),

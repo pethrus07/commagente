@@ -1,7 +1,7 @@
 // 🔌 Provedor de IA real — OpenAI (chat completions + JSON mode).
 // Implementa a mesma PortaIA do dublê; troca via IA_PROVIDER=openai.
 import { config } from '../config'
-import type { ContextoIA, ProvedorIA, SaidaIA, UsoIA } from './porta-ia'
+import type { ContextoIA, DadosAnalise, ProvedorIA, SaidaIA, UsoIA } from './porta-ia'
 import { SaidaIASchema } from './porta-ia'
 
 type Msg = { role: 'system' | 'user' | 'assistant'; content: string }
@@ -190,6 +190,25 @@ export const provedorOpenai: ProvedorIA = {
         },
       ],
       { temperature: 0.4 },
+    )
+    return { texto: conteudo.trim(), uso }
+  },
+
+  async analisar(dados: DadosAnalise): Promise<{ texto: string; uso?: UsoIA }> {
+    // Central de Inteligência (#7): responde SÓ com base no snapshot — guardrail anti-invenção.
+    const { conteudo, uso } = await chat(
+      [
+        {
+          role: 'system',
+          content:
+            'Você é o analista de dados desta conta de atendimento por WhatsApp com IA. Responda à pergunta do operador USANDO SOMENTE os dados (JSON) fornecidos como fonte da verdade. REGRAS: (1) nunca invente números, nomes, datas ou fatos — se a resposta não estiver nos dados, diga com clareza que esse dado ainda não está disponível; (2) use os números EXATOS dos dados; (3) responda em português-BR, direto e objetivo, em markdown curto quando ajudar (negrito/listas); (4) não exponha IDs internos nem devolva o JSON cru; (5) se a pergunta fugir dos dados da conta, explique gentilmente o que você consegue responder.',
+        },
+        {
+          role: 'user',
+          content: `DADOS (retrato atual da conta):\n${JSON.stringify(dados.snapshot)}\n\nPERGUNTA: ${dados.pergunta}`,
+        },
+      ],
+      { temperature: 0.2 },
     )
     return { texto: conteudo.trim(), uso }
   },
