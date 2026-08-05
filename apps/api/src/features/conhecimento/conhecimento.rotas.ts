@@ -8,6 +8,7 @@ import {
   editarConhecimento,
   excluirConhecimento,
   importarDocumento,
+  importarUrl,
   listarConhecimento,
 } from './conhecimento.caso-uso'
 
@@ -52,6 +53,13 @@ export async function conhecimentoRotas(app: FastifyInstance) {
       return importarDocumento(dados)
     },
   )
+
+  // aprendizado por link (§8.14): cola a URL → busca, extrai o texto e vira conhecimento.
+  app.post('/conhecimento/importar-url', async (req, reply) => {
+    const dados = z.object({ url: z.string().url(), categoria }).parse(req.body)
+    reply.code(201)
+    return importarUrl(dados)
+  })
 
   // aprovar / rejeitar (curadoria das sugestões da IA)
   app.post('/conhecimento/:id/status', async (req) => {

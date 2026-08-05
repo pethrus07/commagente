@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Check, ChevronRight, Dna as DnaIcon, FileText, FileUp, Plus, ShieldAlert, Sparkles, X } from 'lucide-react'
+import { Check, ChevronRight, Dna as DnaIcon, FileText, FileUp, Link as LinkIcon, Plus, ShieldAlert, Sparkles, X } from 'lucide-react'
 import { api } from '../lib/api'
 import { CATEGORIAS_DNA, type CategoriaDna, type Dna as DnaTipo } from '../lib/dna'
 import { toast } from '../lib/toast'
@@ -40,12 +40,20 @@ function LeitorDoc({ item, onFechar }: { item: Item; onFechar: () => void }) {
 
 // Editor focado de UMA categoria: o resumo (texto) + os documentos daquela categoria.
 function EditorCategoria({
-  cat, valor, docs, onFechar, onSalvar, onAnexar, onLer, onRemoverDoc, salvando,
+  cat, valor, docs, onFechar, onSalvar, onAnexar, onLink, onLer, onRemoverDoc, salvando,
 }: {
   cat: CategoriaDna; valor: string; docs: Item[]
-  onFechar: () => void; onSalvar: (texto: string) => void; onAnexar: () => void; onLer: (i: Item) => void; onRemoverDoc: (id: string) => void; salvando: boolean
+  onFechar: () => void; onSalvar: (texto: string) => void; onAnexar: () => void; onLink: (url: string) => Promise<void>; onLer: (i: Item) => void; onRemoverDoc: (id: string) => void; salvando: boolean
 }) {
   const [texto, setTexto] = useState(valor)
+  const [link, setLink] = useState('')
+  const [mostrarLink, setMostrarLink] = useState(false)
+  const [impLink, setImpLink] = useState(false)
+  const importarLink = async () => {
+    if (!link.trim()) return
+    setImpLink(true)
+    try { await onLink(link.trim()); setLink(''); setMostrarLink(false) } finally { setImpLink(false) }
+  }
   return (
     <div className="fixed inset-0 z-40 grid place-items-center bg-black/60 p-4 backdrop-blur-sm">
       <Card className="w-full max-w-lg p-6">
@@ -67,7 +75,16 @@ function EditorCategoria({
               <button onClick={() => onRemoverDoc(d.id)} className="text-subtle hover:text-rose-400"><X className="h-3.5 w-3.5" /></button>
             </div>
           ))}
-          <button onClick={onAnexar} className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-line px-2.5 py-1.5 text-[12px] text-subtle transition hover:border-emerald-500/40 hover:text-content"><FileUp className="h-3.5 w-3.5" /> anexar documento</button>
+          <div className="flex flex-wrap gap-1.5">
+            <button onClick={onAnexar} className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-line px-2.5 py-1.5 text-[12px] text-subtle transition hover:border-emerald-500/40 hover:text-content"><FileUp className="h-3.5 w-3.5" /> anexar documento</button>
+            <button onClick={() => setMostrarLink((v) => !v)} className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-line px-2.5 py-1.5 text-[12px] text-subtle transition hover:border-emerald-500/40 hover:text-content"><LinkIcon className="h-3.5 w-3.5" /> colar link</button>
+          </div>
+          {mostrarLink && (
+            <div className="flex gap-1.5">
+              <input value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://seusite.com/produtos" className={cn(campo, 'text-[13px]')} onKeyDown={(e) => e.key === 'Enter' && importarLink()} />
+              <Button onClick={importarLink} loading={impLink}>Ler</Button>
+            </div>
+          )}
         </div>
         <div className="mt-5 flex justify-end gap-2">
           <Button variant="ghost" onClick={onFechar}>Cancelar</Button>
@@ -122,6 +139,11 @@ export function DNA() {
     } catch (err) { toast((err as Error).message, 'erro') }
   }
   const removerDoc = async (id: string) => { try { await api.conhecimento.excluir(id); carregar() } catch (e) { toast((e as Error).message, 'erro') } }
+  const importarLink = async (url: string) => {
+    if (!aberta) return
+    try { await api.conhecimento.importarUrl({ url, categoria: aberta.chave }); toast('Site lido e adicionado ao DNA.', 'ok'); carregar() }
+    catch (e) { toast((e as Error).message, 'erro') }
+  }
   const curar = async (id: string, s: 'aprovado' | 'rejeitado') => { try { await api.conhecimento.status(id, s); carregar() } catch (e) { toast((e as Error).message, 'erro') } }
 
   if (carregando) return <div className="grid place-items-center py-20"><Spinner className="h-6 w-6" /></div>
@@ -187,7 +209,7 @@ export function DNA() {
       {aberta && (
         <EditorCategoria
           cat={aberta} valor={dna[aberta.chave] ?? ''} docs={docsDe(aberta.chave)}
-          onFechar={() => setAberta(null)} onSalvar={salvarCategoria} onAnexar={anexar} onLer={setLendo} onRemoverDoc={removerDoc} salvando={salvando}
+          onFechar={() => setAberta(null)} onSalvar={salvarCategoria} onAnexar={anexar} onLink={importarLink} onLer={setLendo} onRemoverDoc={removerDoc} salvando={salvando}
         />
       )}
       {lendo && <LeitorDoc item={lendo} onFechar={() => setLendo(null)} />}

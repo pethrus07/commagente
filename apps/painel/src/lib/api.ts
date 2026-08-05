@@ -264,6 +264,8 @@ export const api = {
       req<Conhecimento>('/conhecimento', { method: 'POST', body: JSON.stringify(data) }),
     importarDocumento: (data: { nomeArquivo: string; mimetype: string; base64: string; categoria?: string | null }) =>
       req<Conhecimento>('/conhecimento/importar-documento', { method: 'POST', body: JSON.stringify(data) }),
+    importarUrl: (data: { url: string; categoria?: string | null }) =>
+      req<Conhecimento>('/conhecimento/importar-url', { method: 'POST', body: JSON.stringify(data) }),
     status: (id: string, status: Extract<StatusConhecimento, 'aprovado' | 'rejeitado'>) =>
       req<Conhecimento>(`/conhecimento/${id}/status`, {
         method: 'POST',

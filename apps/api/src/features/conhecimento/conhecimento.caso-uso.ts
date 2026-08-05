@@ -134,6 +134,73 @@ export async function importarDocumento(input: {
   return item
 }
 
+// ── Aprendizado por link (§8.14): cola a URL do site/loja → busca, extrai o texto e vira
+// conhecimento (RAG). A IA lê 1× e guarda no acervo (não navega ao vivo a cada mensagem). ──
+function urlSegura(u: string): URL {
+  let url: URL
+  try { url = new URL(u.trim()) } catch { throw new ErroHttp(400, 'URL inválida.') }
+  if (!/^https?:$/.test(url.protocol)) throw new ErroHttp(400, 'Só aceito http(s).')
+  const h = url.hostname.toLowerCase()
+  // anti-SSRF: bloqueia localhost / redes internas / link-local
+  const interno =
+    h === 'localhost' || h.endsWith('.local') || h === '::1' || h.startsWith('fe80') ||
+    /^(127\.|10\.|0\.|169\.254\.|192\.168\.)/.test(h) || /^172\.(1[6-9]|2\d|3[01])\./.test(h)
+  if (interno) throw new ErroHttp(400, 'Endereço interno não é permitido.')
+  return url
+}
+
+function htmlParaTexto(html: string): { titulo: string; texto: string } {
+  const titulo = (html.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1] ?? '').trim()
+  const texto = html
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<!--[\s\S]*?-->/g, ' ')
+    .replace(/<(nav|header|footer|aside)[\s\S]*?<\/\1>/gi, ' ') // tira menu/rodapé (ruído)
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"')
+    .replace(/\s+/g, ' ')
+    .trim()
+  return { titulo, texto }
+}
+
+export async function importarUrl(input: { url: string; categoria?: string | null }) {
+  const tenantId = await tenantAtual()
+  const url = urlSegura(input.url)
+  let html: string
+  try {
+    const resp = await fetch(url.toString(), {
+      headers: { 'user-agent': 'CommagenteBot/1.0 (+https://commagente.com.br)', accept: 'text/html,*/*' },
+      signal: AbortSignal.timeout(15000),
+      redirect: 'follow',
+    })
+    if (!resp.ok) throw new Error(`o site respondeu ${resp.status}`)
+    const ct = resp.headers.get('content-type') ?? ''
+    if (!/html|text|xml/.test(ct)) throw new Error('o link não é uma página de texto')
+    const buf = await resp.arrayBuffer()
+    if (buf.byteLength > 6 * 1024 * 1024) throw new Error('página grande demais')
+    html = Buffer.from(buf).toString('utf8')
+  } catch (e) {
+    throw new ErroHttp(502, `Não consegui ler o site: ${(e as Error).message}.`)
+  }
+  const { titulo, texto } = htmlParaTexto(html)
+  if (texto.replace(/\s/g, '').length < 40) {
+    throw new ErroHttp(400, 'A página não tem texto legível (talvez seja renderizada por JavaScript). Cole o conteúdo à mão, ou tente uma página mais simples.')
+  }
+  const LIMITE = 60000
+  const conteudo = `Fonte: ${url.toString()}\n\n${texto.length > LIMITE ? `${texto.slice(0, LIMITE)}\n\n…(texto truncado)` : texto}`
+  const item = await conhecimentoRepo.criar({
+    tenantId,
+    titulo: (titulo || url.hostname).slice(0, 120),
+    conteudo,
+    status: 'aprovado',
+    origem: 'link',
+    categoria: input.categoria ?? null,
+  })
+  reindexarBg(item.id)
+  return item
+}
+
 async function carregarDono(id: string) {
   const item = await conhecimentoRepo.buscar(id)
   if (!item) throw new ErroHttp(404, 'Conhecimento não encontrado')
