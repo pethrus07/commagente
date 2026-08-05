@@ -16,8 +16,10 @@ import {
   UserCircle,
   X,
 } from 'lucide-react'
+import { EditorDnaCamada } from '../components/EditorDnaCamada'
 import { api } from '../lib/api'
 import { auth } from '../lib/auth'
+import { limparCamadaDna, type CamadaDna } from '../lib/dna'
 import { TIPO_INFO, TIPOS_MISSAO, TRANSICOES } from '../lib/estados'
 import { toast } from '../lib/toast'
 import type { EstadoMissao, Missao } from '../lib/types'
@@ -446,6 +448,7 @@ function EditarMissaoModal({ missao, onFechar }: { missao: Missao; onFechar: (sa
     tom: missao.tom ?? '',
     informacoes: missao.informacoes ?? '',
   })
+  const [dna, setDna] = useState<CamadaDna>((missao.dna as CamadaDna) ?? {}) // camada de DNA da missão (§9 Fase C)
   const [salvando, setSalvando] = useState(false)
 
   const salvar = async () => {
@@ -461,6 +464,7 @@ function EditarMissaoModal({ missao, onFechar }: { missao: Missao; onFechar: (sa
         criterioConclusao: form.criterioConclusao.trim() || null,
         tom: form.tom.trim() || null,
         informacoes: form.informacoes.trim() || null,
+        dna: limparCamadaDna(dna) ?? {}, // {} limpa; vale já no próximo turno
       })
       toast('Missão atualizada — vale a partir do próximo turno. ✅', 'ok')
       onFechar(true)
@@ -535,6 +539,8 @@ function EditarMissaoModal({ missao, onFechar }: { missao: Missao; onFechar: (sa
               🛡️ A IA só afirma o que estiver aqui. Fora disso, não inventa — confirma ou escala.
             </p>
           </div>
+          {/* DNA desta missão — sobrescreve categorias da empresa/campanha só aqui (§9 Fase C) */}
+          <EditorDnaCamada valor={dna} onChange={setDna} nivel="missão" heranca="empresa/campanha" />
         </div>
         <div className="mt-5 flex justify-end gap-2">
           <Button variant="ghost" onClick={() => onFechar(false)}>Cancelar</Button>

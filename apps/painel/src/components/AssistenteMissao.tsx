@@ -7,6 +7,8 @@ import { MODELOS, type ModeloMissao } from '../lib/modelos-missao'
 import { toast } from '../lib/toast'
 import type { EstiloConversa, Numero } from '../lib/types'
 import { Button, Card, cn } from '../lib/ui'
+import { limparCamadaDna, type CamadaDna } from '../lib/dna'
+import { EditorDnaCamada } from './EditorDnaCamada'
 import { EstiloControles } from './EstiloControles'
 import { SeletorContatos } from './SeletorContatos'
 import { SeletorMidia } from './SeletorMidia'
@@ -36,6 +38,7 @@ export function AssistenteMissao({ onFechar }: { onFechar: (criou: boolean) => v
   })
   const [contatos, setContatos] = useState<Contato[]>([])
   const [midiaIds, setMidiaIds] = useState<string[]>([]) // biblioteca curada desta missão (§9 Fase A)
+  const [dna, setDna] = useState<CamadaDna>({}) // camada de DNA desta missão (§9 Fase C)
   const [estilo, setEstilo] = useState<EstiloConversa>(ESTILO_PADRAO) // perfil de conversa da missão
   const [reativo, setReativo] = useState(false)
   const [salvando, setSalvando] = useState(false)
@@ -97,6 +100,7 @@ export function AssistenteMissao({ onFechar }: { onFechar: (criou: boolean) => v
           tom: form.tom.trim() || undefined,
           informacoes: form.informacoes.trim() || undefined,
           midiaIds: midiaIds.length ? midiaIds : undefined, // mídias curadas (vazio → toda a biblioteca)
+          dna: limparCamadaDna(dna), // camada de DNA desta missão (vence campanha/empresa)
           estilo, // perfil de conversa desta missão (personalizado se ajustado)
           contatos,
         })
@@ -198,6 +202,8 @@ export function AssistenteMissao({ onFechar }: { onFechar: (criou: boolean) => v
                 <label className="mb-1 block text-xs text-muted">📎 Mídias disponíveis nesta missão</label>
                 <SeletorMidia valor={midiaIds} onChange={setMidiaIds} dica="Nada marcado → a IA pode enviar qualquer item da sua biblioteca quando fizer sentido." />
               </div>
+              {/* DNA desta missão — sobrescreve categorias da empresa/campanha só aqui (§9 Fase C) */}
+              <EditorDnaCamada valor={dna} onChange={setDna} nivel="missão" heranca="empresa" />
               {/* Perfil de conversa — vem do modelo, ajustável (→ personalizado, salvo na missão) */}
               <div className="rounded-xl border border-line bg-surface/40 p-3">
                 <div className="mb-2 flex items-center justify-between">

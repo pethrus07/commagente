@@ -20,6 +20,7 @@ type DadosMissao = {
   tom?: string
   informacoes?: string
   midiaIds?: string[] // biblioteca curada da missão (vazio → toda a biblioteca do tenant)
+  dna?: unknown // camada de DNA da missão (#9 Fase C): {categoria:{modo,texto}}; validado na rota
   estilo?: unknown // perfil de conversa da missão (formalidade/emoji/bolhas…); validado na rota
   campanhaId?: string
 }
@@ -82,6 +83,7 @@ export async function criarMissaoEmLote(
       tom: input.tom,
       informacoes: input.informacoes,
       midiaIds: input.midiaIds ?? [],
+      dna: (input.dna ?? undefined) as Prisma.InputJsonValue | undefined,
       estilo: (input.estilo ?? undefined) as Prisma.InputJsonValue | undefined,
       campanhaId: input.campanhaId,
     })
@@ -185,6 +187,7 @@ export async function editarMissao(
     criterioConclusao?: string | null
     tom?: string | null
     informacoes?: string | null
+    dna?: unknown // camada de DNA da missão (#9 Fase C)
     nomeContato?: string
   },
 ) {
@@ -200,6 +203,7 @@ export async function editarMissao(
   if (patch.criterioConclusao !== undefined) dados.criterioConclusao = patch.criterioConclusao
   if (patch.tom !== undefined) dados.tom = patch.tom
   if (patch.informacoes !== undefined) dados.informacoes = patch.informacoes
+  if (patch.dna !== undefined) dados.dna = (patch.dna ?? undefined) as Prisma.InputJsonValue | undefined
 
   if (patch.nomeContato !== undefined) {
     await db.contato.update({

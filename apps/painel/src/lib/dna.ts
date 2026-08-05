@@ -20,6 +20,14 @@ export type Dna = Partial<Record<ChaveDna, string | null>>
 export type ModoDna = 'substituir' | 'combinar'
 export type CamadaDna = Partial<Record<ChaveDna, { modo: ModoDna; texto: string }>>
 
+// remove categorias sem texto de fato → só manda o que muda (o backend também revalida).
+// Devolve undefined se a camada ficou vazia (não envia objeto vazio à toa).
+export function limparCamadaDna(dna: CamadaDna): CamadaDna | undefined {
+  const out: CamadaDna = {}
+  for (const [k, v] of Object.entries(dna)) if (v?.texto.trim()) out[k as ChaveDna] = { modo: v.modo, texto: v.texto.trim() }
+  return Object.keys(out).length ? out : undefined
+}
+
 export interface CategoriaDna {
   chave: ChaveDna
   titulo: string

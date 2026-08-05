@@ -15,6 +15,7 @@ export const missoesRepo = {
     tom?: string
     informacoes?: string
     midiaIds?: string[] // biblioteca curada desta missão (vazio → toda a biblioteca do tenant)
+    dna?: Prisma.InputJsonValue // camada de DNA desta missão (#9 Fase C)
     estilo?: Prisma.InputJsonValue // perfil de conversa desta missão (null → herda tenant)
     templateId?: string
     campanhaId?: string

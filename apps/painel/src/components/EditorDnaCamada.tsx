@@ -13,16 +13,21 @@ const MODOS: { id: 'herdar' | ModoDna; rotulo: string; dica: string }[] = [
 ]
 
 /**
- * Editor da camada de DNA da campanha (§9 Fase B). Por padrão TUDO é "Herdar" (a campanha usa o
- * DNA da empresa). O usuário muda só o que for diferente nesta campanha: Combinar (soma) ou
- * Substituir (troca). Produz o objeto {categoria: {modo, texto}} — só categorias não-Herdar.
+ * Editor de uma camada de DNA (§9). Por padrão TUDO é "Herdar" (usa o DNA herdado — empresa, e
+ * também a campanha quando é uma missão). O usuário muda só o que for diferente nesta camada:
+ * Combinar (soma) ou Substituir (troca). Produz {categoria: {modo, texto}} — só o não-Herdar.
+ * `nivel` = "campanha" | "missão" (texto da UI); `heranca` = de quem herda por padrão.
  */
-export function EditorDnaCampanha({
+export function EditorDnaCamada({
   valor,
   onChange,
+  nivel = 'campanha',
+  heranca = 'empresa',
 }: {
   valor: CamadaDna
   onChange: (dna: CamadaDna) => void
+  nivel?: string
+  heranca?: string
 }) {
   const [aberto, setAberto] = useState(false)
   const ativas = Object.keys(valor).length
@@ -48,7 +53,7 @@ export function EditorDnaCampanha({
       >
         <span className="flex items-center gap-2">
           <Dna className="h-4 w-4 text-indigo-300" />
-          <span className="text-xs font-medium text-content">DNA desta campanha</span>
+          <span className="text-xs font-medium text-content">DNA desta {nivel}</span>
           {ativas > 0 && (
             <span className="rounded-full bg-indigo-500/15 px-2 py-0.5 text-[10px] font-medium text-indigo-200">
               {ativas} ajuste{ativas === 1 ? '' : 's'}
@@ -61,8 +66,8 @@ export function EditorDnaCampanha({
       {aberto && (
         <div className="space-y-2 border-t border-line px-3 py-3">
           <p className="text-[11px] leading-snug text-muted">
-            Por padrão a campanha usa o DNA da <b>empresa</b>. Mude aqui só o que for diferente nesta
-            campanha — ex.: um <b>público-alvo</b> ou <b>preço</b> promocional só dela.
+            Por padrão esta {nivel} usa o DNA da <b>{heranca}</b>. Mude aqui só o que for diferente
+            nesta {nivel} — ex.: um <b>público-alvo</b> ou <b>preço</b> só dela.
           </p>
           {CATEGORIAS_DNA.map((c) => {
             const atual = valor[c.chave]
@@ -97,8 +102,8 @@ export function EditorDnaCampanha({
                     rows={2}
                     placeholder={
                       modo === 'substituir'
-                        ? `Troca "${c.titulo}" só nesta campanha…`
-                        : `Soma ao "${c.titulo}" da empresa nesta campanha…`
+                        ? `Troca "${c.titulo}" só nesta ${nivel}…`
+                        : `Soma ao "${c.titulo}" herdado, só nesta ${nivel}…`
                     }
                     className={cn(campo, 'mt-2 resize-none')}
                   />

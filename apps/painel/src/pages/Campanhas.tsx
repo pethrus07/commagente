@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { BarChart3, Dna, Download, FileText, Megaphone, Plus, Send, Sparkles, UserPlus, X } from 'lucide-react'
-import { EditorDnaCampanha } from '../components/EditorDnaCampanha'
+import { EditorDnaCamada } from '../components/EditorDnaCamada'
 import { SeletorContatos } from '../components/SeletorContatos'
 import { SeletorMidia } from '../components/SeletorMidia'
 import { api } from '../lib/api'
-import type { CamadaDna } from '../lib/dna'
+import { limparCamadaDna, type CamadaDna } from '../lib/dna'
 import { TIPO_INFO, TIPOS_MISSAO, descreverDisparo, rotuloNumero } from '../lib/estados'
 import { toast } from '../lib/toast'
 import type { CampanhaResumo, Numero, RelatorioCampanha } from '../lib/types'
@@ -12,13 +12,6 @@ import { Button, Card, EmptyState, Spinner, cn, tempoRelativo } from '../lib/ui'
 
 const campo =
   'w-full rounded-xl border border-line bg-surface2 px-4 py-2 text-sm text-content placeholder:text-subtle focus:border-indigo-500/50 focus:outline-none'
-
-// remove categorias sem texto de fato → só manda o que muda (o backend também revalida)
-function limparCamadaDna(dna: CamadaDna): CamadaDna | undefined {
-  const out: CamadaDna = {}
-  for (const [k, v] of Object.entries(dna)) if (v?.texto.trim()) out[k as keyof CamadaDna] = { modo: v.modo, texto: v.texto.trim() }
-  return Object.keys(out).length ? out : undefined
-}
 
 function NovaCampanhaModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
   const [numeros, setNumeros] = useState<Numero[]>([])
@@ -127,7 +120,7 @@ function NovaCampanhaModal({ onFechar }: { onFechar: (criou: boolean) => void })
             <label className="mb-1 block text-xs text-muted">📎 Mídias da campanha (opcional)</label>
             <SeletorMidia valor={midiaIds} onChange={setMidiaIds} dica="Nada marcado → a IA pode enviar qualquer item da biblioteca em cada conversa." />
           </div>
-          <EditorDnaCampanha valor={dna} onChange={setDna} />
+          <EditorDnaCamada valor={dna} onChange={setDna} nivel="campanha" heranca="empresa" />
           <div className="border-t border-line pt-3">
             <SeletorContatos onChange={setContatos} onAlvoTag={setTagAlvo} />
           </div>
@@ -352,7 +345,7 @@ function EditarDnaModal({ campanha, onFechar }: { campanha: CampanhaResumo; onFe
           <div className="grid place-items-center py-10"><Spinner className="h-6 w-6" /></div>
         ) : (
           <>
-            <EditorDnaCampanha valor={dna} onChange={setDna} />
+            <EditorDnaCamada valor={dna} onChange={setDna} nivel="campanha" heranca="empresa" />
             <div className="mt-5 flex justify-end gap-2">
               <Button variant="ghost" onClick={onFechar}>Cancelar</Button>
               <Button onClick={salvar} loading={salvando}>Salvar DNA</Button>

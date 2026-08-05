@@ -320,6 +320,7 @@ export const api = {
       tom?: string
       informacoes?: string
       midiaIds?: string[] // biblioteca curada da missão
+      dna?: import('./dna').CamadaDna // camada de DNA da missão (§9 Fase C)
       estilo?: EstiloConversa
       contatos?: { telefone: string; nome?: string }[]
       tagId?: string
@@ -338,6 +339,7 @@ export const api = {
         criterioConclusao?: string | null
         tom?: string | null
         informacoes?: string | null
+        dna?: import('./dna').CamadaDna // camada de DNA da missão (§9 Fase C)
         nomeContato?: string
       },
     ) =>

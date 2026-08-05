@@ -88,3 +88,24 @@ test('compilarDnaComCamadas sem camada = compilarDna do tenant (compat)', () => 
   assert.deepEqual(compilarDnaComCamadas(tenant), compilarDna(tenant))
   assert.deepEqual(compilarDnaComCamadas(tenant, null, undefined), compilarDna(tenant))
 })
+
+test('3 camadas (#9 Fase C): missão vence campanha vence tenant', () => {
+  const tenant = { precos: 'R$ 100 (empresa)' }
+  const campanha = { precos: { modo: 'substituir', texto: 'R$ 90 (campanha)' } }
+  const missao = { precos: { modo: 'substituir', texto: 'R$ 80 (missão)' } }
+  // ordem crescente de prioridade: tenant(base), campanha, missão → a missão vence
+  const r = resolverDna(lerDna(tenant), lerCamadaDna(campanha), lerCamadaDna(missao))
+  assert.equal(r.precos, 'R$ 80 (missão)')
+  // sem a camada da missão, a campanha prevalece sobre o tenant
+  const semMissao = resolverDna(lerDna(tenant), lerCamadaDna(campanha))
+  assert.equal(semMissao.precos, 'R$ 90 (campanha)')
+})
+
+test('3 camadas Combinar acumula tenant + campanha + missão na ordem', () => {
+  const r = resolverDna(
+    { diferenciais: 'Entrega rápida' },
+    lerCamadaDna({ diferenciais: { modo: 'combinar', texto: 'Frete grátis' } }),
+    lerCamadaDna({ diferenciais: { modo: 'combinar', texto: 'Brinde' } }),
+  )
+  assert.equal(r.diferenciais, 'Entrega rápida\nFrete grátis\nBrinde')
+})

@@ -158,6 +158,7 @@ export interface Missao {
   criterioConclusao: string | null
   tom: string | null
   informacoes: string | null
+  dna?: import('./dna').CamadaDna | null // camada de DNA da missão (§9 Fase C)
   estado: EstadoMissao
   iaPausada: boolean
   motivoEscala: string | null

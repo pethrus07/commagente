@@ -348,6 +348,7 @@ model Missao {
   tom                String? // humor/estilo da conversa (ex.: "amigável e informal")
   informacoes        String? // base de fatos autorizados que a IA PODE afirmar (preço, prazo, condições)
   midiaIds           String[]     @default([]) @map("midia_ids") @db.Uuid // biblioteca curada DESTA missão; vazio → toda a biblioteca do tenant
+  dna                Json? // camada de DNA DESTA missão (#9 Fase C): {categoria:{modo,texto}}; vence a campanha e o tenant
   estilo             Json? // perfil de conversa DESTA missão (formalidade/emoji/bolhas…); null → herda do tenant
   estado             EstadoMissao @default(configurada)
   modo               String       @default("auto") // auto = IA envia sozinha · copilot = rascunha e aguarda aprovação

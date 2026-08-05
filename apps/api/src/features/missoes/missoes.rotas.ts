@@ -2,6 +2,7 @@
 import { EstadoMissao } from '@prisma/client'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
+import { dnaCamadaSchema } from '../tenant/tenant.dna'
 import { estiloSchema } from '../tenant/tenant.estilo'
 import { aprovarRascunho, descartarRascunho } from '../conversa/conversa.caso-uso'
 import {
@@ -21,6 +22,7 @@ import {
 const tipoMissao = z.enum(['vender', 'qualificar', 'orcar', 'cobrar', 'suporte', 'outro'])
 const modoMissao = z.enum(['auto', 'copilot'])
 const midiaIds = z.array(z.string().uuid()).optional() // biblioteca curada (§9 Fase A)
+const dnaCamada = dnaCamadaSchema.optional() // camada de DNA da missão (§9 Fase C)
 
 const corpoCriar = z.object({
   telefone: z.string().min(8),
@@ -33,6 +35,7 @@ const corpoCriar = z.object({
   tom: z.string().optional(),
   informacoes: z.string().optional(),
   midiaIds,
+  dna: dnaCamada,
   estilo: estiloSchema.optional(),
   nomeContato: z.string().optional(),
 })
@@ -46,6 +49,7 @@ const corpoEditar = z.object({
   criterioConclusao: z.string().nullish(),
   tom: z.string().nullish(),
   informacoes: z.string().nullish(),
+  dna: dnaCamada,
   nomeContato: z.string().optional(),
 })
 
@@ -61,6 +65,7 @@ const corpoLote = z
     tom: z.string().optional(),
     informacoes: z.string().optional(),
     midiaIds,
+    dna: dnaCamada,
     estilo: estiloSchema.optional(),
     contatos: z
       .array(z.object({ telefone: z.string().min(8), nome: z.string().optional() }))

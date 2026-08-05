@@ -85,6 +85,7 @@ type MissaoComMsgs = {
   criterioConclusao: string | null
   tom: string | null
   informacoes: string | null
+  dna?: unknown // camada de DNA DESTA missão (#9 Fase C): vence a campanha e o tenant
   estilo?: unknown // perfil de conversa DESTA missão (tem prioridade sobre o do tenant)
   estado: EstadoMissao
   resumo: string | null
@@ -106,9 +107,9 @@ export function montarFicha(
   conhecimento?: string[] | null,
   midiasDisponiveis?: { id: string; nome: string }[] | null,
 ): ContextoIA {
-  // DNA do tenant COM a camada da campanha (#9 Fase B): Regras de Negócio → persona (prioridade);
-  // demais categorias → conhecimento autorizado. Campanha pode Substituir/Combinar por categoria.
-  const dna = compilarDnaComCamadas(missao.tenant?.dna, missao.campanha?.dna)
+  // DNA hierárquico (#9): tenant = base; campanha e missão são camadas em ordem CRESCENTE de
+  // prioridade (a missão vence a campanha, que vence o tenant). Substituir/Combinar por categoria.
+  const dna = compilarDnaComCamadas(missao.tenant?.dna, missao.campanha?.dna, missao.dna)
   return {
     persona: montarPersona({
       tipo: missao.tipo,
