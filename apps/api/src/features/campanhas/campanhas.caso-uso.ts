@@ -121,6 +121,33 @@ export async function obterCampanha(id: string) {
   return campanha
 }
 
+// Duplica a DEFINIÇÃO da campanha (sem missões/contatos) — base pra teste A/B: clona, você ajusta
+// a variante (objetivo/tom/DNA/mídia/estilo) e dispara pro outro segmento.
+export async function duplicarCampanha(id: string) {
+  const orig = await db.campanha.findUnique({ where: { id } })
+  if (!orig) throw new ErroHttp(404, 'Campanha não encontrada')
+  await conferirDono(orig.tenantId)
+  const nova = await db.campanha.create({
+    data: {
+      tenantId: orig.tenantId,
+      numeroId: orig.numeroId,
+      nome: `${orig.nome} (cópia)`,
+      tipo: orig.tipo,
+      modo: orig.modo,
+      objetivo: orig.objetivo,
+      contexto: orig.contexto,
+      criterioConclusao: orig.criterioConclusao,
+      tom: orig.tom,
+      informacoes: orig.informacoes,
+      midiaIds: orig.midiaIds,
+      dna: (orig.dna ?? undefined) as Prisma.InputJsonValue | undefined,
+      estilo: (orig.estilo ?? undefined) as Prisma.InputJsonValue | undefined,
+    },
+    select: { id: true, nome: true },
+  })
+  return nova
+}
+
 // #9 — edita as camadas da campanha (DNA + mídia). As duas refletem VIVO nas missões dela
 // (DNA resolvido e mídia herdada no montador a cada turno). Só mexe no que veio no patch.
 export async function editarCampanha(id: string, patch: { dna?: unknown; midiaIds?: string[] }) {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BarChart3, Dna, Download, FileText, Megaphone, Paperclip, Pencil, Plus, Send, Sparkles, UserPlus, X } from 'lucide-react'
+import { BarChart3, Copy, Dna, Download, FileText, Megaphone, Paperclip, Pencil, Plus, Send, Sparkles, UserPlus, X } from 'lucide-react'
 import { EditorDnaCamada } from '../components/EditorDnaCamada'
 import { EstiloControles } from '../components/EstiloControles'
 import { SeletorContatos } from '../components/SeletorContatos'
@@ -486,6 +486,17 @@ export function Campanhas() {
     }
   }
 
+  // duplica a definição (sem contatos/missões) — base pra teste A/B
+  const duplicar = async (c: CampanhaResumo) => {
+    try {
+      await api.campanhas.duplicar(c.id)
+      toast('Campanha duplicada. Ajuste a variante (A/B) e adicione os contatos.', 'ok')
+      carregar()
+    } catch (e) {
+      toast((e as Error).message, 'erro')
+    }
+  }
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
@@ -533,10 +544,11 @@ export function Campanhas() {
                     <Button onClick={() => disparar(c)} loading={disparando === c.id} className="!py-1 !text-xs"><Send className="h-3.5 w-3.5" /> Disparar</Button>
                   </div>
                 )}
-                <div className="mt-3 flex gap-2">
+                <div className="mt-3 flex flex-wrap gap-2">
                   <Button variant="ghost" className="flex-1" onClick={() => setRelatorio(c)}><FileText className="h-4 w-4" /> Relatório</Button>
                   <Button variant="ghost" className="flex-1" onClick={() => setAdd(c)}><UserPlus className="h-4 w-4" /> Contatos</Button>
                   <Button variant="ghost" onClick={() => setDnaCamp(c)} title="Editar mídia e DNA da campanha"><Pencil className="h-4 w-4" /> Editar</Button>
+                  <Button variant="ghost" onClick={() => duplicar(c)} title="Duplicar (teste A/B)"><Copy className="h-4 w-4" /></Button>
                 </div>
               </Card>
             )

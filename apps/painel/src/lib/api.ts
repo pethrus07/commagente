@@ -162,6 +162,8 @@ export const api = {
     ) => req<{ criadas: number }>(`/campanhas/${id}/contatos`, { method: 'POST', body: JSON.stringify(alvo) }),
     iniciar: (id: string) =>
       req<ResultadoDisparo>(`/campanhas/${id}/iniciar`, { method: 'POST', body: '{}' }),
+    duplicar: (id: string) =>
+      req<{ id: string; nome: string }>(`/campanhas/${id}/duplicar`, { method: 'POST', body: '{}' }),
     relatorio: (id: string) => req<RelatorioCampanha>(`/campanhas/${id}/relatorio`),
     sintetizar: (id: string) =>
       req<{ sintese: string }>(`/campanhas/${id}/relatorio/sintetizar`, {

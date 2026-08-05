@@ -6,6 +6,7 @@ import { estiloSchema } from '../tenant/tenant.estilo'
 import {
   adicionarContatosCampanha,
   criarCampanha,
+  duplicarCampanha,
   editarCampanha,
   iniciarCampanha,
   listarCampanhas,
@@ -103,5 +104,12 @@ export async function campanhasRotas(app: FastifyInstance) {
   app.post('/campanhas/:id/iniciar', async (req) => {
     const { id } = paramsId.parse(req.params)
     return iniciarCampanha(id)
+  })
+
+  // DUPLICA a definição (sem missões) — base pra teste A/B
+  app.post('/campanhas/:id/duplicar', async (req, reply) => {
+    const { id } = paramsId.parse(req.params)
+    reply.code(201)
+    return duplicarCampanha(id)
   })
 }
