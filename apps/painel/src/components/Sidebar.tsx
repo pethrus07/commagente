@@ -2,6 +2,8 @@ import {
   Building2,
   CalendarClock,
   Dna,
+  MessageCircle,
+  Paperclip,
   LayoutDashboard,
   LifeBuoy,
   LogOut,
@@ -42,7 +44,9 @@ export type Page =
   | 'escalados'
   | 'contatos'
   | 'tags'
-  | 'conhecimento'
+  | 'dna'
+  | 'voz'
+  | 'biblioteca'
   | 'tenants'
 
 const ITENS: Item[] = [
@@ -54,7 +58,9 @@ const ITENS: Item[] = [
   { id: 'escalados', label: 'Escalados', icon: LifeBuoy },
   { id: 'contatos', label: 'Contatos', icon: Users },
   { id: 'tags', label: 'Tags', icon: Tag },
-  { id: 'conhecimento', label: 'DNA & Conhecimento', icon: Dna },
+  { id: 'dna', label: 'DNA', icon: Dna },
+  { id: 'voz', label: 'Voz & estilo', icon: MessageCircle },
+  { id: 'biblioteca', label: 'Biblioteca', icon: Paperclip },
   { id: 'numeros', label: 'Números', icon: Smartphone },
 ]
 

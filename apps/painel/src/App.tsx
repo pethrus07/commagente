@@ -7,7 +7,9 @@ import { auth, type TenantSel, type UsuarioSessao } from './lib/auth'
 import { useToasts } from './lib/toast'
 import { cn } from './lib/ui'
 import { Campanhas } from './pages/Campanhas'
-import { Conhecimento } from './pages/Conhecimento'
+import { DNA } from './pages/DNA'
+import { VozEstilo } from './pages/VozEstilo'
+import { Biblioteca } from './pages/Biblioteca'
 import { Contatos } from './pages/Contatos'
 import { Dashboard } from './pages/Dashboard'
 import { Escalados } from './pages/Escalados'
@@ -29,7 +31,9 @@ const TITULOS: Record<Page, { t: string; s: string }> = {
   escalados: { t: 'Escalados', s: 'Conversas que a IA entregou pra você' },
   contatos: { t: 'Contatos', s: 'Leads e clientes (CRM)' },
   tags: { t: 'Tags', s: 'Rótulos que viram conhecimento pra IA sobre o contato' },
-  conhecimento: { t: 'DNA & Conhecimento', s: 'O que a IA sabe sobre a empresa — e o que aprende com as conversas' },
+  dna: { t: 'DNA', s: 'O que a IA sabe e pode afirmar sobre a empresa' },
+  voz: { t: 'Voz & estilo', s: 'Como a IA fala — a voz da marca e o jeito de escrever' },
+  biblioteca: { t: 'Biblioteca', s: 'Arquivos que a IA envia (catálogo, cardápio, tabela, áudio, apresentação…)' },
   numeros: { t: 'Números', s: 'Chips conectados via Evolution' },
   tenants: { t: 'Tenants', s: 'Clientes da plataforma' },
 }
@@ -113,7 +117,9 @@ export default function App() {
               {rota.page === 'numeros' && <Numeros />}
               {rota.page === 'contatos' && <Contatos />}
               {rota.page === 'tags' && <Tags />}
-              {rota.page === 'conhecimento' && <Conhecimento />}
+              {rota.page === 'dna' && <DNA />}
+              {rota.page === 'voz' && <VozEstilo />}
+              {rota.page === 'biblioteca' && <Biblioteca />}
               {rota.page === 'escalados' && <Escalados onAbrir={(id) => setRota({ page: 'missao', id })} />}
               {rota.page === 'missoes' && <Missoes onAbrir={(id) => setRota({ page: 'missao', id })} />}
               {rota.page === 'campanhas' && <Campanhas />}
