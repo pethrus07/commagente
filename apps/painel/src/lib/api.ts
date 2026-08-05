@@ -340,6 +340,7 @@ export const api = {
         tom?: string | null
         informacoes?: string | null
         dna?: import('./dna').CamadaDna // camada de DNA da missão (§9 Fase C)
+        midiaIds?: string[] // biblioteca curada da missão (§9 Fase A) — editável no detalhe
         nomeContato?: string
       },
     ) =>

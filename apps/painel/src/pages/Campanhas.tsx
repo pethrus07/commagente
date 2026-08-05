@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BarChart3, Dna, Download, FileText, Megaphone, Plus, Send, Sparkles, UserPlus, X } from 'lucide-react'
+import { BarChart3, Dna, Download, FileText, Megaphone, Paperclip, Plus, Send, Sparkles, UserPlus, X } from 'lucide-react'
 import { EditorDnaCamada } from '../components/EditorDnaCamada'
 import { SeletorContatos } from '../components/SeletorContatos'
 import { SeletorMidia } from '../components/SeletorMidia'
@@ -410,6 +410,17 @@ export function Campanhas() {
                   </div>
                 </div>
                 <p className="mt-3 line-clamp-2 text-sm text-content">{c.objetivo}</p>
+                {/* camadas configuradas (#9): DNA próprio + mídias curadas */}
+                {((c.dnaAjustes ?? 0) > 0 || (c.midias ?? 0) > 0) && (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {(c.dnaAjustes ?? 0) > 0 && (
+                      <span className="inline-flex items-center gap-1 rounded-md bg-indigo-500/12 px-2 py-0.5 text-[11px] text-indigo-200"><Dna className="h-3 w-3" /> DNA próprio ({c.dnaAjustes})</span>
+                    )}
+                    {(c.midias ?? 0) > 0 && (
+                      <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/12 px-2 py-0.5 text-[11px] text-emerald-200"><Paperclip className="h-3 w-3" /> {c.midias} mídia{c.midias === 1 ? '' : 's'}</span>
+                    )}
+                  </div>
+                )}
                 <div className="mt-4 flex items-center gap-4 text-sm">
                   <span className="text-content"><b className="tabular-nums">{c.total}</b> <span className="text-muted">conversas</span></span>
                   <span className="text-emerald-300"><b className="tabular-nums">{c.cumpridas}</b> <span className="text-emerald-300/60">cumpridas</span></span>

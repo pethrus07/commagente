@@ -4,9 +4,12 @@ import {
   Brain,
   CheckCircle2,
   Coins,
+  Dna,
   Hand,
   Info,
   LifeBuoy,
+  Megaphone,
+  Paperclip,
   Pencil,
   Play,
   Rocket,
@@ -19,7 +22,8 @@ import {
 import { EditorDnaCamada } from '../components/EditorDnaCamada'
 import { api } from '../lib/api'
 import { auth } from '../lib/auth'
-import { limparCamadaDna, type CamadaDna } from '../lib/dna'
+import { SeletorMidia } from '../components/SeletorMidia'
+import { CATEGORIAS_DNA, limparCamadaDna, type CamadaDna } from '../lib/dna'
 import { TIPO_INFO, TIPOS_MISSAO, TRANSICOES } from '../lib/estados'
 import { toast } from '../lib/toast'
 import type { EstadoMissao, Missao } from '../lib/types'
@@ -43,6 +47,7 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
   const [controlando, setControlando] = useState(false)
   const [draft, setDraft] = useState<string | null>(null)
   const [rasc, setRasc] = useState(false)
+  const [nomesMidia, setNomesMidia] = useState<Record<string, string>>({}) // id→nome p/ exibir as mídias curadas
   const fimRef = useRef<HTMLDivElement>(null)
 
   const carregar = async () => {
@@ -62,6 +67,14 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
   useEffect(() => {
     fimRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [m?.mensagens?.length])
+
+  // nomes das mídias da biblioteca (pra mostrar as curadas por nome, não por id)
+  useEffect(() => {
+    api.midia
+      .listar()
+      .then((ms) => setNomesMidia(Object.fromEntries(ms.map((x) => [x.id, x.nome]))))
+      .catch(() => {})
+  }, [])
 
   // sincroniza o rascunho editável quando a IA gera um novo (não sobrescreve edição do poll)
   useEffect(() => {
@@ -329,6 +342,46 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
                   </p>
                 )}
               </div>
+              {/* Camadas configuradas (#9): campanha (herança) · DNA próprio · mídias curadas */}
+              {m.campanha?.nome && (
+                <div>
+                  <p className="mb-0.5 text-[11px] uppercase tracking-wide text-muted">Campanha</p>
+                  <p className="flex items-center gap-1.5 text-sm text-content">
+                    <Megaphone className="h-3.5 w-3.5 text-indigo-400" /> {m.campanha.nome}
+                    <span className="text-[11px] text-subtle">· herda DNA e mídias dela</span>
+                  </p>
+                </div>
+              )}
+              <div>
+                <p className="mb-1 text-[11px] uppercase tracking-wide text-muted">DNA desta missão</p>
+                {m.dna && Object.keys(m.dna).length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {Object.entries(m.dna).map(([chave, v]) => (
+                      <span key={chave} className="inline-flex items-center gap-1 rounded-md bg-indigo-500/12 px-2 py-0.5 text-[11px] text-indigo-200">
+                        <Dna className="h-3 w-3" />
+                        {CATEGORIAS_DNA.find((c) => c.chave === chave)?.titulo ?? chave}
+                        <span className="text-indigo-300/70">· {v?.modo === 'combinar' ? 'combina' : 'substitui'}</span>
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-subtle">Herda 100% da empresa{m.campanha?.nome ? '/campanha' : ''}.</p>
+                )}
+              </div>
+              <div>
+                <p className="mb-1 text-[11px] uppercase tracking-wide text-muted">Mídias disponíveis</p>
+                {m.midiaIds && m.midiaIds.length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {m.midiaIds.map((mid) => (
+                      <span key={mid} className="inline-flex items-center gap-1 rounded-md bg-emerald-500/12 px-2 py-0.5 text-[11px] text-emerald-200">
+                        <Paperclip className="h-3 w-3" /> {nomesMidia[mid] ?? 'mídia'}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-subtle">Toda a biblioteca (a IA escolhe o que faz sentido).</p>
+                )}
+              </div>
             </div>
           </Card>
 
@@ -449,6 +502,7 @@ function EditarMissaoModal({ missao, onFechar }: { missao: Missao; onFechar: (sa
     informacoes: missao.informacoes ?? '',
   })
   const [dna, setDna] = useState<CamadaDna>((missao.dna as CamadaDna) ?? {}) // camada de DNA da missão (§9 Fase C)
+  const [midiaIds, setMidiaIds] = useState<string[]>(missao.midiaIds ?? []) // mídias curadas (§9 Fase A)
   const [salvando, setSalvando] = useState(false)
 
   const salvar = async () => {
@@ -465,6 +519,7 @@ function EditarMissaoModal({ missao, onFechar }: { missao: Missao; onFechar: (sa
         tom: form.tom.trim() || null,
         informacoes: form.informacoes.trim() || null,
         dna: limparCamadaDna(dna) ?? {}, // {} limpa; vale já no próximo turno
+        midiaIds, // mídias curadas desta missão (vazio → toda a biblioteca)
       })
       toast('Missão atualizada — vale a partir do próximo turno. ✅', 'ok')
       onFechar(true)
@@ -538,6 +593,11 @@ function EditarMissaoModal({ missao, onFechar }: { missao: Missao; onFechar: (sa
             <p className="mt-1 text-[11px] leading-snug text-muted">
               🛡️ A IA só afirma o que estiver aqui. Fora disso, não inventa — confirma ou escala.
             </p>
+          </div>
+          {/* Mídias desta missão — a IA envia quando fizer sentido (§9 Fase A) */}
+          <div>
+            <label className="mb-1 block text-xs text-muted">📎 Mídias disponíveis nesta missão</label>
+            <SeletorMidia valor={midiaIds} onChange={setMidiaIds} dica="Nada marcado → a IA pode enviar qualquer item da biblioteca." />
           </div>
           {/* DNA desta missão — sobrescreve categorias da empresa/campanha só aqui (§9 Fase C) */}
           <EditorDnaCamada valor={dna} onChange={setDna} nivel="missão" heranca="empresa/campanha" />

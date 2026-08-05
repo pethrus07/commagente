@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { CalendarClock, Pause, Pencil, Play, Plus, Trash2, Upload, Wallet, X } from 'lucide-react'
+import { CalendarClock, Paperclip, Pause, Pencil, Play, Plus, Trash2, Upload, Wallet, X } from 'lucide-react'
 import { SeletorMidia } from '../components/SeletorMidia'
 import { api } from '../lib/api'
 import { TIPO_INFO, TIPOS_MISSAO, rotuloNumero } from '../lib/estados'
@@ -330,6 +330,7 @@ function NovoModal({ onFechar }: { onFechar: (criou: boolean) => void }) {
 function EditarModal({ ag, onFechar }: { ag: Agendamento; onFechar: (salvou: boolean) => void }) {
   const [dia, setDia] = useState(String(ag.diaDoMes ?? ''))
   const [rotulo, setRotulo] = useState(ag.rotulo ?? '')
+  const [midiaIds, setMidiaIds] = useState<string[]>(ag.midiaIds ?? []) // anexos do disparo (§9 Fase A)
   const [salvando, setSalvando] = useState(false)
   const salvar = async () => {
     setSalvando(true)
@@ -337,6 +338,7 @@ function EditarModal({ ag, onFechar }: { ag: Agendamento; onFechar: (salvou: boo
       await api.agendamentos.editar(ag.id, {
         diaDoMes: ag.recorrencia === 'mensal' && dia ? Number(dia) : undefined,
         rotulo: rotulo.trim(),
+        midiaIds, // vazio limpa; no disparo fixo vai junto do texto (boleto)
       })
       toast('Agendamento atualizado.', 'ok')
       onFechar(true)
@@ -348,7 +350,7 @@ function EditarModal({ ag, onFechar }: { ag: Agendamento; onFechar: (salvou: boo
   }
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 backdrop-blur-sm">
-      <Card className="w-full max-w-sm p-6">
+      <Card className="max-h-[90vh] w-full max-w-sm overflow-y-auto p-6">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="font-semibold text-content">Editar agendamento</h3>
           <button onClick={() => onFechar(false)} className="text-muted hover:text-content"><X className="h-5 w-5" /></button>
@@ -363,6 +365,10 @@ function EditarModal({ ag, onFechar }: { ag: Agendamento; onFechar: (salvou: boo
           <div>
             <label className="mb-1 block text-xs text-muted">Rótulo</label>
             <input value={rotulo} onChange={(e) => setRotulo(e.target.value)} className={campo} />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-muted">📎 Anexos do disparo</label>
+            <SeletorMidia valor={midiaIds} onChange={setMidiaIds} dica={ag.entrega === 'fixa' ? 'Nada marcado → só o texto. Marque um boleto/arquivo pra ir junto.' : 'Nada marcado → a IA oferece qualquer item da biblioteca.'} />
           </div>
         </div>
         <div className="mt-5 flex justify-end gap-2">
@@ -432,6 +438,9 @@ export function Programadas() {
                     </td>
                     <td className="px-4 py-3">
                       <span className="rounded-md bg-surface2 px-2 py-0.5 text-xs text-content">{a.entrega === 'ia' ? `🤖 ${TIPO_INFO[a.tipo as keyof typeof TIPO_INFO]?.label ?? a.tipo}` : '✉️ Msg fixa'}</span>
+                      {(a.midiaIds?.length ?? 0) > 0 && (
+                        <span className="ml-1.5 inline-flex items-center gap-0.5 rounded-md bg-emerald-500/12 px-1.5 py-0.5 text-[11px] text-emerald-200" title="Anexo no disparo"><Paperclip className="h-3 w-3" />{a.midiaIds!.length}</span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       {!a.ativo ? (

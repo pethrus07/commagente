@@ -71,6 +71,8 @@ export function Sidebar({
   onSair,
   tenantSel,
   onTrocarTenant,
+  mobileAberta,
+  onFechar,
 }: {
   atual: Page
   onNavegar: (p: Page) => void
@@ -78,6 +80,8 @@ export function Sidebar({
   onSair: () => void
   tenantSel: TenantSel | null
   onTrocarTenant: (t: TenantSel | null) => void
+  mobileAberta: boolean // no celular a sidebar é um drawer
+  onFechar: () => void
 }) {
   const ehSuper = usuario.papel === 'super_admin'
   const [escalados, setEscalados] = useState(0)
@@ -105,7 +109,15 @@ export function Sidebar({
   const itens = ITENS.filter((i) => !i.soSuperAdmin || ehSuper)
 
   return (
-    <aside className="flex w-60 shrink-0 flex-col border-r border-line bg-surface px-4 py-6">
+    <>
+      {/* backdrop só no mobile quando o drawer está aberto */}
+      {mobileAberta && <div className="fixed inset-0 z-40 bg-black/50 md:hidden" onClick={onFechar} />}
+      <aside
+        className={cn(
+          'fixed inset-y-0 left-0 z-50 flex w-60 shrink-0 flex-col overflow-y-auto border-r border-line bg-surface px-4 py-6 transition-transform md:static md:z-auto md:translate-x-0',
+          mobileAberta ? 'translate-x-0' : '-translate-x-full',
+        )}
+      >
       <div className="mb-6 flex items-center gap-2.5 px-2">
         <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/30">
           <Zap className="h-5 w-5 text-white" fill="currentColor" />
@@ -144,7 +156,7 @@ export function Sidebar({
           return (
             <button
               key={item.id}
-              onClick={() => onNavegar(item.id)}
+              onClick={() => { onNavegar(item.id); onFechar() }}
               className={cn(
                 'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition',
                 ativo
@@ -191,5 +203,6 @@ export function Sidebar({
         </div>
       </div>
     </aside>
+    </>
   )
 }

@@ -51,6 +51,7 @@ export interface Agendamento {
   execucoes: number
   entrega: EntregaAgendamento
   mensagemFixa: string | null
+  midiaIds?: string[] // anexos do disparo (ex.: boleto) — §9 Fase A
   rotulo: string | null
   ativo: boolean
   pularCicloRef: string | null
@@ -159,6 +160,8 @@ export interface Missao {
   tom: string | null
   informacoes: string | null
   dna?: import('./dna').CamadaDna | null // camada de DNA da missão (§9 Fase C)
+  midiaIds?: string[] // biblioteca curada da missão (§9 Fase A)
+  campanha?: { nome: string } | null // campanha a que pertence (herança de DNA/mídia)
   estado: EstadoMissao
   iaPausada: boolean
   motivoEscala: string | null
@@ -240,6 +243,8 @@ export interface CampanhaResumo {
   total: number
   cumpridas: number
   pendentes: number // missões ainda paradas em 'configurada' (nunca disparadas)
+  dnaAjustes?: number // nº de categorias de DNA sobrescritas na campanha (#9 Fase B)
+  midias?: number // nº de mídias curadas na campanha (#9 Fase A)
 }
 
 // Resultado de um disparo em lote (iniciar campanha / iniciar todas as configuradas)

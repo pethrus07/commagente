@@ -56,7 +56,7 @@ function EditorCategoria({
   }
   return (
     <div className="fixed inset-0 z-40 grid place-items-center bg-black/60 p-4 backdrop-blur-sm">
-      <Card className="w-full max-w-lg p-6">
+      <Card className="max-h-[90vh] w-full max-w-lg overflow-y-auto p-6">
         <div className="mb-1 flex items-center justify-between">
           <h3 className="flex items-center gap-2 font-semibold text-content">
             {cat.prioridade && <ShieldAlert className="h-4 w-4 text-amber-500" />}{cat.titulo}

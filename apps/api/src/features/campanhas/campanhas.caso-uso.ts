@@ -5,6 +5,7 @@ import { conferirDono, tenantAtual } from '../../core/contexto'
 import { db } from '../../core/db'
 import { ErroHttp } from '../../core/erros'
 import { ia } from '../../core/ia'
+import { lerCamadaDna } from '../tenant/tenant.dna'
 import { criarMissaoEmLote, iniciarMissoesConfiguradas } from '../missoes/missoes.caso-uso'
 
 type DefCampanha = {
@@ -54,6 +55,9 @@ export async function listarCampanhas() {
     total: c._count.missoes,
     cumpridas: mapaConcl.get(c.id) ?? 0,
     pendentes: mapaPend.get(c.id) ?? 0,
+    // flags p/ o card refletir as camadas configuradas (#9): nº de categorias de DNA + nº de mídias
+    dnaAjustes: Object.keys(lerCamadaDna(c.dna)).length,
+    midias: c.midiaIds.length,
   }))
 }
 

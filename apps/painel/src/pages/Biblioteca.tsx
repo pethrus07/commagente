@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { FileText, FileUp, Paperclip, Trash2 } from 'lucide-react'
+import { FileUp, Paperclip, Trash2 } from 'lucide-react'
+import { IconeMidia } from '../components/SeletorMidia'
 import { api } from '../lib/api'
 import { toast } from '../lib/toast'
 import type { Midia } from '../lib/types'
@@ -60,7 +61,7 @@ export function Biblioteca() {
         <div className="space-y-2">
           {midias.map((m) => (
             <Card key={m.id} className="flex items-center gap-3 px-4 py-3">
-              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-emerald-500/15 text-emerald-400"><FileText className="h-4 w-4" /></div>
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-surface2"><IconeMidia mime={m.mimetype} /></div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-content">{m.nome}</p>
                 <p className="text-[11px] text-subtle">{m.mimetype} · {fmt(m.tamanho)}</p>

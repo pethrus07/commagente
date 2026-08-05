@@ -1,4 +1,4 @@
-import { CheckCircle2, XCircle } from 'lucide-react'
+import { CheckCircle2, Menu, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Sidebar, type Page } from './components/Sidebar'
 import { TermosModal } from './components/TermosModal'
@@ -40,6 +40,7 @@ const TITULOS: Record<Page, { t: string; s: string }> = {
 
 export default function App() {
   const [rota, setRota] = useState<Rota>({ page: 'dashboard' })
+  const [menuAberto, setMenuAberto] = useState(false) // drawer da sidebar no celular
   const [usuario, setUsuario] = useState<UsuarioSessao | null>(auth.usuario())
   const [tenantSel, setTenantSel] = useState<TenantSel | null>(auth.tenantSel())
   const toasts = useToasts()
@@ -95,13 +96,24 @@ export default function App() {
             onSair={sair}
             tenantSel={tenantSel}
             onTrocarTenant={trocarTenant}
+            mobileAberta={menuAberto}
+            onFechar={() => setMenuAberto(false)}
           />
 
           <div className="flex min-w-0 flex-1 flex-col">
-            <header className="flex items-center justify-between border-b border-line px-8 py-5">
-              <div>
-                <h1 className="text-lg font-semibold tracking-tight text-content">{titulo.t}</h1>
-                <p className="text-sm text-muted">{titulo.s}</p>
+            <header className="flex items-center justify-between gap-3 border-b border-line px-4 py-5 md:px-8">
+              <div className="flex min-w-0 items-center gap-3">
+                <button
+                  onClick={() => setMenuAberto(true)}
+                  className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-muted transition hover:bg-surface2 hover:text-content md:hidden"
+                  aria-label="Abrir menu"
+                >
+                  <Menu className="h-5 w-5" />
+                </button>
+                <div className="min-w-0">
+                  <h1 className="truncate text-lg font-semibold tracking-tight text-content">{titulo.t}</h1>
+                  <p className="truncate text-sm text-muted">{titulo.s}</p>
+                </div>
               </div>
               {escopo && (
                 <span className="rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-700 dark:text-indigo-300">
@@ -111,7 +123,7 @@ export default function App() {
             </header>
 
             {/* key por tenant: trocar de tenant remonta e recarrega as páginas */}
-            <main key={tenantSel?.id ?? 'padrao'} className="flex-1 overflow-y-auto p-8">
+            <main key={tenantSel?.id ?? 'padrao'} className="flex-1 overflow-y-auto p-4 md:p-8">
               {rota.page === 'tenants' && <Tenants onVerTenant={trocarTenant} />}
               {rota.page === 'dashboard' && <Dashboard />}
               {rota.page === 'numeros' && <Numeros />}

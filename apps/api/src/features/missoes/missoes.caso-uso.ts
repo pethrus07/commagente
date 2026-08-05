@@ -188,6 +188,7 @@ export async function editarMissao(
     tom?: string | null
     informacoes?: string | null
     dna?: unknown // camada de DNA da missão (#9 Fase C)
+    midiaIds?: string[] // biblioteca curada da missão (#9 Fase A) — editável no detalhe
     nomeContato?: string
   },
 ) {
@@ -204,6 +205,7 @@ export async function editarMissao(
   if (patch.tom !== undefined) dados.tom = patch.tom
   if (patch.informacoes !== undefined) dados.informacoes = patch.informacoes
   if (patch.dna !== undefined) dados.dna = (patch.dna ?? undefined) as Prisma.InputJsonValue | undefined
+  if (patch.midiaIds !== undefined) dados.midiaIds = patch.midiaIds
 
   if (patch.nomeContato !== undefined) {
     await db.contato.update({

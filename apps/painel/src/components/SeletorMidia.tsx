@@ -5,7 +5,7 @@ import type { Midia } from '../lib/types'
 import { cn } from '../lib/ui'
 
 // ícone conforme o tipo do arquivo (a IA/entrega envia inline conforme o mimetype)
-function IconeMidia({ mime }: { mime: string }) {
+export function IconeMidia({ mime }: { mime: string }) {
   const c = 'h-4 w-4 shrink-0'
   if (mime.startsWith('image/')) return <ImageIcon className={cn(c, 'text-emerald-300')} />
   if (mime.startsWith('audio/')) return <Music className={cn(c, 'text-violet-300')} />

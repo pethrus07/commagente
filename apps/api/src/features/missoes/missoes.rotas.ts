@@ -50,6 +50,7 @@ const corpoEditar = z.object({
   tom: z.string().nullish(),
   informacoes: z.string().nullish(),
   dna: dnaCamada,
+  midiaIds,
   nomeContato: z.string().optional(),
 })
 

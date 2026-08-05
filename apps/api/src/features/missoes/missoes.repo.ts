@@ -38,7 +38,7 @@ export const missoesRepo = {
         contato: { include: { tags: { include: { tag: { select: { nome: true, descricao: true } } } } } }, // memoria/dna vêm no include completo
         numero: true,
         tenant: { select: { persona: true, estilo: true, dna: true } }, // identidade + estilo + DNA da IA p/ o prompt
-        campanha: { select: { dna: true } }, // camada de DNA da campanha (#9 Fase B) — sobrescreve categorias
+        campanha: { select: { nome: true, dna: true } }, // nome (exibição no detalhe) + camada de DNA (#9 Fase B)
         mensagens: { orderBy: { criadaEm: 'asc' } },
       },
     })
