@@ -274,6 +274,14 @@ export const api = {
     excluir: (id: string) => req(`/conhecimento/${id}`, { method: 'DELETE' }),
   },
 
+  // biblioteca de mídia (§8.15) — arquivos que a IA pode enviar
+  midia: {
+    listar: () => req<import('./types').Midia[]>('/midia'),
+    subir: (data: { nome: string; mimetype: string; base64: string }) =>
+      req<import('./types').Midia>('/midia', { method: 'POST', body: JSON.stringify(data) }),
+    excluir: (id: string) => req(`/midia/${id}`, { method: 'DELETE' }),
+  },
+
   missoes: {
     listar: () => req<Missao[]>('/missoes'),
     obter: (id: string) => req<Missao>(`/missoes/${id}`),

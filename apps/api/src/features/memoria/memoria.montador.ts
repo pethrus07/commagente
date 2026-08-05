@@ -102,6 +102,7 @@ type MissaoComMsgs = {
 export function montarFicha(
   missao: MissaoComMsgs,
   conhecimento?: string[] | null,
+  midiasDisponiveis?: { id: string; nome: string }[] | null,
 ): ContextoIA {
   // DNA do tenant: Regras de Negócio → persona (prioridade); demais categorias → conhecimento autorizado.
   const dna = compilarDna(missao.tenant?.dna)
@@ -137,6 +138,7 @@ export function montarFicha(
     dnaContato: compilarDnaContato(missao.contato?.dna),
     conhecimento: conhecimento ?? null,
     dnaConhecimento: dna.conhecimento,
+    midiasDisponiveis: midiasDisponiveis ?? null,
     ultimasMensagens: missao.mensagens
       .slice(-ULTIMAS)
       .map((m) => ({ direcao: m.direcao, conteudo: m.conteudo })),

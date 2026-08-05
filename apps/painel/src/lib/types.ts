@@ -220,6 +220,15 @@ export interface Conhecimento {
   criadoEm: string
 }
 
+// biblioteca de mídia: arquivos que a IA pode enviar (catálogo, tabela de preço…) [§8.15]
+export interface Midia {
+  id: string
+  nome: string
+  mimetype: string
+  tamanho: number
+  criadoEm: string
+}
+
 export interface CampanhaResumo {
   id: string
   nome: string

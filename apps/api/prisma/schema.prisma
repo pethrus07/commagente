@@ -81,8 +81,26 @@ model Tenant {
   campanhas    Campanha[]
   agendamentos Agendamento[]
   tags         Tag[]
+  midias       Midia[]
 
   @@map("tenants")
+}
+
+// ─── Biblioteca de mídia: arquivos "bonitos" (catálogo, tabela de preço, PDF) que a IA
+// pode ENVIAR ao contato quando fizer sentido (ação enviar_midia). [parceiro §8.15] ──
+model Midia {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  nome      String // rótulo pra IA reconhecer (ex.: "Catálogo de peças", "Tabela de preços")
+  mimetype  String
+  tamanho   Int // bytes
+  dados     Bytes // o arquivo em si (bytea)
+  criadoEm  DateTime @default(now()) @map("criado_em")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
+  @@map("midia")
 }
 
 // ─── Memória COLETIVA do tenant (conhecimento curado / aprendido) ──

@@ -10,6 +10,7 @@ import { conhecimentoRelevante } from '../conhecimento/conhecimento.caso-uso'
 import { conhecimentoRepo } from '../conhecimento/conhecimento.repo'
 import { jitterMs } from '../fila/fila.dominio'
 import { filaRepo } from '../fila/fila.repo'
+import { midiaParaEnvio, midiasDoTenant } from '../midia/midia.caso-uso'
 import { montarFicha } from '../memoria/memoria.montador'
 import { podeTransicionar } from '../missoes/missao.dominio'
 import { missoesRepo } from '../missoes/missoes.repo'
@@ -136,7 +137,8 @@ async function executarTurno(missaoId: string) {
     .map((m) => m.conteudo)
     .join(' ')
   const conhecimento = await conhecimentoRelevante(missao.tenantId, consulta)
-  const ctx = montarFicha(missao, conhecimento)
+  const midias = await midiasDoTenant(missao.tenantId) // biblioteca: o que a IA pode enviar
+  const ctx = montarFicha(missao, conhecimento, midias)
 
   // 2) chama a IA e 3) VALIDA o contrato (guardrail — nunca confia cego no modelo).
   // Se a IA falhar (ex.: OpenAI 401/429), NÃO some em silêncio: registra o erro,
@@ -287,6 +289,24 @@ async function executarTurno(missaoId: string) {
     }
     await avisarEscalonamento(missao, 'Falha ao enfileirar a resposta gerada')
     return { ok: false as const, erro_enfileirar: true }
+  }
+  // 7b) MÍDIA: se a IA decidiu enviar um arquivo da biblioteca, enfileira LOGO APÓS o texto.
+  // Best-effort: nunca derruba o turno (a mensagem já foi enfileirada); só envia mídia do próprio tenant.
+  if (saida.enviar_midia) {
+    try {
+      const doc = await midiaParaEnvio(saida.enviar_midia, missao.tenantId)
+      if (doc) {
+        await filaRepo.enfileirar({
+          tenantId: missao.tenantId,
+          missaoId,
+          contatoId: missao.contatoId,
+          payload: { numeroId: missao.numeroId, telefone: missao.contato.telefone, documento: doc, tipo: 'conversa' },
+          agendadoPara: new Date(Date.now() + jitterMs('conversa') + 4000), // chega logo depois da mensagem
+        })
+      }
+    } catch (e) {
+      console.error('[conversa] enfileirar mídia falhou (best-effort):', (e as Error)?.message)
+    }
   }
   await db.evento.create({
     data: {

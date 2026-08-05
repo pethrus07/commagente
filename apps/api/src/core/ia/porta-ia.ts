@@ -33,6 +33,8 @@ export interface ContextoIA {
   dnaContato?: string | null
   /** memória COLETIVA do tenant — conhecimento aprendido/curado (FAQ, objeções, políticas) */
   conhecimento?: string[] | null
+  /** mídias da biblioteca que a IA PODE enviar (catálogo, tabela de preço…) — id + nome */
+  midiasDisponiveis?: { id: string; nome: string }[] | null
   /**
    * DNA da empresa — conhecimento estruturado por categorias (empresa, produtos, preços…),
    * já compilado e dentro do orçamento de contexto. Fonte AUTORIZADA (como `informacoes`).
@@ -73,6 +75,8 @@ export const SaidaIASchema = z.object({
   motivo_escala: z.string().nullish(),
   /** memória coletiva: lição GERAL e reutilizável p/ a base de conhecimento (ou null) */
   aprendizado_sugerido: z.string().nullish(),
+  /** id de uma mídia da biblioteca a enviar AGORA (catálogo/tabela) — só quando fizer sentido */
+  enviar_midia: z.string().nullish(),
   /** desfecho da missão — preencher SÓ ao concluir (novo_estado=concluida) */
   resultado: z.string().nullish(),
 })
