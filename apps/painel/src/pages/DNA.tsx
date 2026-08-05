@@ -30,7 +30,7 @@ function LeitorDoc({ item, onFechar }: { item: Item; onFechar: () => void }) {
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted">{item.conteudo}</p>
         </div>
         <div className="border-t border-line px-5 py-2.5 text-[11px] text-subtle">
-          {item.origem === 'documento' ? '📄 de documento' : item.origem === 'ia' ? '🤖 aprendido pela IA' : '✍️ escrito à mão'} · a IA consulta este conteúdo por relevância.
+          {item.origem === 'documento' ? '📄 de documento' : item.origem === 'link' ? '🔗 de um site' : item.origem === 'ia' ? '🤖 aprendido pela IA' : '✍️ escrito à mão'} · a IA consulta este conteúdo por relevância.
         </div>
       </Card>
       </div>
@@ -95,12 +95,90 @@ function EditorCategoria({
   )
 }
 
+// "Outros conhecimentos": bucket LIVRE (categoria = null) pro que não cabe nas 10 categorias.
+// Uma lista de entradas (escritas / documento / link) — a IA usa tudo por relevância (RAG).
+function EditorGeral({ itens, onFechar, onMudou, onLer }: {
+  itens: Item[]; onFechar: () => void; onMudou: () => void; onLer: (i: Item) => void
+}) {
+  const [titulo, setTitulo] = useState('')
+  const [conteudo, setConteudo] = useState('')
+  const [link, setLink] = useState('')
+  const [busy, setBusy] = useState<'nota' | 'link' | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  const salvarNota = async () => {
+    if (!conteudo.trim()) return toast('Escreva o conhecimento.', 'erro')
+    setBusy('nota')
+    try {
+      await api.conhecimento.criar({ titulo: titulo.trim() || 'Conhecimento', conteudo: conteudo.trim(), categoria: null })
+      toast('Conhecimento adicionado.', 'ok'); setTitulo(''); setConteudo(''); onMudou()
+    } catch (e) { toast((e as Error).message, 'erro') } finally { setBusy(null) }
+  }
+  const onArquivo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]; e.target.value = ''
+    if (!file) return
+    try {
+      const base64 = await lerBase64(file)
+      await api.conhecimento.importarDocumento({ nomeArquivo: file.name, mimetype: file.type || 'application/octet-stream', base64, categoria: null })
+      toast('Documento adicionado.', 'ok'); onMudou()
+    } catch (err) { toast((err as Error).message, 'erro') }
+  }
+  const importarLink = async () => {
+    if (!link.trim()) return
+    setBusy('link')
+    try { await api.conhecimento.importarUrl({ url: link.trim(), categoria: null }); toast('Site lido e adicionado.', 'ok'); setLink(''); onMudou() }
+    catch (e) { toast((e as Error).message, 'erro') } finally { setBusy(null) }
+  }
+  const remover = async (id: string) => { try { await api.conhecimento.excluir(id); onMudou() } catch (e) { toast((e as Error).message, 'erro') } }
+
+  return (
+    <div className="fixed inset-0 z-40 grid place-items-center bg-black/60 p-4 backdrop-blur-sm">
+      <Card className="max-h-[90vh] w-full max-w-lg overflow-y-auto p-6">
+        <input ref={fileRef} type="file" accept=".pdf,.docx,.txt,.md" onChange={onArquivo} className="hidden" />
+        <div className="mb-1 flex items-center justify-between">
+          <h3 className="flex items-center gap-2 font-semibold text-content"><Sparkles className="h-4 w-4 text-indigo-300" /> Outros conhecimentos</h3>
+          <button onClick={onFechar} className="text-subtle hover:text-content"><X className="h-5 w-5" /></button>
+        </div>
+        <p className="mb-3 text-[11px] leading-snug text-muted">Qualquer coisa que a IA deva saber e não cabe nas categorias — política de troca, horário de funcionamento, regras específicas, avisos. Vira <b className="text-muted">fonte autorizada</b> (a IA consulta por relevância).</p>
+
+        <div className="space-y-1.5">
+          {itens.length === 0 && <p className="text-xs text-subtle">Nada aqui ainda.</p>}
+          {itens.map((d) => (
+            <div key={d.id} className="flex items-center gap-2 rounded-lg border border-line bg-surface2 px-2.5 py-1.5">
+              {d.origem === 'link' ? <LinkIcon className="h-3.5 w-3.5 shrink-0 text-sky-400" /> : <FileText className="h-3.5 w-3.5 shrink-0 text-emerald-400" />}
+              <button onClick={() => onLer(d)} className="min-w-0 flex-1 truncate text-left text-[13px] text-content hover:text-indigo-300">{d.titulo}</button>
+              <button onClick={() => remover(d.id)} className="text-subtle hover:text-rose-400"><X className="h-3.5 w-3.5" /></button>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4 space-y-2 border-t border-line pt-3">
+          <input value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Título (opcional)" className={cn(campo, 'text-[13px]')} />
+          <textarea value={conteudo} onChange={(e) => setConteudo(e.target.value)} rows={3} placeholder="Escreva o conhecimento…" className={cn(campo, 'resize-none text-[13px]')} />
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Button onClick={salvarNota} loading={busy === 'nota'}><Plus className="h-4 w-4" /> Adicionar</Button>
+            <button onClick={() => fileRef.current?.click()} className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-line px-2.5 py-1.5 text-[12px] text-subtle transition hover:border-emerald-500/40 hover:text-content"><FileUp className="h-3.5 w-3.5" /> anexar documento</button>
+          </div>
+          <div className="flex gap-1.5">
+            <input value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://seusite.com/… (colar link)" className={cn(campo, 'text-[13px]')} onKeyDown={(e) => e.key === 'Enter' && importarLink()} />
+            <Button variant="ghost" onClick={importarLink} loading={busy === 'link'}>Ler</Button>
+          </div>
+        </div>
+        <div className="mt-5 flex justify-end">
+          <Button variant="ghost" onClick={onFechar}>Fechar</Button>
+        </div>
+      </Card>
+    </div>
+  )
+}
+
 // Página DNA: só o que a IA SABE. Lista clicável de categorias (defaults-first) → editor focado.
 export function DNA() {
   const [dna, setDna] = useState<DnaTipo>({})
   const [itens, setItens] = useState<Item[]>([])
   const [carregando, setCarregando] = useState(true)
   const [aberta, setAberta] = useState<CategoriaDna | null>(null)
+  const [geralAberto, setGeralAberto] = useState(false)
   const [lendo, setLendo] = useState<Item | null>(null)
   const [salvando, setSalvando] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -117,6 +195,7 @@ export function DNA() {
   const score = CATEGORIAS_DNA.reduce((s, c) => s + (cheia(c) ? PESO[c.chave] ?? 0 : 0), 0)
   const corScore = score >= 75 ? 'bg-emerald-500' : score >= 40 ? 'bg-amber-500' : 'bg-rose-500'
   const sugeridos = itens.filter((i) => i.status === 'sugerido')
+  const gerais = itens.filter((i) => i.status === 'aprovado' && !i.categoria) // conhecimento livre (sem categoria)
 
   const salvarCategoria = async (texto: string) => {
     if (!aberta) return
@@ -190,6 +269,22 @@ export function DNA() {
         })}
       </div>
 
+      {/* Outros conhecimentos — bucket livre pro que não cabe nas categorias */}
+      <button
+        onClick={() => setGeralAberto(true)}
+        className="flex w-full items-center gap-3 rounded-2xl border border-dashed border-line px-4 py-3 text-left transition hover:border-indigo-500/40 hover:bg-surface2"
+      >
+        <span className={cn('grid h-6 w-6 shrink-0 place-items-center rounded-md', gerais.length > 0 ? 'bg-indigo-500/15 text-indigo-300' : 'bg-surface2 text-subtle')}>
+          <Sparkles className="h-3.5 w-3.5" />
+        </span>
+        <span className="flex min-w-0 flex-1 flex-col">
+          <span className="text-sm font-medium text-content">Outros conhecimentos</span>
+          <span className="text-[11px] text-subtle">qualquer coisa que não se encaixe nas categorias acima</span>
+        </span>
+        <span className="shrink-0 text-[11px] text-subtle">{gerais.length > 0 ? `${gerais.length} item${gerais.length > 1 ? 's' : ''}` : 'vazio'}</span>
+        <ChevronRight className="h-4 w-4 shrink-0 text-subtle" />
+      </button>
+
       {/* Sugestões da IA (curadoria rápida) */}
       {sugeridos.length > 0 && (
         <div className="space-y-2">
@@ -212,6 +307,7 @@ export function DNA() {
           onFechar={() => setAberta(null)} onSalvar={salvarCategoria} onAnexar={anexar} onLink={importarLink} onLer={setLendo} onRemoverDoc={removerDoc} salvando={salvando}
         />
       )}
+      {geralAberto && <EditorGeral itens={gerais} onFechar={() => setGeralAberto(false)} onMudou={carregar} onLer={setLendo} />}
       {lendo && <LeitorDoc item={lendo} onFechar={() => setLendo(null)} />}
     </div>
   )
