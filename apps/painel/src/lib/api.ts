@@ -153,9 +153,9 @@ export const api = {
       contatos?: { telefone: string; nome?: string }[]
       tagId?: string // dispara pra TODOS os contatos da tag (resolvido no servidor)
     }) => req<{ campanha: { id: string }; criadas: number }>('/campanhas', { method: 'POST', body: JSON.stringify(data) }),
-    editarDna: (id: string, dna: import('./dna').CamadaDna) =>
-      req<{ id: string; dna: unknown }>(`/campanhas/${id}/dna`, { method: 'PATCH', body: JSON.stringify(dna) }),
-    obter: (id: string) => req<{ id: string; nome: string; dna?: import('./dna').CamadaDna | null }>(`/campanhas/${id}`),
+    editar: (id: string, patch: { dna?: import('./dna').CamadaDna; midiaIds?: string[] }) =>
+      req<{ id: string; dna: unknown; midiaIds: string[] }>(`/campanhas/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+    obter: (id: string) => req<{ id: string; nome: string; dna?: import('./dna').CamadaDna | null; midiaIds?: string[] }>(`/campanhas/${id}`),
     adicionarContatos: (
       id: string,
       alvo: { contatos?: { telefone: string; nome?: string }[]; tagId?: string },

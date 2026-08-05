@@ -6,7 +6,7 @@ import { estiloSchema } from '../tenant/tenant.estilo'
 import {
   adicionarContatosCampanha,
   criarCampanha,
-  editarDnaCampanha,
+  editarCampanha,
   iniciarCampanha,
   listarCampanhas,
   obterCampanha,
@@ -61,11 +61,13 @@ export async function campanhasRotas(app: FastifyInstance) {
     return obterCampanha(id)
   })
 
-  // #9 Fase B — define/ajusta a camada de DNA da campanha (reflete vivo nas missões dela)
-  app.patch('/campanhas/:id/dna', async (req) => {
+  // #9 — ajusta as camadas da campanha (DNA + mídia); reflete vivo nas missões dela
+  app.patch('/campanhas/:id', async (req) => {
     const { id } = paramsId.parse(req.params)
-    const dna = dnaCamadaSchema.parse(req.body ?? {})
-    return editarDnaCampanha(id, dna)
+    const patch = z
+      .object({ dna: dnaCamadaSchema.optional(), midiaIds: z.array(z.string().uuid()).optional() })
+      .parse(req.body ?? {})
+    return editarCampanha(id, patch)
   })
 
   // RELATÓRIO consolidado da campanha (conteúdo coletado por contato + placar por estado)

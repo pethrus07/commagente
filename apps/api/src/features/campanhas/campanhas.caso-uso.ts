@@ -121,17 +121,16 @@ export async function obterCampanha(id: string) {
   return campanha
 }
 
-// #9 Fase B — edita a camada de DNA da campanha (reflete VIVO nas missões dela, resolvido no
-// montador a cada turno). `dna` = {categoria:{modo,texto}} já validado na rota.
-export async function editarDnaCampanha(id: string, dna: unknown) {
+// #9 — edita as camadas da campanha (DNA + mídia). As duas refletem VIVO nas missões dela
+// (DNA resolvido e mídia herdada no montador a cada turno). Só mexe no que veio no patch.
+export async function editarCampanha(id: string, patch: { dna?: unknown; midiaIds?: string[] }) {
   const campanha = await db.campanha.findUnique({ where: { id }, select: { tenantId: true } })
   if (!campanha) throw new ErroHttp(404, 'Campanha não encontrada')
   await conferirDono(campanha.tenantId)
-  return db.campanha.update({
-    where: { id },
-    data: { dna: (dna ?? undefined) as Prisma.InputJsonValue | undefined },
-    select: { id: true, dna: true },
-  })
+  const data: Prisma.CampanhaUpdateInput = {}
+  if (patch.dna !== undefined) data.dna = (patch.dna ?? undefined) as Prisma.InputJsonValue | undefined
+  if (patch.midiaIds !== undefined) data.midiaIds = patch.midiaIds
+  return db.campanha.update({ where: { id }, data, select: { id: true, dna: true, midiaIds: true } })
 }
 
 /**
@@ -249,7 +248,6 @@ function dispararDaCampanha(
     criterioConclusao: string | null
     tom: string | null
     informacoes: string | null
-    midiaIds?: string[]
     estilo?: Prisma.JsonValue
   },
   alvo: Alvo,
@@ -263,7 +261,8 @@ function dispararDaCampanha(
     criterioConclusao: campanha.criterioConclusao ?? undefined,
     tom: campanha.tom ?? undefined,
     informacoes: campanha.informacoes ?? undefined,
-    midiaIds: campanha.midiaIds ?? [],
+    // NÃO copia a mídia da campanha p/ a missão: ela é herdada AO VIVO no montador (igual ao DNA),
+    // então editar a mídia da campanha reflete em todas as missões dela. [§9 — paridade com DNA]
     estilo: campanha.estilo ?? undefined,
     campanhaId: campanha.id,
     contatos: alvo.contatos,

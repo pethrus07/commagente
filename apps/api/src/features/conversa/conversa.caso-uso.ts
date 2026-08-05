@@ -137,11 +137,12 @@ async function executarTurno(missaoId: string) {
     .map((m) => m.conteudo)
     .join(' ')
   const conhecimento = await conhecimentoRelevante(missao.tenantId, consulta)
-  // biblioteca disponível à IA: se a missão/campanha CUROU mídias (midiaIds), a IA só enxerga
-  // essas (foco); se não curou nada (vazio), toda a biblioteca do tenant fica à disposição. [§9 Fase A]
+  // biblioteca disponível à IA (herança ao vivo, igual ao DNA): mídias da MISSÃO vencem; se ela não
+  // curou nada, herda as da CAMPANHA; se nenhuma das duas curou, toda a biblioteca fica à disposição.
   const biblioteca = await midiasDoTenant(missao.tenantId)
-  const midias = missao.midiaIds.length
-    ? biblioteca.filter((m) => missao.midiaIds.includes(m.id))
+  const idsCurados = missao.midiaIds.length ? missao.midiaIds : (missao.campanha?.midiaIds ?? [])
+  const midias = idsCurados.length
+    ? biblioteca.filter((m) => idsCurados.includes(m.id))
     : biblioteca
   const ctx = montarFicha(missao, conhecimento, midias)
 

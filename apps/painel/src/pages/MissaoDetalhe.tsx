@@ -378,6 +378,8 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
                       </span>
                     ))}
                   </div>
+                ) : m.campanha ? (
+                  <p className="text-xs text-subtle">Herda as mídias da campanha.</p>
                 ) : (
                   <p className="text-xs text-subtle">Toda a biblioteca (a IA escolhe o que faz sentido).</p>
                 )}
