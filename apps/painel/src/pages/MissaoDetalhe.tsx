@@ -24,7 +24,7 @@ import { api } from '../lib/api'
 import { auth } from '../lib/auth'
 import { SeletorMidia } from '../components/SeletorMidia'
 import { CATEGORIAS_DNA, limparCamadaDna, type CamadaDna } from '../lib/dna'
-import { TIPO_INFO, TIPOS_MISSAO, TRANSICOES } from '../lib/estados'
+import { TIPO_INFO, TIPOS_MISSAO, transicoesManuais } from '../lib/estados'
 import { toast } from '../lib/toast'
 import type { EstadoMissao, Missao } from '../lib/types'
 import {
@@ -305,10 +305,10 @@ export function MissaoDetalhe({ id, onVoltar }: { id: string; onVoltar: () => vo
           <Card className="p-4">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Ações de estado</p>
             <div className="flex flex-wrap gap-2">
-              {TRANSICOES[m.estado].length === 0 ? (
-                <span className="text-xs text-muted">Estado terminal.</span>
+              {transicoesManuais(m.estado).length === 0 ? (
+                <span className="text-xs text-muted">Nenhuma ação manual aqui — a IA conduz.</span>
               ) : (
-                TRANSICOES[m.estado].map((e) => (
+                transicoesManuais(m.estado).map((e) => (
                   <button key={e} onClick={() => mudar(e)} className={cn('rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 ring-inset transition hover:brightness-125', ESTADO_INFO[e].badge)}>
                     → {ESTADO_INFO[e].label}
                   </button>

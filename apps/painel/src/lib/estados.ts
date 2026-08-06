@@ -44,6 +44,22 @@ export function podeTransicionar(de: EstadoMissao, para: EstadoMissao): boolean 
   return TRANSICOES[de].includes(para)
 }
 
+// Transições que ATIVAM a missão — só o sistema faz (botão "Iniciar" / resposta do cliente).
+// Espelha o backend (missao.dominio): não aparecem como botão manual, senão o usuário "anda"
+// com o status na mão e a missão nunca dispara o opener.
+const SO_SISTEMA: [EstadoMissao, EstadoMissao][] = [
+  ['configurada', 'na_fila'],
+  ['na_fila', 'em_conversa'],
+  ['sem_resposta', 'na_fila'],
+]
+export function transicoesManuais(de: EstadoMissao): EstadoMissao[] {
+  return TRANSICOES[de].filter((para) => !SO_SISTEMA.some(([a, b]) => a === de && b === para))
+}
+// dá pra ir de → para POR MUDANÇA MANUAL (board/botões)? Exclui as transições que só o sistema faz.
+export function podeTransicionarManual(de: EstadoMissao, para: EstadoMissao): boolean {
+  return podeTransicionar(de, para) && !SO_SISTEMA.some(([a, b]) => a === de && b === para)
+}
+
 // rótulos amigáveis dos motivos de "pulo" no disparo em lote
 const MOTIVO_DISPARO: Record<string, string> = {
   ja_iniciada: 'já iniciadas',

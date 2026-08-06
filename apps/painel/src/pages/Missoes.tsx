@@ -2,7 +2,7 @@ import { type ReactNode, useEffect, useMemo, useState } from 'react'
 import { ChevronRight, LayoutGrid, List, Plus, Send, Target } from 'lucide-react'
 import { AssistenteMissao } from '../components/AssistenteMissao'
 import { api } from '../lib/api'
-import { COLUNAS, TIPO_INFO, descreverDisparo, podeTransicionar } from '../lib/estados'
+import { COLUNAS, TIPO_INFO, descreverDisparo, podeTransicionarManual } from '../lib/estados'
 import { toast } from '../lib/toast'
 import type { EstadoMissao, Missao } from '../lib/types'
 import {
@@ -62,8 +62,13 @@ export function Missoes({ onAbrir }: { onAbrir: (id: string) => void }) {
   // arrastar um card para outra coluna = mudar de estado (validado pelo domínio)
   const mover = async (m: Missao, estado: EstadoMissao) => {
     if (m.estado === estado) return
-    if (!podeTransicionar(m.estado, estado)) {
-      toast(`Transição ${ESTADO_INFO[m.estado].label} → ${ESTADO_INFO[estado].label} não é permitida.`, 'erro')
+    if (!podeTransicionarManual(m.estado, estado)) {
+      toast(
+        m.estado === 'configurada' && estado === 'na_fila'
+          ? 'Pra ativar, use o botão "Iniciar" — ele que envia a mensagem de abertura.'
+          : `Esse status é controlado pelo sistema — não dá pra mover na mão.`,
+        'erro',
+      )
       return
     }
     // otimista: move na hora, confirma no servidor
@@ -104,7 +109,7 @@ export function Missoes({ onAbrir }: { onAbrir: (id: string) => void }) {
         <div className="flex flex-1 gap-3 overflow-x-auto pb-2">
           {COLUNAS.map((estado) => {
             const cards = (missoes ?? []).filter((m) => m.estado === estado)
-            const soltavel = arrastando ? podeTransicionar(arrastando.estado, estado) && arrastando.estado !== estado : false
+            const soltavel = arrastando ? podeTransicionarManual(arrastando.estado, estado) && arrastando.estado !== estado : false
             const info = ESTADO_INFO[estado]
             return (
               <div
