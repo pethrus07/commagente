@@ -57,7 +57,7 @@ export const CATEGORIAS_DNA: CategoriaDna[] = [
 // ── Orçamento de contexto ────────────────────────────────────────────────────
 const CAP_PROMPT = 1200 // teto por categoria injetada no prompt
 const CAP_TOTAL = 6000 // teto do bloco de conhecimento inteiro (soma das categorias)
-const MAX_ARMAZENADO = 6000 // teto por categoria no banco (o painel guarda mais do que injeta)
+const MAX_ARMAZENADO = 20000 // teto por categoria no banco — generoso (o prompt injeta só CAP_PROMPT; o resto fica guardado). Cliente cola lista de preços/produtos grande sem tomar erro.
 
 function truncar(txt: string, cap: number): string {
   const t = txt.trim()
@@ -65,7 +65,11 @@ function truncar(txt: string, cap: number): string {
 }
 
 // schema de escrita — todas as categorias opcionais; string generosa (o corte fino é no prompt).
-const campo = z.string().trim().max(MAX_ARMAZENADO).nullish()
+const campo = z
+  .string()
+  .trim()
+  .max(MAX_ARMAZENADO, `Texto muito longo (máx ${MAX_ARMAZENADO.toLocaleString('pt-BR')} caracteres). Resuma aqui o essencial — o catálogo/lista completa fica melhor na Base de Conhecimento (a IA busca por relevância).`)
+  .nullish()
 export const dnaSchema = z.object(
   Object.fromEntries(CHAVES_DNA.map((k) => [k, campo])) as Record<ChaveDna, typeof campo>,
 )

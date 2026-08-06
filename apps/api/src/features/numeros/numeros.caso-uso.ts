@@ -71,16 +71,21 @@ export async function atualizarConfigNumero(
   return numerosRepo.atualizarConfig(id, patch)
 }
 
-// Testa o aviso de escalonamento: manda uma mensagem de exemplo pro destino (numeroAviso
-// ou o próprio número). Reusa o self-send validado — serve pra confirmar que chega.
+// Testa o aviso de escalonamento: manda uma mensagem de exemplo pro numeroAviso configurado.
+// O WhatsApp NÃO entrega mensagem de um número pra ele mesmo → o destino tem que ser um chip DISTINTO.
 export async function enviarAvisoTeste(id: string) {
   const numero = await numerosRepo.buscar(id)
   if (!numero) throw new ErroHttp(404, 'Número não encontrado')
   await conferirDono(numero.tenantId)
   if (numero.statusConexao !== 'conectado')
     throw new ErroHttp(409, 'Conecte o número antes de testar o aviso.')
-  const destino = (numero.numeroAviso || numero.telefone || '').replace(/\D/g, '')
-  if (destino.length < 8) throw new ErroHttp(400, 'Número de aviso inválido.')
+  const proprio = (numero.telefone || '').replace(/\D/g, '')
+  const destino = (numero.numeroAviso || '').replace(/\D/g, '')
+  if (destino.length < 8 || destino === proprio)
+    throw new ErroHttp(
+      400,
+      'Configure um "número de aviso" diferente do próprio chip do bot. O WhatsApp não entrega mensagem de um número para ele mesmo — use o seu WhatsApp pessoal pra receber os alertas de escalonamento.',
+    )
   await wa.enviarTexto(
     numero.instanciaEvolution,
     destino,

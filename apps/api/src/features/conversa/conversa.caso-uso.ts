@@ -80,7 +80,8 @@ const JANELA_AVISO_MS = 20_000
 
 // Avisa o operador no WhatsApp quando uma conversa escala (reusa o self-send validado:
 // o número entrega mensagem pra ele mesmo). Best-effort — NUNCA derruba o turno.
-// Destino = numeroAviso configurado, senão o próprio número (self).
+// Destino = numeroAviso configurado (um WhatsApp DISTINTO do bot). O WhatsApp NÃO entrega
+// mensagem de um número para ele mesmo — então sem numeroAviso distinto, não há como avisar.
 async function avisarEscalonamento(
   missao: {
     id: string
@@ -97,8 +98,10 @@ async function avisarEscalonamento(
 ) {
   const n = missao.numero
   if (!n?.avisarEscalonamento) return
-  const destino = (n.numeroAviso || n.telefone || '').replace(/\D/g, '')
-  if (destino.length < 8) return
+  const proprio = (n.telefone || '').replace(/\D/g, '')
+  const destino = (n.numeroAviso || '').replace(/\D/g, '')
+  // sem número de aviso DISTINTO do próprio chip, não dá pra avisar (self-send é rejeitado pelo WhatsApp)
+  if (destino.length < 8 || destino === proprio) return
   // anti-rajada: numa queda de IA em massa, não dispara N self-sends seguidos no mesmo chip
   const agora = Date.now()
   if (agora - (ultimoAvisoPorInstancia.get(n.instanciaEvolution) ?? 0) < JANELA_AVISO_MS) return
