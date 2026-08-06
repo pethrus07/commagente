@@ -8,7 +8,7 @@ import { api } from '../lib/api'
 import { limparCamadaDna, type CamadaDna } from '../lib/dna'
 import { ESTILO_PADRAO } from '../lib/estilos-conversa'
 import { MODELOS, type ModeloMissao } from '../lib/modelos-missao'
-import { TIPO_INFO, descreverDisparo, rotuloNumero } from '../lib/estados'
+import { TIPO_INFO, TIPOS_MISSAO, descreverDisparo, rotuloNumero } from '../lib/estados'
 import { toast } from '../lib/toast'
 import type { CampanhaResumo, EstiloConversa, Numero, RelatorioCampanha } from '../lib/types'
 import { Button, Card, EmptyState, Spinner, cn, tempoRelativo } from '../lib/ui'
@@ -400,8 +400,10 @@ function RelatorioModal({ campanha, onFechar }: { campanha: CampanhaResumo; onFe
   )
 }
 
-// #9 — edita as camadas de uma campanha JÁ criada (mídia + DNA); refletem vivo nas missões dela.
+// #9 — edita a campanha JÁ criada, COMPLETA (config + perfil + mídia + DNA), igual à missão.
 function EditarCampanhaModal({ campanha, onFechar }: { campanha: CampanhaResumo; onFechar: () => void }) {
+  const [form, setForm] = useState({ nome: '', tipo: 'vender', modo: 'auto' as 'auto' | 'copilot', objetivo: '', criterioConclusao: '', tom: '', informacoes: '' })
+  const [estilo, setEstilo] = useState<EstiloConversa>(ESTILO_PADRAO)
   const [dna, setDna] = useState<CamadaDna>({})
   const [midiaIds, setMidiaIds] = useState<string[]>([])
   const [carregando, setCarregando] = useState(true)
@@ -410,16 +412,34 @@ function EditarCampanhaModal({ campanha, onFechar }: { campanha: CampanhaResumo;
   useEffect(() => {
     api.campanhas
       .obter(campanha.id)
-      .then((c) => { setDna((c.dna as CamadaDna) ?? {}); setMidiaIds(c.midiaIds ?? []) })
+      .then((c) => {
+        setForm({ nome: c.nome, tipo: c.tipo, modo: (c.modo as 'auto' | 'copilot') ?? 'auto', objetivo: c.objetivo, criterioConclusao: c.criterioConclusao ?? '', tom: c.tom ?? '', informacoes: c.informacoes ?? '' })
+        setEstilo(c.estilo ?? ESTILO_PADRAO)
+        setDna((c.dna as CamadaDna) ?? {})
+        setMidiaIds(c.midiaIds ?? [])
+      })
       .catch((e) => toast((e as Error).message, 'erro'))
       .finally(() => setCarregando(false))
   }, [campanha.id])
 
   const salvar = async () => {
+    if (!form.nome.trim()) return toast('Dê um nome à campanha.', 'erro')
+    if (!form.objetivo.trim()) return toast('Descreva o objetivo.', 'erro')
     setSalvando(true)
     try {
-      await api.campanhas.editar(campanha.id, { dna: limparCamadaDna(dna) ?? {}, midiaIds })
-      toast('Campanha atualizada — vale já na próxima resposta das missões dela.', 'ok')
+      await api.campanhas.editar(campanha.id, {
+        nome: form.nome.trim(),
+        tipo: form.tipo,
+        modo: form.modo,
+        objetivo: form.objetivo.trim(),
+        criterioConclusao: form.criterioConclusao.trim() || null,
+        tom: form.tom.trim() || null,
+        informacoes: form.informacoes.trim() || null,
+        estilo,
+        dna: limparCamadaDna(dna) ?? {},
+        midiaIds,
+      })
+      toast('Campanha atualizada.', 'ok')
       onFechar()
     } catch (e) {
       toast((e as Error).message, 'erro')
@@ -434,7 +454,7 @@ function EditarCampanhaModal({ campanha, onFechar }: { campanha: CampanhaResumo;
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h3 className="font-semibold text-content">Editar campanha</h3>
-            <p className="text-xs text-muted">{campanha.nome}</p>
+            <p className="text-xs text-muted">Muda a definição da campanha (vale pras próximas missões; DNA e mídia refletem ao vivo nas atuais).</p>
           </div>
           <button onClick={onFechar} className="text-muted hover:text-content"><X className="h-5 w-5" /></button>
         </div>
@@ -443,10 +463,59 @@ function EditarCampanhaModal({ campanha, onFechar }: { campanha: CampanhaResumo;
         ) : (
           <div className="space-y-3">
             <div>
+              <label className="mb-1 block text-xs text-muted">Nome da campanha</label>
+              <input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} className={campo} />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs text-muted">Tipo</label>
+              <div className="flex flex-wrap gap-1.5">
+                {TIPOS_MISSAO.map((t) => (
+                  <button key={t} onClick={() => setForm({ ...form, tipo: t })} className={cn('rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 ring-inset transition', form.tipo === t ? 'bg-indigo-500/20 text-indigo-200 ring-indigo-500/40' : 'text-muted ring-line hover:text-content')}>
+                    {TIPO_INFO[t].emoji} {TIPO_INFO[t].label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs text-muted">Objetivo</label>
+              <textarea value={form.objetivo} onChange={(e) => setForm({ ...form, objetivo: e.target.value })} rows={2} className={cn(campo, 'resize-none')} />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs text-muted">Tom / humor</label>
+              <input value={form.tom} onChange={(e) => setForm({ ...form, tom: e.target.value })} className={campo} />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs text-muted">Critério de conclusão (opcional)</label>
+              <input value={form.criterioConclusao} onChange={(e) => setForm({ ...form, criterioConclusao: e.target.value })} className={campo} />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs text-muted">Informações autorizadas (opcional)</label>
+              <textarea value={form.informacoes} onChange={(e) => setForm({ ...form, informacoes: e.target.value })} rows={2} className={cn(campo, 'resize-none')} />
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-xs text-muted">Modo</label>
+                <div className="flex gap-1.5">
+                  {(['auto', 'copilot'] as const).map((md) => (
+                    <button key={md} onClick={() => setForm({ ...form, modo: md })} className={cn('flex-1 rounded-lg px-2 py-1.5 text-xs font-medium ring-1 ring-inset transition', form.modo === md ? 'bg-indigo-500/20 text-indigo-200 ring-indigo-500/40' : 'text-muted ring-line hover:text-content')}>
+                      {md === 'auto' ? '⚡ Auto' : '👁️ Co-pilot'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div>
               <label className="mb-1 block text-xs text-muted">📎 Mídias da campanha</label>
-              <SeletorMidia valor={midiaIds} onChange={setMidiaIds} dica="Nada marcado → a IA pode enviar qualquer item da biblioteca. As missões desta campanha herdam isto ao vivo." />
+              <SeletorMidia valor={midiaIds} onChange={setMidiaIds} dica="As missões desta campanha herdam isto ao vivo." />
             </div>
             <EditorDnaCamada valor={dna} onChange={setDna} nivel="campanha" heranca="empresa" />
+            <div className="rounded-xl border border-line bg-surface/40 p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <label className="block text-xs font-medium text-muted">Perfil de conversa — como a IA escreve</label>
+                <span className="rounded-full bg-indigo-500/15 px-2 py-0.5 text-[10px] font-medium text-indigo-200">{estilo.perfil ?? 'Personalizado'}</span>
+              </div>
+              <EstiloControles estilo={estilo} onChange={setEstilo} />
+            </div>
             <div className="mt-2 flex justify-end gap-2">
               <Button variant="ghost" onClick={onFechar}>Cancelar</Button>
               <Button onClick={salvar} loading={salvando}>Salvar</Button>

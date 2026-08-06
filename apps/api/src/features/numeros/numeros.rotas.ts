@@ -21,6 +21,7 @@ const corpoConfig = z.object({
   janelaInicio: z.string().optional(),
   janelaFim: z.string().optional(),
   budgetDiario: z.number().int().optional(),
+  aquecimentoEstagio: z.number().int().min(1).max(5).optional(),
   maxConversasAtivas: z.number().int().optional(),
   suporteReativo: z.boolean().optional(),
   suporteObjetivo: z.string().nullish(),

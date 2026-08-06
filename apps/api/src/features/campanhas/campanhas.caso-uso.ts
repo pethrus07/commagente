@@ -148,16 +148,41 @@ export async function duplicarCampanha(id: string) {
   return nova
 }
 
-// #9 — edita as camadas da campanha (DNA + mídia). As duas refletem VIVO nas missões dela
-// (DNA resolvido e mídia herdada no montador a cada turno). Só mexe no que veio no patch.
-export async function editarCampanha(id: string, patch: { dna?: unknown; midiaIds?: string[] }) {
+// #9 — edita a definição da campanha (config + camadas). DNA e mídia refletem VIVO nas missões
+// dela; os demais campos (objetivo/tom/…) são a DEFINIÇÃO — valem pras próximas missões da campanha
+// (as já criadas guardam o snapshot). Só mexe no que veio no patch.
+export async function editarCampanha(
+  id: string,
+  patch: {
+    nome?: string
+    tipo?: string
+    modo?: string
+    objetivo?: string
+    contexto?: string | null
+    criterioConclusao?: string | null
+    tom?: string | null
+    informacoes?: string | null
+    estilo?: unknown
+    dna?: unknown
+    midiaIds?: string[]
+  },
+) {
   const campanha = await db.campanha.findUnique({ where: { id }, select: { tenantId: true } })
   if (!campanha) throw new ErroHttp(404, 'Campanha não encontrada')
   await conferirDono(campanha.tenantId)
   const data: Prisma.CampanhaUpdateInput = {}
+  if (patch.nome !== undefined) data.nome = patch.nome
+  if (patch.tipo !== undefined) data.tipo = patch.tipo
+  if (patch.modo !== undefined) data.modo = patch.modo
+  if (patch.objetivo !== undefined) data.objetivo = patch.objetivo
+  if (patch.contexto !== undefined) data.contexto = patch.contexto
+  if (patch.criterioConclusao !== undefined) data.criterioConclusao = patch.criterioConclusao
+  if (patch.tom !== undefined) data.tom = patch.tom
+  if (patch.informacoes !== undefined) data.informacoes = patch.informacoes
+  if (patch.estilo !== undefined) data.estilo = (patch.estilo ?? undefined) as Prisma.InputJsonValue | undefined
   if (patch.dna !== undefined) data.dna = (patch.dna ?? undefined) as Prisma.InputJsonValue | undefined
   if (patch.midiaIds !== undefined) data.midiaIds = patch.midiaIds
-  return db.campanha.update({ where: { id }, data, select: { id: true, dna: true, midiaIds: true } })
+  return db.campanha.update({ where: { id }, data, select: { id: true } })
 }
 
 /**

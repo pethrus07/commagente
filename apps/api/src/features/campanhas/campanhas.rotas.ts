@@ -62,11 +62,23 @@ export async function campanhasRotas(app: FastifyInstance) {
     return obterCampanha(id)
   })
 
-  // #9 — ajusta as camadas da campanha (DNA + mídia); reflete vivo nas missões dela
+  // #9 — edita a definição completa da campanha (config + camadas)
   app.patch('/campanhas/:id', async (req) => {
     const { id } = paramsId.parse(req.params)
     const patch = z
-      .object({ dna: dnaCamadaSchema.optional(), midiaIds: z.array(z.string().uuid()).optional() })
+      .object({
+        nome: z.string().min(1).optional(),
+        tipo: tipoMissao.optional(),
+        modo: z.enum(['auto', 'copilot']).optional(),
+        objetivo: z.string().min(1).optional(),
+        contexto: z.string().nullish(),
+        criterioConclusao: z.string().nullish(),
+        tom: z.string().nullish(),
+        informacoes: z.string().nullish(),
+        estilo: estiloSchema.optional(),
+        dna: dnaCamadaSchema.optional(),
+        midiaIds: z.array(z.string().uuid()).optional(),
+      })
       .parse(req.body ?? {})
     return editarCampanha(id, patch)
   })

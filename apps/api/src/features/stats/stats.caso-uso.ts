@@ -2,6 +2,7 @@
 import { config } from '../../core/config'
 import { tenantAtual } from '../../core/contexto'
 import { db } from '../../core/db'
+import { tetoDiarioPorEstagio } from '../fila/fila.dominio'
 import { classificarSaude } from '../numeros/numeros.dominio'
 import { numerosRepo } from '../numeros/numeros.repo'
 
@@ -21,7 +22,7 @@ async function vigia(tenantId: string): Promise<{ tipo: string; mensagem: string
 
   const numeros = await db.numeroWhatsapp.findMany({
     where: { tenantId },
-    select: { id: true, telefone: true, statusConexao: true, criadoEm: true },
+    select: { id: true, telefone: true, statusConexao: true, criadoEm: true, budgetDiario: true, enviadosHoje: true, aquecimentoEstagio: true },
   })
   const h24 = new Date(Date.now() - 24 * 3_600_000)
   const alertas: { tipo: string; mensagem: string }[] = []
@@ -37,6 +38,24 @@ async function vigia(tenantId: string): Promise<{ tipo: string; mensagem: string
         })
       }
       continue // desconectado → não faz sentido checar saúde/silêncio
+    }
+    // AQUECIMENTO: atingiu o teto diário e há aberturas SEGURADAS na fila (o usuário não sabe por
+    // que "não começou"). Só alerta se de fato existir opener 'novo' pendente pra este número.
+    const tetoEfetivo = Math.min(n.budgetDiario, tetoDiarioPorEstagio(n.aquecimentoEstagio))
+    if (n.enviadosHoje >= tetoEfetivo) {
+      const seguradas = await db.filaEnvio.count({
+        where: {
+          tenantId,
+          status: 'pendente',
+          AND: [{ payload: { path: ['numeroId'], equals: n.id } }, { payload: { path: ['tipo'], equals: 'novo' } }],
+        },
+      })
+      if (seguradas > 0) {
+        alertas.push({
+          tipo: 'aquecimento',
+          mensagem: `Número +${n.telefone}: limite diário do aquecimento atingido (${tetoEfetivo}). ${seguradas} abertura(s) seguradas — saem quando o dia virar, ou suba o estágio em Números.`,
+        })
+      }
     }
     // saúde: taxa de resposta baixa → risco de bloqueio (iniciações já ficam pausadas)
     const { base, naoRespondidas } = await numerosRepo.saude(n.id)

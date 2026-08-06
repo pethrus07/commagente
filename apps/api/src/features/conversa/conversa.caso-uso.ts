@@ -6,6 +6,7 @@ import { whatsapp } from '../../core/evolution'
 import { ErroHttp } from '../../core/erros'
 import { ia } from '../../core/ia'
 import { SaidaIASchema, type SaidaIA, type UsoIA } from '../../core/ia/porta-ia'
+import { telefoneBR } from '../../core/telefone'
 import { conhecimentoRelevante } from '../conhecimento/conhecimento.caso-uso'
 import { conhecimentoRepo } from '../conhecimento/conhecimento.repo'
 import { jitterMs } from '../fila/fila.dominio'
@@ -80,8 +81,8 @@ const JANELA_AVISO_MS = 20_000
 
 // Avisa o operador no WhatsApp quando uma conversa escala (reusa o self-send validado:
 // o número entrega mensagem pra ele mesmo). Best-effort — NUNCA derruba o turno.
-// Destino = numeroAviso configurado (um WhatsApp DISTINTO do bot). O WhatsApp NÃO entrega
-// mensagem de um número para ele mesmo — então sem numeroAviso distinto, não há como avisar.
+// Destino = numeroAviso configurado, senão o próprio número (self-send funciona). Normaliza com o
+// DDI 55 (telefoneBR): sem o 55 o JID fica inválido (exists:false) e o aviso não sai.
 async function avisarEscalonamento(
   missao: {
     id: string
@@ -98,10 +99,8 @@ async function avisarEscalonamento(
 ) {
   const n = missao.numero
   if (!n?.avisarEscalonamento) return
-  const proprio = (n.telefone || '').replace(/\D/g, '')
-  const destino = (n.numeroAviso || '').replace(/\D/g, '')
-  // sem número de aviso DISTINTO do próprio chip, não dá pra avisar (self-send é rejeitado pelo WhatsApp)
-  if (destino.length < 8 || destino === proprio) return
+  const destino = telefoneBR(n.numeroAviso || n.telefone || '')
+  if (destino.length < 10) return
   // anti-rajada: numa queda de IA em massa, não dispara N self-sends seguidos no mesmo chip
   const agora = Date.now()
   if (agora - (ultimoAvisoPorInstancia.get(n.instanciaEvolution) ?? 0) < JANELA_AVISO_MS) return

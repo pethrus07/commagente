@@ -20,6 +20,7 @@ function ConfigModal({ numero, onFechar }: { numero: Numero; onFechar: (salvou: 
     janelaInicio: numero.janelaInicio,
     janelaFim: numero.janelaFim,
     budgetDiario: String(numero.budgetDiario),
+    aquecimentoEstagio: String(numero.aquecimentoEstagio),
     maxConversasAtivas: String(numero.maxConversasAtivas),
     suporteReativo: numero.suporteReativo,
     avisarEscalonamento: numero.avisarEscalonamento,
@@ -40,6 +41,7 @@ function ConfigModal({ numero, onFechar }: { numero: Numero; onFechar: (salvou: 
         janelaInicio: form.janelaInicio,
         janelaFim: form.janelaFim,
         budgetDiario: budget,
+        aquecimentoEstagio: Number(form.aquecimentoEstagio),
         maxConversasAtivas: cap,
         suporteReativo: form.suporteReativo,
         avisarEscalonamento: form.avisarEscalonamento,
@@ -105,6 +107,15 @@ function ConfigModal({ numero, onFechar }: { numero: Numero; onFechar: (salvou: 
               <label className="mb-1 block text-xs text-muted">Cap conversas ativas</label>
               <input type="number" min={1} value={form.maxConversasAtivas} onChange={(e) => setForm({ ...form, maxConversasAtivas: e.target.value })} className={campo} />
             </div>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-muted">Estágio de aquecimento (chip novo → maduro)</label>
+            <select value={form.aquecimentoEstagio} onChange={(e) => setForm({ ...form, aquecimentoEstagio: e.target.value })} className={campo}>
+              {[['1', '20'], ['2', '50'], ['3', '120'], ['4', '250'], ['5', '400']].map(([est, teto]) => (
+                <option key={est} value={est} className="bg-slate-900">Estágio {est} — até {teto} aberturas/dia</option>
+              ))}
+            </select>
+            <p className="mt-1 text-[11px] leading-snug text-muted">O teto real de <b>aberturas de conversa</b> por dia é o <b>menor</b> entre o budget e o teto do estágio. Chip novo começa no 1 (20/dia) — suba conforme aquece. ⚠️ subir rápido demais aumenta o risco de bloqueio.</p>
           </div>
           <p className="text-[11px] leading-snug text-muted">
             🛡️ Janela = horário permitido de envio · Budget = teto de mensagens/dia · Cap = máximo de conversas simultâneas que a IA inicia.
@@ -326,8 +337,8 @@ export function Numeros() {
                 </div>
 
                 <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-                  <div className="rounded-lg bg-surface2 py-2" title={`Teto efetivo do dia = menor entre o budget (${n.budgetDiario}) e o teto do estágio ${n.aquecimentoEstagio}. Ao atingir, o anti-bloqueio pausa novos envios.`}>
-                    <p className="text-sm font-semibold text-content">{n.enviadosHoje}/{n.tetoEfetivo}</p>
+                  <div className="rounded-lg bg-surface2 py-2" title={`Teto efetivo do dia = menor entre o budget (${n.budgetDiario}) e o teto do estágio ${n.aquecimentoEstagio}. Ao atingir, o anti-bloqueio pausa novas ABERTURAS (respostas continuam).`}>
+                    <p className={cn('text-sm font-semibold', n.enviadosHoje >= n.tetoEfetivo ? 'text-amber-400' : 'text-content')}>{n.enviadosHoje}/{n.tetoEfetivo}</p>
                     <p className="text-[11px] text-muted">hoje (teto)</p>
                   </div>
                   <div className="rounded-lg bg-surface2 py-2">
@@ -339,6 +350,13 @@ export function Numeros() {
                     <p className="text-[11px] text-muted">janela</p>
                   </div>
                 </div>
+
+                {n.statusConexao === 'conectado' && n.enviadosHoje >= n.tetoEfetivo && (
+                  <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-[11px] leading-snug text-amber-700 dark:text-amber-200">
+                    <span>⏳</span>
+                    <span><b>Limite diário do aquecimento atingido</b> ({n.tetoEfetivo} aberturas). Novas conversas ficam <b>seguradas</b> e saem quando o dia virar. Pra liberar hoje, suba o estágio de aquecimento em Configurar. (As respostas a conversas ativas continuam normalmente.)</span>
+                  </div>
+                )}
 
                 {n.saude && <SaudeBadge saude={n.saude} />}
 

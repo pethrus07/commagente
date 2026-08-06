@@ -2,6 +2,7 @@
 // Orquestra a PortaWhatsApp (adapter Evolution) + persistência; sem regra de negócio pesada.
 import { config } from '../../core/config'
 import { ErroHttp } from '../../core/erros'
+import { telefoneBR } from '../../core/telefone'
 import { whatsapp } from '../../core/evolution'
 import type { PortaWhatsApp, QrCode } from '../../core/evolution/porta-whatsapp'
 import { conferirDono, tenantAtual } from '../../core/contexto'
@@ -41,6 +42,7 @@ export async function atualizarConfigNumero(
     janelaInicio?: string
     janelaFim?: string
     budgetDiario?: number
+    aquecimentoEstagio?: number
     maxConversasAtivas?: number
     suporteReativo?: boolean
     suporteObjetivo?: string | null
@@ -63,6 +65,8 @@ export async function atualizarConfigNumero(
     throw new ErroHttp(400, 'janelaFim inválida (use HH:mm)')
   if (patch.budgetDiario !== undefined && patch.budgetDiario < 1)
     throw new ErroHttp(400, 'budgetDiario deve ser ≥ 1')
+  if (patch.aquecimentoEstagio !== undefined && (patch.aquecimentoEstagio < 1 || patch.aquecimentoEstagio > 5))
+    throw new ErroHttp(400, 'Estágio de aquecimento deve ser de 1 a 5.')
   if (patch.maxConversasAtivas !== undefined && patch.maxConversasAtivas < 1)
     throw new ErroHttp(400, 'maxConversasAtivas deve ser ≥ 1')
   if (patch.suporteModo !== undefined && !['auto', 'copilot'].includes(patch.suporteModo))
@@ -71,21 +75,17 @@ export async function atualizarConfigNumero(
   return numerosRepo.atualizarConfig(id, patch)
 }
 
-// Testa o aviso de escalonamento: manda uma mensagem de exemplo pro numeroAviso configurado.
-// O WhatsApp NÃO entrega mensagem de um número pra ele mesmo → o destino tem que ser um chip DISTINTO.
+// Testa o aviso de escalonamento: manda uma mensagem de exemplo pro destino (numeroAviso ou o
+// próprio número — self-send FUNCIONA). O que quebrava era o número salvo sem o DDI 55 → JID
+// inválido (exists:false); normalizamos com telefoneBR antes de enviar.
 export async function enviarAvisoTeste(id: string) {
   const numero = await numerosRepo.buscar(id)
   if (!numero) throw new ErroHttp(404, 'Número não encontrado')
   await conferirDono(numero.tenantId)
   if (numero.statusConexao !== 'conectado')
     throw new ErroHttp(409, 'Conecte o número antes de testar o aviso.')
-  const proprio = (numero.telefone || '').replace(/\D/g, '')
-  const destino = (numero.numeroAviso || '').replace(/\D/g, '')
-  if (destino.length < 8 || destino === proprio)
-    throw new ErroHttp(
-      400,
-      'Configure um "número de aviso" diferente do próprio chip do bot. O WhatsApp não entrega mensagem de um número para ele mesmo — use o seu WhatsApp pessoal pra receber os alertas de escalonamento.',
-    )
+  const destino = telefoneBR(numero.numeroAviso || numero.telefone || '')
+  if (destino.length < 10) throw new ErroHttp(400, 'Número de aviso inválido.')
   await wa.enviarTexto(
     numero.instanciaEvolution,
     destino,
