@@ -73,6 +73,7 @@ export interface Numero {
   tetoEfetivo: number
   enviadosHoje: number
   maxConversasAtivas: number
+  semLimite?: boolean
   janelaInicio: string
   janelaFim: string
   suporteReativo: boolean

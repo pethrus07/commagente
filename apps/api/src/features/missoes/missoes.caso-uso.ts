@@ -246,35 +246,38 @@ export async function iniciarMissao(id: string) {
     throw new ErroHttp(409, 'Este contato pediu pra não receber mensagens (opt-out).')
   }
 
-  // cap anti-bloqueio: limita conversas simultâneas conduzidas pela IA no número
+  // cap anti-bloqueio: limita conversas simultâneas conduzidas pela IA no número.
   if (missao.estado === 'configurada') {
-    const ativas = await numerosRepo.contarAtivas(missao.numeroId)
-    if (ativas >= missao.numero.maxConversasAtivas) {
-      throw new ErroHttp(
-        409,
-        `Cap de conversas ativas atingido (${missao.numero.maxConversasAtivas}) neste número. Conclua ou arquive alguma antes de iniciar outra.`,
-      )
-    }
+    // modo teste (semLimite): pula os guardas anti-ban (cap/anti-spam/saúde). Aceitou o risco.
+    if (!missao.numero.semLimite) {
+      const ativas = await numerosRepo.contarAtivas(missao.numeroId)
+      if (ativas >= missao.numero.maxConversasAtivas) {
+        throw new ErroHttp(
+          409,
+          `Cap de conversas ativas atingido (${missao.numero.maxConversasAtivas}) neste número. Conclua ou arquive alguma antes de iniciar outra.`,
+        )
+      }
 
-    // anti-spam: no máx. 2 iniciações por contato por semana (evita parecer spam)
-    const semanaAtras = new Date(Date.now() - 7 * 86_400_000)
-    const iniciadasContato = await missoesRepo.contarIniciadasPorContato(missao.contatoId, semanaAtras)
-    if (iniciadasContato >= 2) {
-      throw new ErroHttp(
-        409,
-        'Limite de iniciações por contato atingido (2 por semana). Espaça o contato pra não parecer spam.',
-      )
-    }
+      // anti-spam: no máx. 2 iniciações por contato por semana (evita parecer spam)
+      const semanaAtras = new Date(Date.now() - 7 * 86_400_000)
+      const iniciadasContato = await missoesRepo.contarIniciadasPorContato(missao.contatoId, semanaAtras)
+      if (iniciadasContato >= 2) {
+        throw new ErroHttp(
+          409,
+          'Limite de iniciações por contato atingido (2 por semana). Espaça o contato pra não parecer spam.',
+        )
+      }
 
-    // saúde anti-ban (gatilho 2026): taxa de resposta em risco → pausa novas iniciações
-    const { base, naoRespondidas } = await numerosRepo.saude(missao.numeroId)
-    const saude = classificarSaude(base, naoRespondidas)
-    if (saude.status === 'risco') {
-      throw new ErroHttp(
-        409,
-        `Número com taxa de resposta baixa (${Math.round((saude.replyRate ?? 0) * 100)}%). ` +
-          'Novas iniciações pausadas pra proteger de bloqueio — conclua ou arquive os leads sem retorno antes.',
-      )
+      // saúde anti-ban (gatilho 2026): taxa de resposta em risco → pausa novas iniciações
+      const { base, naoRespondidas } = await numerosRepo.saude(missao.numeroId)
+      const saude = classificarSaude(base, naoRespondidas)
+      if (saude.status === 'risco') {
+        throw new ErroHttp(
+          409,
+          `Número com taxa de resposta baixa (${Math.round((saude.replyRate ?? 0) * 100)}%). ` +
+            'Novas iniciações pausadas pra proteger de bloqueio — conclua ou arquive os leads sem retorno antes.',
+        )
+      }
     }
 
     await missoesRepo.atualizarEstado(id, 'na_fila')
@@ -322,31 +325,34 @@ export async function iniciarMissoesConfiguradas(ids: string[]) {
         continue
       }
 
-      // saúde do número (cache): em risco → pausa novas iniciações (gatilho anti-ban)
-      if (!emRisco.has(missao.numeroId)) {
-        const { base, naoRespondidas } = await numerosRepo.saude(missao.numeroId)
-        emRisco.set(missao.numeroId, classificarSaude(base, naoRespondidas).status === 'risco')
-      }
-      if (emRisco.get(missao.numeroId)) {
-        pula('saude_risco')
-        continue
-      }
+      // modo teste (semLimite): pula os guardas anti-ban (saúde/cap/anti-spam). Aceitou o risco.
+      if (!missao.numero.semLimite) {
+        // saúde do número (cache): em risco → pausa novas iniciações (gatilho anti-ban)
+        if (!emRisco.has(missao.numeroId)) {
+          const { base, naoRespondidas } = await numerosRepo.saude(missao.numeroId)
+          emRisco.set(missao.numeroId, classificarSaude(base, naoRespondidas).status === 'risco')
+        }
+        if (emRisco.get(missao.numeroId)) {
+          pula('saude_risco')
+          continue
+        }
 
-      // cap de conversas ativas do número (cache decrementado a cada início)
-      if (!vagas.has(missao.numeroId)) {
-        const ativas = await numerosRepo.contarAtivas(missao.numeroId)
-        vagas.set(missao.numeroId, Math.max(0, missao.numero.maxConversasAtivas - ativas))
-      }
-      if ((vagas.get(missao.numeroId) ?? 0) <= 0) {
-        pula('cap_ativas')
-        continue
-      }
+        // cap de conversas ativas do número (cache decrementado a cada início)
+        if (!vagas.has(missao.numeroId)) {
+          const ativas = await numerosRepo.contarAtivas(missao.numeroId)
+          vagas.set(missao.numeroId, Math.max(0, missao.numero.maxConversasAtivas - ativas))
+        }
+        if ((vagas.get(missao.numeroId) ?? 0) <= 0) {
+          pula('cap_ativas')
+          continue
+        }
 
-      // anti-spam: no máx. 2 iniciações por contato por semana
-      const semana = new Date(Date.now() - 7 * 86_400_000)
-      if ((await missoesRepo.contarIniciadasPorContato(missao.contatoId, semana)) >= 2) {
-        pula('cap_contato')
-        continue
+        // anti-spam: no máx. 2 iniciações por contato por semana
+        const semana = new Date(Date.now() - 7 * 86_400_000)
+        if ((await missoesRepo.contarIniciadasPorContato(missao.contatoId, semana)) >= 2) {
+          pula('cap_contato')
+          continue
+        }
       }
 
       // inicia: move p/ na_fila e consome a vaga JÁ (antes do opener), pra o cap não furar.

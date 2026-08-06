@@ -73,7 +73,8 @@ async function tick() {
       // a gente TEM que ser respondido — senão o atendimento "trava" sem aviso (o cliente do
       // Desbravando mandou msg e ficou sem resposta porque o budget diário cortou a resposta).
       // Resposta segue só o opt-out + anti-rajada (espaçamento) + chip conectado.
-      if (p.tipo === 'novo') {
+      // modo teste (semLimite): bypassa janela + budget de outreach (o operador aceitou o risco)
+      if (p.tipo === 'novo' && !numero.semLimite) {
         if (!dentroDaJanela(agoraHHmm(), numero.janelaInicio, numero.janelaFim)) continue
         const tetoEfetivo = Math.min(
           numero.budgetDiario,
@@ -89,9 +90,9 @@ async function tick() {
       }
 
       // ANTI-RAJADA: respeita o intervalo mínimo entre envios do mesmo número.
-      // (o item fica pendente e é reprocessado quando chegar a hora)
+      // (o item fica pendente e é reprocessado quando chegar a hora) — modo teste bypassa.
       const agora = Date.now()
-      if (numero.proximoEnvioEm && agora < numero.proximoEnvioEm.getTime()) {
+      if (!numero.semLimite && numero.proximoEnvioEm && agora < numero.proximoEnvioEm.getTime()) {
         continue
       }
 

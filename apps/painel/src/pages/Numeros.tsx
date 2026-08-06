@@ -22,6 +22,7 @@ function ConfigModal({ numero, onFechar }: { numero: Numero; onFechar: (salvou: 
     budgetDiario: String(numero.budgetDiario),
     aquecimentoEstagio: String(numero.aquecimentoEstagio),
     maxConversasAtivas: String(numero.maxConversasAtivas),
+    semLimite: numero.semLimite ?? false,
     suporteReativo: numero.suporteReativo,
     avisarEscalonamento: numero.avisarEscalonamento,
     numeroAviso: numero.numeroAviso ?? '',
@@ -43,6 +44,7 @@ function ConfigModal({ numero, onFechar }: { numero: Numero; onFechar: (salvou: 
         budgetDiario: budget,
         aquecimentoEstagio: Number(form.aquecimentoEstagio),
         maxConversasAtivas: cap,
+        semLimite: form.semLimite,
         suporteReativo: form.suporteReativo,
         avisarEscalonamento: form.avisarEscalonamento,
         numeroAviso: form.numeroAviso.trim() || null,
@@ -120,6 +122,19 @@ function ConfigModal({ numero, onFechar }: { numero: Numero; onFechar: (salvou: 
           <p className="text-[11px] leading-snug text-muted">
             🛡️ Janela = horário permitido de envio · Budget = teto de mensagens/dia · Cap = máximo de conversas simultâneas que a IA inicia.
           </p>
+          <button
+            type="button"
+            onClick={() => setForm({ ...form, semLimite: !form.semLimite })}
+            className={cn('flex w-full items-start gap-3 rounded-xl border p-3 text-left transition', form.semLimite ? 'border-rose-500/50 bg-rose-500/[0.08]' : 'border-line bg-surface2 hover:border-line-strong')}
+          >
+            <span className={cn('mt-0.5 grid h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition', form.semLimite ? 'bg-rose-500' : 'bg-line-strong')}>
+              <span className={cn('h-4 w-4 rounded-full bg-white transition', form.semLimite && 'translate-x-4')} />
+            </span>
+            <span>
+              <span className="block text-sm font-medium text-content">🔥 Modo teste — sem freio anti-ban</span>
+              <span className="mt-0.5 block text-[11px] leading-snug text-muted">Ignora <b>tudo</b>: janela, budget, aquecimento, espaçamento entre envios, saúde e anti-spam. Manda no talo. <b className="text-rose-300">Alto risco de bloqueio do WhatsApp</b> — use só em chip de teste que você topa perder.</span>
+            </span>
+          </button>
           <div className="border-t border-line pt-3">
             <button
               type="button"

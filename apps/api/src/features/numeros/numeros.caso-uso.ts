@@ -44,6 +44,7 @@ export async function atualizarConfigNumero(
     budgetDiario?: number
     aquecimentoEstagio?: number
     maxConversasAtivas?: number
+    semLimite?: boolean
     suporteReativo?: boolean
     suporteObjetivo?: string | null
     suporteTom?: string | null
