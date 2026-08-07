@@ -441,6 +441,9 @@ model FilaEnvio {
   tentativas   Int         @default(0)
   status       StatusEnvio @default(pendente)
   criadoEm     DateTime    @default(now()) @map("criado_em")
+  // carimbo do último update (Prisma @updatedAt): quando o item foi 'enviando', é a hora do
+  // claim. O reaper só recupera 'enviando' ANTIGO (órfão real), não um envio em curso.
+  atualizadoEm DateTime    @updatedAt @map("atualizado_em")
 
   tenant  Tenant  @relation(fields: [tenantId], references: [id])
   missao  Missao  @relation(fields: [missaoId], references: [id])

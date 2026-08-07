@@ -24,6 +24,15 @@ export const conversaRepo = {
     return db.missao.update({ where: { id }, data: { rascunho: null } })
   },
 
+  // CONTINUIDADE entre missões: já mandamos alguma mensagem pra este contato em OUTRA missão?
+  // Se sim, um novo opener (ex.: outra campanha) NÃO deve recomeçar com "bom dia/meu nome é".
+  async contatoJaContatado(contatoId: string, exceoMissaoId: string): Promise<boolean> {
+    const n = await db.mensagem.count({
+      where: { contatoId, direcao: 'out', missaoId: { not: exceoMissaoId } },
+    })
+    return n > 0
+  },
+
   // memória INDIVIDUAL: mescla fatos novos no perfil do contato (persiste entre missões)
   async mesclarMemoriaContato(
     contatoId: string,

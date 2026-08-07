@@ -1,5 +1,6 @@
 // ⚙️ Aplicação — o HARNESS da conversa (a moldura determinística em volta do LLM).
 // 1 turno: monta contexto → IA (structured) → valida → aplica estado + fatos → responde.
+import { config } from '../../core/config'
 import { conferirDono } from '../../core/contexto'
 import { db } from '../../core/db'
 import { whatsapp } from '../../core/evolution'
@@ -17,6 +18,16 @@ import { podeTransicionar } from '../missoes/missao.dominio'
 import { missoesRepo } from '../missoes/missoes.repo'
 import { lerEstilo } from '../tenant/tenant.estilo'
 import { conversaRepo } from './conversa.repo'
+
+// período do dia no fuso do tenant → a IA cumprimenta certo (bom dia/tarde/noite)
+function periodoDoDia(agora: Date): 'manhã' | 'tarde' | 'noite' {
+  const h = Number(
+    new Intl.DateTimeFormat('en-US', { timeZone: config.tz, hour: 'numeric', hourCycle: 'h23' }).format(agora),
+  )
+  if (h < 12) return 'manhã'
+  if (h < 18) return 'tarde'
+  return 'noite'
+}
 
 const turnosAtivos = new Set<string>()
 
@@ -147,7 +158,15 @@ async function executarTurno(missaoId: string) {
   const midias = idsCurados.length
     ? biblioteca.filter((m) => idsCurados.includes(m.id))
     : biblioteca
-  const ctx = montarFicha(missao, conhecimento, midias)
+  // SINAIS de conversa humana (fix "não parecer robô"): período do dia (saudação certa) +
+  // se já houve troca com este contato (nesta ou em missão anterior → não recomeçar com "bom dia").
+  const jaConversouAntes =
+    missao.mensagens.some((m) => m.direcao === 'out') ||
+    (await conversaRepo.contatoJaContatado(missao.contatoId, missao.id))
+  const ctx = montarFicha(missao, conhecimento, midias, {
+    periodo: periodoDoDia(new Date()),
+    jaConversouAntes,
+  })
 
   // 2) chama a IA e 3) VALIDA o contrato (guardrail — nunca confia cego no modelo).
   // Se a IA falhar (ex.: OpenAI 401/429), NÃO some em silêncio: registra o erro,

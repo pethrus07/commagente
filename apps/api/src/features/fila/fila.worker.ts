@@ -38,18 +38,22 @@ function agoraData(): string {
 const MAX_TENTATIVAS = 5 // depois disso o item vira dead-letter (status 'erro')
 
 let rodando = false
-let inicioTick = 0
-const TICK_MAX_MS = 90_000 // watchdog: se um tick passar disso, considera travado e destrava
 
 async function tick() {
-  if (rodando) {
-    // watchdog anti-freeze: um tick pendurado (rede/Evolution) não pode congelar a fila pra sempre
-    if (Date.now() - inicioTick < TICK_MAX_MS) return
-    console.error('[fila] watchdog: tick anterior travado >90s, destravando')
-  }
+  // SINGLE-FLIGHT ESTRITO: nunca roda dois ticks ao mesmo tempo. (O watchdog antigo, que abria um
+  // 2º ciclo por cima do 1º após 90s, ERA a causa da duplicação: dois loops pegavam o mesmo item.)
+  // Não pode congelar: cada request à Evolution tem timeout de 30s (evolution.client), então um
+  // tick sempre termina e libera o lock. E mesmo se dois rodassem, o claim atômico impede a duplicata.
+  if (rodando) return
   rodando = true
-  inicioTick = Date.now()
   try {
+    // REAPER periódico: recupera itens 'enviando' órfãos (processo morreu no meio) — só os ANTIGOS
+    // (>120s), nunca um envio em curso. Roda a cada tick (barato: updateMany indexado com filtro de tempo).
+    await filaRepo
+      .reclamarPresos()
+      .then((n) => n > 0 && console.log(`[fila] reaper: ${n} item(ns) órfão(s) 'enviando' → 'pendente'`))
+      .catch((e) => console.error('[fila] reaper falhou (ignorado):', e))
+
     const devidos = await filaRepo.pegarDevidos(new Date())
     for (const item of devidos) {
       const p = item.payload as Payload
@@ -99,7 +103,10 @@ async function tick() {
         continue
       }
 
-      await filaRepo.marcar(item.id, 'enviando')
+      // CLAIM ATÔMICO: só envia se ganhar a transição pendente→enviando. Se outro loop já pegou
+      // este item (corrida em `pegarDevidos`, que não tranca a linha), reivindicar devolve false
+      // e a gente PULA — é o que impede o mesmo opener/resposta de sair 2×, 3×, 4×.
+      if (!(await filaRepo.reivindicar(item.id))) continue
       try {
         let enviados = 1
         if (p.documento) {
@@ -132,12 +139,8 @@ async function tick() {
 }
 
 export function iniciarWorker(intervaloMs = 3000) {
-  // REAPER no boot: itens órfãos presos em 'enviando' (processo morreu no meio do envio)
-  // voltam pra 'pendente' — senão a resposta some a cada deploy/restart.
-  filaRepo
-    .reclamarPresos()
-    .then((n) => n > 0 && console.log(`[fila] reaper: ${n} item(ns) preso(s) 'enviando' → 'pendente'`))
-    .catch((e) => console.error('[fila] reaper falhou (ignorado):', e))
+  // O reaper agora roda DENTRO do tick (periódico, só órfãos >120s) — cobre tanto o boot quanto
+  // órfãos que surgem em runtime. Não precisa mais de um reaper de boot separado.
   // .catch obrigatório: sem ele, um erro transitório de DB dentro do tick vira
   // unhandled rejection e derruba o processo (Node ≥15). O worker deve ser resiliente.
   setInterval(() => {
