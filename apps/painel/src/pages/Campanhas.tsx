@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BarChart3, Copy, Dna, Download, FileText, Megaphone, Paperclip, Pencil, Plus, Send, Sparkles, UserPlus, X } from 'lucide-react'
+import { BarChart3, Copy, Dna, Download, FileText, Megaphone, Paperclip, Pause, Pencil, Play, Plus, Send, Sparkles, UserPlus, X } from 'lucide-react'
 import { EditorDnaCamada } from '../components/EditorDnaCamada'
 import { EstiloControles } from '../components/EstiloControles'
 import { SeletorContatos } from '../components/SeletorContatos'
@@ -566,6 +566,17 @@ export function Campanhas() {
     }
   }
 
+  // pausa/retoma a campanha (a IA para/volta a enviar e responder — histórico preservado)
+  const pausar = async (c: CampanhaResumo) => {
+    try {
+      await api.campanhas.pausar(c.id, !c.pausada)
+      toast(c.pausada ? 'Campanha retomada — a IA volta de onde parou.' : 'Campanha pausada — a IA para de enviar/responder (o histórico fica salvo).', 'ok')
+      carregar()
+    } catch (e) {
+      toast((e as Error).message, 'erro')
+    }
+  }
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
@@ -586,7 +597,10 @@ export function Campanhas() {
                 <div className="flex items-start gap-3">
                   <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-500/15 text-indigo-300"><Megaphone className="h-5 w-5" /></div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium text-content">{c.nome}</p>
+                    <p className="flex items-center gap-2 truncate font-medium text-content">
+                      {c.nome}
+                      {c.pausada && <span className="shrink-0 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-300">pausada</span>}
+                    </p>
                     <p className="truncate text-xs text-muted">{TIPO_INFO[c.tipo]?.emoji} {TIPO_INFO[c.tipo]?.label} · {tempoRelativo(c.criadoEm)}</p>
                   </div>
                 </div>
@@ -617,6 +631,7 @@ export function Campanhas() {
                   <Button variant="ghost" className="flex-1" onClick={() => setRelatorio(c)}><FileText className="h-4 w-4" /> Relatório</Button>
                   <Button variant="ghost" className="flex-1" onClick={() => setAdd(c)}><UserPlus className="h-4 w-4" /> Contatos</Button>
                   <Button variant="ghost" onClick={() => setDnaCamp(c)} title="Editar mídia e DNA da campanha"><Pencil className="h-4 w-4" /> Editar</Button>
+                  <Button variant="ghost" onClick={() => pausar(c)} title={c.pausada ? 'Retomar — a IA volta a enviar/responder' : 'Pausar — a IA para de enviar/responder (histórico salvo)'}>{c.pausada ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}</Button>
                   <Button variant="ghost" onClick={() => duplicar(c)} title="Duplicar (teste A/B)"><Copy className="h-4 w-4" /></Button>
                 </div>
               </Card>

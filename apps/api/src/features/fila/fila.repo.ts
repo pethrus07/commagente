@@ -31,6 +31,8 @@ export const filaRepo = {
       where: { status: 'pendente', agendadoPara: { lte: agora } },
       orderBy: { agendadoPara: 'asc' },
       take: limite,
+      // pausa (missão ou campanha) segura o envio do que já está na fila
+      include: { missao: { select: { iaPausada: true, campanha: { select: { pausada: true } } } } },
     })
   },
 

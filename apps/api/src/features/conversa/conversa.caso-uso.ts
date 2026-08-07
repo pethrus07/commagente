@@ -126,8 +126,9 @@ async function executarTurno(missaoId: string) {
   const missao = await missoesRepo.buscar(missaoId)
   if (!missao) return { ok: false as const, motivo: 'missao_inexistente' }
 
-  // 0) guardrail de controle: se um humano assumiu (IA pausada), a IA não responde.
-  if (missao.iaPausada) return { ok: true as const, pausada: true }
+  // 0) guardrail de controle: se um humano assumiu (IA pausada) OU a campanha está pausada, a IA
+  // não responde/gera (o inbound já foi salvo → histórico preservado; retoma ao despausar).
+  if (missao.iaPausada || missao.campanha?.pausada) return { ok: true as const, pausada: true }
 
   // 1) monta a ficha: contexto individual (missão + contato) + memória COLETIVA.
   // RAG: recupera só os trechos RELEVANTES do conhecimento (as últimas mensagens do lead

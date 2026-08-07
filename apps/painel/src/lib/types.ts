@@ -244,6 +244,7 @@ export interface CampanhaResumo {
   total: number
   cumpridas: number
   pendentes: number // missões ainda paradas em 'configurada' (nunca disparadas)
+  pausada?: boolean // campanha pausada (IA não envia/responde nas missões dela)
   dnaAjustes?: number // nº de categorias de DNA sobrescritas na campanha (#9 Fase B)
   midias?: number // nº de mídias curadas na campanha (#9 Fase A)
 }

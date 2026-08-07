@@ -58,6 +58,9 @@ async function tick() {
         await filaRepo.marcar(item.id, 'erro', true)
         continue
       }
+      // PAUSA: missão pausada (humano assumiu) OU campanha pausada → segura o envio (fica pendente,
+      // sai quando despausar). Preserva o histórico sem mandar besteira durante a edição/pausa.
+      if (item.missao?.iaPausada || item.missao?.campanha?.pausada) continue
       // CHIP FORA DO AR: não tenta enviar (senão queima as 5 tentativas em ~7min e vira
       // dead-letter → resposta perdida). Deixa 'pendente' pra sair quando o chip voltar.
       if (numero.statusConexao !== 'conectado') continue

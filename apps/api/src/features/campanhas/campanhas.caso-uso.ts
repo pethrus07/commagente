@@ -55,10 +55,21 @@ export async function listarCampanhas() {
     total: c._count.missoes,
     cumpridas: mapaConcl.get(c.id) ?? 0,
     pendentes: mapaPend.get(c.id) ?? 0,
+    pausada: c.pausada,
     // flags p/ o card refletir as camadas configuradas (#9): nº de categorias de DNA + nº de mídias
     dnaAjustes: Object.keys(lerCamadaDna(c.dna)).length,
     midias: c.midiaIds.length,
   }))
+}
+
+// Pausa/retoma a campanha inteira: enquanto pausada, a IA não envia nem responde nas missões dela
+// (o worker segura a fila; processarTurno não gera). Histórico preservado — retoma de onde parou.
+export async function pausarCampanha(id: string, pausada: boolean) {
+  const campanha = await db.campanha.findUnique({ where: { id }, select: { tenantId: true } })
+  if (!campanha) throw new ErroHttp(404, 'Campanha não encontrada')
+  await conferirDono(campanha.tenantId)
+  await db.campanha.update({ where: { id }, data: { pausada } })
+  return { ok: true as const, pausada }
 }
 
 // Dispara a campanha: inicia todas as missões ainda paradas ('configurada') dela.

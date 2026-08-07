@@ -9,6 +9,7 @@ import {
   duplicarCampanha,
   editarCampanha,
   iniciarCampanha,
+  pausarCampanha,
   listarCampanhas,
   obterCampanha,
   obterRelatorioCampanha,
@@ -116,6 +117,13 @@ export async function campanhasRotas(app: FastifyInstance) {
   app.post('/campanhas/:id/iniciar', async (req) => {
     const { id } = paramsId.parse(req.params)
     return iniciarCampanha(id)
+  })
+
+  // PAUSAR / RETOMAR a campanha (a IA para/volta a enviar e responder nas missões dela)
+  app.post('/campanhas/:id/pausar', async (req) => {
+    const { id } = paramsId.parse(req.params)
+    const { pausada } = z.object({ pausada: z.boolean() }).parse(req.body ?? {})
+    return pausarCampanha(id, pausada)
   })
 
   // DUPLICA a definição (sem missões) — base pra teste A/B

@@ -194,6 +194,8 @@ export const api = {
       req<ResultadoDisparo>(`/campanhas/${id}/iniciar`, { method: 'POST', body: '{}' }),
     duplicar: (id: string) =>
       req<{ id: string; nome: string }>(`/campanhas/${id}/duplicar`, { method: 'POST', body: '{}' }),
+    pausar: (id: string, pausada: boolean) =>
+      req<{ ok: true; pausada: boolean }>(`/campanhas/${id}/pausar`, { method: 'POST', body: JSON.stringify({ pausada }) }),
     relatorio: (id: string) => req<RelatorioCampanha>(`/campanhas/${id}/relatorio`),
     sintetizar: (id: string) =>
       req<{ sintese: string }>(`/campanhas/${id}/relatorio/sintetizar`, {
