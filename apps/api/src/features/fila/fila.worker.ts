@@ -37,6 +37,14 @@ function agoraData(): string {
 
 const MAX_TENTATIVAS = 5 // depois disso o item vira dead-letter (status 'erro')
 
+// CHIP FORA DO AR — anti head-of-line: enquanto o chip está desconectado, o item não pode sair.
+// Em vez de segurar 'pendente' na FRENTE da fila (entupindo os 20 slots do pegarDevidos e starvando
+// itens novos de outros chips), a gente ADIA (joga pro fim) e, se estiver ABANDONADO há tempo
+// demais, dá baixa. ADIAR curto = quando o chip volta, sai rápido; ABANDONO longo = openers de dias
+// atrás não podem "ressuscitar" e virar spam.
+const ADIAR_CHIP_OFFLINE_MS = 5 * 60_000 // 5 min: reavalia o item quando (talvez) o chip voltar
+const ABANDONO_CHIP_OFFLINE_MS = 24 * 60 * 60_000 // 24h fora do ar → item abandonado, dead-letter
+
 let rodando = false
 
 async function tick() {
@@ -65,9 +73,19 @@ async function tick() {
       // PAUSA: missão pausada (humano assumiu) OU campanha pausada → segura o envio (fica pendente,
       // sai quando despausar). Preserva o histórico sem mandar besteira durante a edição/pausa.
       if (item.missao?.iaPausada || item.missao?.campanha?.pausada) continue
-      // CHIP FORA DO AR: não tenta enviar (senão queima as 5 tentativas em ~7min e vira
-      // dead-letter → resposta perdida). Deixa 'pendente' pra sair quando o chip voltar.
-      if (numero.statusConexao !== 'conectado') continue
+      // CHIP FORA DO AR: não tenta enviar (senão queima as 5 tentativas e vira dead-letter). Mas NÃO
+      // deixa 'pendente' na frente da fila — isso ENTUPIA tudo (vários itens de um chip caído são os
+      // mais antigos → pegarDevidos só via eles, pulava todos e nunca alcançava os novos de outros
+      // chips: foi o que travou o teste do vendedor — 28 openers de um chip offline seguravam a fila).
+      // Item velho demais → baixa; senão → adia pro fim (reavalia quando o chip voltar).
+      if (numero.statusConexao !== 'conectado') {
+        if (Date.now() - item.criadoEm.getTime() > ABANDONO_CHIP_OFFLINE_MS) {
+          await filaRepo.marcar(item.id, 'erro', true) // chip caído há tempo demais → abandonado
+        } else {
+          await filaRepo.adiar(item.id, new Date(Date.now() + ADIAR_CHIP_OFFLINE_MS))
+        }
+        continue
+      }
       // reset diário: virou o dia (no TZ) → zera o contador antes de checar o budget
       const hoje = agoraData()
       if (numero.enviadosData !== hoje) {

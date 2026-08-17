@@ -114,6 +114,14 @@ export const filaRepo = {
     })
   },
 
+  // ADIAR (anti head-of-line): empurra o agendamento pra frente SEM contar tentativa nem mudar
+  // status. Usado quando o chip está fora do ar — em vez de deixar o item 'pendente' na FRENTE da
+  // fila (onde `pegarDevidos` só via ele + os outros do mesmo chip caído, entupindo os 20 slots e
+  // starvando itens novos de OUTROS chips), joga pro fim pra reavaliar quando o chip voltar.
+  adiar(id: string, quando: Date) {
+    return db.filaEnvio.update({ where: { id }, data: { agendadoPara: quando } })
+  },
+
   // REAPER (no boot): itens presos em 'enviando' são de um processo que morreu (deploy/crash)
   // entre o claim e marcar('ok') — nada os re-seleciona. Volta pra 'pendente' pra não perder o
   // envio. ⚠️ SÓ recupera itens 'enviando' ANTIGOS (órfãos de verdade, > `idadeMinMs`): um envio
