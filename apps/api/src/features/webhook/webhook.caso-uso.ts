@@ -39,10 +39,18 @@ export async function processarWebhook(payload: unknown) {
     const numero = await webhookRepo.acharNumeroPorInstancia(evento.instancia)
     if (!numero) return // instância desconhecida
 
+    // ⚠️ @lid + SUPORTE REATIVO (número DEDICADO à IA): o WhatsApp mudou (privacidade "LinkedID") e
+    // passou a entregar mensagens de CLIENTE com `fromMe:true` erroneamente (o `key` não tem campo
+    // que diga quem enviou). Num número dedicado à IA (suporte reativo ON) NÃO há humano digitando,
+    // então uma msg `@lid` `fromMe:true` que NÃO é o nosso próprio envio (não gravada) É do cliente
+    // → reinterpreta como RECEBIDA. Assim a IA responde. (Decisão do Pedro: suporte reativo = da IA.)
+    // Nossos próprios envios do executor são filtrados logo abaixo pela idempotência (já gravados).
+    const reinterpretarInbound = evento.fromMe && !!evento.ehLid && numero.suporteReativo
+
     // fromMe: ou é a NOSSA saída (executor, já gravada) ou o OPERADOR digitou no celular
     // durante um handoff. A do operador precisa entrar no histórico como 'out' — senão, ao
     // devolver pra IA, ela não sabe que o humano já respondeu e pode repetir/contradizer.
-    if (evento.fromMe) {
+    if (evento.fromMe && !reinterpretarInbound) {
       if (
         !evento.providerMsgId ||
         (await webhookRepo.existeMensagem(numero.tenantId, evento.providerMsgId))
@@ -73,7 +81,8 @@ export async function processarWebhook(payload: unknown) {
     const contato = await webhookRepo.upsertContato(
       numero.tenantId,
       evento.telefone,
-      evento.nome,
+      // nas reinterpretadas (@lid fromMe=true) o pushName vem como o NOME DO CHIP, não do cliente → ignora
+      reinterpretarInbound ? undefined : evento.nome,
     )
     let missao = await missoesRepo.acharAtivaPorContatoNumero(
       numero.id,

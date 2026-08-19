@@ -19,6 +19,8 @@ export type EventoWa =
       conteudo: string
       providerMsgId: string
       fromMe: boolean
+      /** remetente veio como JID @lid (LinkedID, privacidade nova do WhatsApp) — `telefone` guarda o JID completo */
+      ehLid?: boolean
       /** presente quando a mensagem é uma nota de voz — a Aplicação transcreve */
       audio?: AudioRecebido
     }
@@ -118,7 +120,10 @@ export function normalizarEvento(payload: Payload): EventoWa {
     if (!jid || jid.endsWith('@g.us') || jid === 'status@broadcast') {
       return { tipo: 'ignorado' }
     }
-    const telefone = telefoneDoJid(jid)
+    // @lid (LinkedID): guarda o JID COMPLETO como "telefone" — o número puro do LID não é telefone
+    // e roteia errado no envio; respondendo no próprio "<lid>@lid" a Evolution entrega no destino certo.
+    const ehLid = jid.endsWith('@lid')
+    const telefone = ehLid ? jid : telefoneDoJid(jid)
     if (!telefone) return { tipo: 'ignorado' }
     const providerMsgId: string = data?.key?.id ?? ''
     const fromMe = Boolean(data?.key?.fromMe)
@@ -129,6 +134,7 @@ export function normalizarEvento(payload: Payload): EventoWa {
       nome: data?.pushName,
       providerMsgId,
       fromMe,
+      ehLid,
     }
 
     const conteudo = textoDaMensagem(data?.message)
