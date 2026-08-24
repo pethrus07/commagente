@@ -102,6 +102,12 @@ export const api = {
         method: 'POST',
         body: '{}',
       }),
+    desconectar: (id: string) =>
+      req<{ ok: true; status: 'desconectado' }>(`/numeros/${id}/desconectar`, {
+        method: 'POST',
+        body: '{}',
+      }),
+    remover: (id: string) => req<{ ok: true }>(`/numeros/${id}`, { method: 'DELETE' }),
     status: (id: string) =>
       req<{ status: Numero['statusConexao'] }>(`/numeros/${id}/status`),
     editar: (
@@ -196,6 +202,8 @@ export const api = {
       req<{ id: string; nome: string }>(`/campanhas/${id}/duplicar`, { method: 'POST', body: '{}' }),
     pausar: (id: string, pausada: boolean) =>
       req<{ ok: true; pausada: boolean }>(`/campanhas/${id}/pausar`, { method: 'POST', body: JSON.stringify({ pausada }) }),
+    excluir: (id: string) =>
+      req<{ ok: true; missoesExcluidas: number }>(`/campanhas/${id}`, { method: 'DELETE' }),
     relatorio: (id: string) => req<RelatorioCampanha>(`/campanhas/${id}/relatorio`),
     sintetizar: (id: string) =>
       req<{ sintese: string }>(`/campanhas/${id}/relatorio/sintetizar`, {

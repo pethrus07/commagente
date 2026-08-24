@@ -113,6 +113,35 @@ export async function conectarNumero(id: string): Promise<QrCode> {
   return wa.conectar(instancia) // { base64, codigo } — QR pra escanear
 }
 
+// DESCONECTA (logout) o chip: a sessão cai, o número FICA no sistema pra reconectar depois.
+// Uso: trocar de aparelho/chip, pausar a operação daquele número.
+export async function desconectarNumero(id: string) {
+  const numero = await numerosRepo.buscar(id)
+  if (!numero) throw new ErroHttp(404, 'Número não encontrado')
+  await conferirDono(numero.tenantId)
+  await wa.desconectar(numero.instanciaEvolution) // best-effort na ponte
+  await numerosRepo.atualizarStatus(id, 'desconectado')
+  return { ok: true as const, status: 'desconectado' as const }
+}
+
+// REMOVE o número do sistema. Bloqueia se ainda houver campanhas/missões (o número é FK
+// obrigatória delas) — o usuário exclui as campanhas antes. Também apaga a instância na ponte.
+export async function removerNumero(id: string) {
+  const numero = await numerosRepo.buscar(id)
+  if (!numero) throw new ErroHttp(404, 'Número não encontrado')
+  await conferirDono(numero.tenantId)
+  const { missoes, campanhas } = await numerosRepo.contarVinculos(id)
+  if (missoes > 0 || campanhas > 0) {
+    throw new ErroHttp(
+      409,
+      `Este número tem ${campanhas} campanha(s) e ${missoes} missão(ões). Exclua-as antes de remover o número.`,
+    )
+  }
+  await wa.removerInstancia(numero.instanciaEvolution) // best-effort na ponte
+  await numerosRepo.deletar(id)
+  return { ok: true as const }
+}
+
 export async function statusNumero(id: string) {
   const numero = await numerosRepo.buscar(id)
   if (!numero) throw new ErroHttp(404, 'Número não encontrado')

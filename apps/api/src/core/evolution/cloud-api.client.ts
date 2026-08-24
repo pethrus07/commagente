@@ -76,6 +76,14 @@ export const cloudApiClient: PortaWhatsApp = {
     return config.cloud.token && config.cloud.phoneNumberId ? 'conectado' : 'desconectado'
   },
 
+  async desconectar() {
+    /* no-op: o oficial não tem sessão/logout — o número vive na Meta, não em instância volátil */
+  },
+
+  async removerInstancia() {
+    /* no-op: remover o número do sistema não desfaz o cadastro na Meta */
+  },
+
   async configurarWebhook() {
     // O webhook do oficial é cadastrado UMA vez no painel da Meta (App > WhatsApp > Configuration:
     // Callback URL + Verify Token = CLOUD_API_VERIFY_TOKEN), não por chamada de API por número.

@@ -362,6 +362,10 @@ model Missao {
   fatos              Json? // fatos extraídos (memória)
   tokensEntrada      Int          @default(0) @map("tokens_entrada") // instrumentação de custo (acumulado; só super-admin vê)
   tokensSaida        Int          @default(0) @map("tokens_saida")
+  // FOLLOW-UP (insistência configurável): quando reengajar se o contato não responder, e quantos
+  // follow-ups já mandamos NESTA sequência de silêncio (zera quando o contato responde).
+  proximoFollowupEm  DateTime?    @map("proximo_followup_em")
+  followupsEnviados  Int          @default(0) @map("followups_enviados")
   iniciadaEm         DateTime?    @map("iniciada_em")
   concluidaEm        DateTime?    @map("concluida_em")
   criadoEm           DateTime     @default(now()) @map("criado_em")

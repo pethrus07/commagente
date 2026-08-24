@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { BarChart3, Copy, Dna, Download, FileText, Megaphone, Paperclip, Pause, Pencil, Play, Plus, Send, Sparkles, UserPlus, X } from 'lucide-react'
+import { BarChart3, Copy, Dna, Download, FileText, Megaphone, Paperclip, Pause, Pencil, Play, Plus, Send, Sparkles, Trash2, UserPlus, X } from 'lucide-react'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import { EditorDnaCamada } from '../components/EditorDnaCamada'
 import { EstiloControles } from '../components/EstiloControles'
 import { SeletorContatos } from '../components/SeletorContatos'
@@ -533,6 +534,7 @@ export function Campanhas() {
   const [add, setAdd] = useState<CampanhaResumo | null>(null)
   const [dnaCamp, setDnaCamp] = useState<CampanhaResumo | null>(null)
   const [relatorio, setRelatorio] = useState<CampanhaResumo | null>(null)
+  const [excluir, setExcluir] = useState<CampanhaResumo | null>(null)
 
   const [disparando, setDisparando] = useState<string | null>(null)
 
@@ -633,6 +635,7 @@ export function Campanhas() {
                   <Button variant="ghost" onClick={() => setDnaCamp(c)} title="Editar mídia e DNA da campanha"><Pencil className="h-4 w-4" /> Editar</Button>
                   <Button variant="ghost" onClick={() => pausar(c)} title={c.pausada ? 'Retomar — a IA volta a enviar/responder' : 'Pausar — a IA para de enviar/responder (histórico salvo)'}>{c.pausada ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}</Button>
                   <Button variant="ghost" onClick={() => duplicar(c)} title="Duplicar (teste A/B)"><Copy className="h-4 w-4" /></Button>
+                  <Button variant="ghost" onClick={() => setExcluir(c)} title="Excluir campanha" className="text-rose-400 hover:text-rose-300"><Trash2 className="h-4 w-4" /></Button>
                 </div>
               </Card>
             )
@@ -644,6 +647,28 @@ export function Campanhas() {
       {add && <AddContatosModal campanha={add} onFechar={(a) => { setAdd(null); if (a) carregar() }} />}
       {dnaCamp && <EditarCampanhaModal campanha={dnaCamp} onFechar={() => setDnaCamp(null)} />}
       {relatorio && <RelatorioModal campanha={relatorio} onFechar={() => setRelatorio(null)} />}
+      {excluir && (
+        <ConfirmDialog
+          titulo={`Excluir "${excluir.nome}"?`}
+          mensagem={
+            <>
+              Isso apaga a campanha e as <b>{excluir.total}</b> missão(ões)/conversa(s) dela. <b>Não dá pra desfazer.</b>
+            </>
+          }
+          confirmarLabel="Excluir campanha"
+          onConfirmar={async () => {
+            try {
+              const r = await api.campanhas.excluir(excluir.id)
+              toast(`Campanha excluída (${r.missoesExcluidas} missões).`, 'ok')
+              setExcluir(null)
+              carregar()
+            } catch (e) {
+              toast((e as Error).message, 'erro')
+            }
+          }}
+          onFechar={() => setExcluir(null)}
+        />
+      )}
     </div>
   )
 }

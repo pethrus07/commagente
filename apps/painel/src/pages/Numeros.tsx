@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Plus, QrCode, SlidersHorizontal, Smartphone, X } from 'lucide-react'
+import { Plus, PowerOff, QrCode, SlidersHorizontal, Smartphone, Trash2, X } from 'lucide-react'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import { api } from '../lib/api'
 import { toast } from '../lib/toast'
 import type { Numero, SaudeNumero } from '../lib/types'
@@ -271,6 +272,8 @@ export function Numeros() {
   const [salvando, setSalvando] = useState(false)
   const [conectar, setConectar] = useState<Numero | null>(null)
   const [configurar, setConfigurar] = useState<Numero | null>(null)
+  const [desconectar, setDesconectar] = useState<Numero | null>(null)
+  const [remover, setRemover] = useState<Numero | null>(null)
 
   const carregar = async () => {
     try {
@@ -390,6 +393,14 @@ export function Numeros() {
                   <Button variant="ghost" onClick={() => setConfigurar(n)} title="Anti-bloqueio">
                     <SlidersHorizontal className="h-4 w-4" />
                   </Button>
+                  {n.statusConexao !== 'desconectado' && (
+                    <Button variant="ghost" onClick={() => setDesconectar(n)} title="Desconectar (logout do chip)">
+                      <PowerOff className="h-4 w-4" />
+                    </Button>
+                  )}
+                  <Button variant="ghost" onClick={() => setRemover(n)} title="Remover número do sistema" className="text-rose-400 hover:text-rose-300">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </Card>
             )
@@ -414,6 +425,44 @@ export function Numeros() {
             setConfigurar(null)
             if (salvou) carregar()
           }}
+        />
+      )}
+
+      {desconectar && (
+        <ConfirmDialog
+          titulo={`Desconectar ${desconectar.apelido || desconectar.telefone}?`}
+          mensagem={<>O chip faz logout e para de enviar/receber. O número <b>continua</b> no sistema — dá pra reconectar por QR depois.</>}
+          confirmarLabel="Desconectar"
+          onConfirmar={async () => {
+            try {
+              await api.numeros.desconectar(desconectar.id)
+              toast('Número desconectado.', 'ok')
+              setDesconectar(null)
+              carregar()
+            } catch (e) {
+              toast((e as Error).message, 'erro')
+            }
+          }}
+          onFechar={() => setDesconectar(null)}
+        />
+      )}
+
+      {remover && (
+        <ConfirmDialog
+          titulo={`Remover ${remover.apelido || remover.telefone}?`}
+          mensagem={<>Tira o número do sistema e apaga a instância na ponte. Se ele tiver campanhas/missões, você precisa excluí-las antes. <b>Não dá pra desfazer.</b></>}
+          confirmarLabel="Remover número"
+          onConfirmar={async () => {
+            try {
+              await api.numeros.remover(remover.id)
+              toast('Número removido.', 'ok')
+              setRemover(null)
+              carregar()
+            } catch (e) {
+              toast((e as Error).message, 'erro')
+            }
+          }}
+          onFechar={() => setRemover(null)}
         />
       )}
     </div>

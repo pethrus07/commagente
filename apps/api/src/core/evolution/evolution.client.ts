@@ -105,6 +105,26 @@ export const evolutionClient: PortaWhatsApp = {
     return mapearEstado(r.instance?.state)
   },
 
+  async desconectar(instancia) {
+    // v2: DELETE /instance/logout/{instance} — derruba a sessão (o chip cai), a instância fica.
+    // tolerante: se já estiver deslogada/ausente (404), o objetivo já está cumprido.
+    await req('DELETE', `/instance/logout/${instancia}`).catch((e) => {
+      const msg = (e as Error)?.message ?? ''
+      if (!/→ 40[0-9]/.test(msg)) throw e
+    })
+  },
+
+  async removerInstancia(instancia) {
+    // v2: DELETE /instance/delete/{instance} — apaga a instância de vez. Faz logout antes (se
+    // conectada, o delete pode recusar). Tudo best-effort: remover o número não pode travar por
+    // causa da ponte.
+    await this.desconectar(instancia).catch(() => {})
+    await req('DELETE', `/instance/delete/${instancia}`).catch((e) => {
+      const msg = (e as Error)?.message ?? ''
+      if (!/→ 40[0-9]/.test(msg)) throw e
+    })
+  },
+
   async configurarWebhook(instancia, url) {
     // v2: POST /webhook/set/{instance} com objeto "webhook" aninhado.
     await req('POST', `/webhook/set/${instancia}`, {

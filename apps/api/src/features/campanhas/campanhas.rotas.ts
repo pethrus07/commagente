@@ -8,6 +8,7 @@ import {
   criarCampanha,
   duplicarCampanha,
   editarCampanha,
+  excluirCampanha,
   iniciarCampanha,
   pausarCampanha,
   listarCampanhas,
@@ -131,5 +132,11 @@ export async function campanhasRotas(app: FastifyInstance) {
     const { id } = paramsId.parse(req.params)
     reply.code(201)
     return duplicarCampanha(id)
+  })
+
+  // EXCLUI a campanha e tudo que pende dela (missões/mensagens/fila) — a UI confirma antes
+  app.delete('/campanhas/:id', async (req) => {
+    const { id } = paramsId.parse(req.params)
+    return excluirCampanha(id)
   })
 }

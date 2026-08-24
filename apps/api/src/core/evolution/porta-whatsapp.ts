@@ -27,6 +27,10 @@ export interface PortaWhatsApp {
   conectar(instancia: string): Promise<QrCode>
   /** estado atual da sessão */
   statusConexao(instancia: string): Promise<StatusConexaoWa>
+  /** desconecta (logout) a sessão — o chip cai, mas a instância continua pra reconectar depois */
+  desconectar(instancia: string): Promise<void>
+  /** remove a instância/sessão de vez na ponte (ao excluir o número do sistema) */
+  removerInstancia(instancia: string): Promise<void>
   /** aponta o webhook de eventos (mensagens recebidas, status) pra nossa API */
   configurarWebhook(instancia: string, url: string): Promise<void>
   /** envia texto; retorna o id da mensagem no provider */

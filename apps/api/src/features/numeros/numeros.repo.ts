@@ -48,6 +48,20 @@ export const numerosRepo = {
     return db.numeroWhatsapp.update({ where: { id }, data })
   },
 
+  // remove o número do sistema (só quando não tem vínculos — checado no caso-uso)
+  deletar(id: string) {
+    return db.numeroWhatsapp.delete({ where: { id } })
+  },
+
+  // vínculos que impedem a remoção segura (o número é FK obrigatória em missão/campanha)
+  async contarVinculos(numeroId: string): Promise<{ missoes: number; campanhas: number }> {
+    const [missoes, campanhas] = await Promise.all([
+      db.missao.count({ where: { numeroId } }),
+      db.campanha.count({ where: { numeroId } }),
+    ])
+    return { missoes, campanhas }
+  },
+
   // quantas conversas o número tem ativas sob a IA (na fila + em conversa)
   contarAtivas(numeroId: string) {
     return db.missao.count({

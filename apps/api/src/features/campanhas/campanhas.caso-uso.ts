@@ -72,6 +72,28 @@ export async function pausarCampanha(id: string, pausada: boolean) {
   return { ok: true as const, pausada }
 }
 
+// EXCLUI a campanha e TUDO que pende dela (missões, mensagens, fila, eventos), numa transação.
+// Não há cascade no schema, então a ordem importa (filhos antes dos pais). Contatos NÃO são
+// apagados (são compartilhados); o conhecimento aprendido é só DESVINCULADO da missão (preserva
+// a base). Ação destrutiva → a UI confirma antes.
+export async function excluirCampanha(id: string) {
+  const campanha = await db.campanha.findUnique({ where: { id }, select: { tenantId: true } })
+  if (!campanha) throw new ErroHttp(404, 'Campanha não encontrada')
+  await conferirDono(campanha.tenantId)
+  const missoes = await db.missao.findMany({ where: { campanhaId: id }, select: { id: true } })
+  const missaoIds = missoes.map((m) => m.id)
+  await db.$transaction([
+    db.mensagem.deleteMany({ where: { missaoId: { in: missaoIds } } }),
+    db.filaEnvio.deleteMany({ where: { missaoId: { in: missaoIds } } }),
+    db.evento.deleteMany({ where: { missaoId: { in: missaoIds } } }),
+    // conhecimento aprendido nessas missões: preserva o conteúdo, só solta a proveniência
+    db.conhecimento.updateMany({ where: { missaoId: { in: missaoIds } }, data: { missaoId: null } }),
+    db.missao.deleteMany({ where: { campanhaId: id } }),
+    db.campanha.delete({ where: { id } }),
+  ])
+  return { ok: true as const, missoesExcluidas: missaoIds.length }
+}
+
 // Dispara a campanha: inicia todas as missões ainda paradas ('configurada') dela.
 // Reusa o início em lote (guardas anti-ban + relatório do que iniciou/pulou).
 export async function iniciarCampanha(id: string) {

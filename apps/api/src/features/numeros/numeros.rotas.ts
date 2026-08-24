@@ -5,8 +5,10 @@ import {
   atualizarConfigNumero,
   cadastrarNumero,
   conectarNumero,
+  desconectarNumero,
   enviarAvisoTeste,
   listarNumeros,
+  removerNumero,
   statusNumero,
 } from './numeros.caso-uso'
 
@@ -76,5 +78,17 @@ export async function numerosRotas(app: FastifyInstance) {
   app.post('/numeros/:id/testar-aviso', async (req) => {
     const { id } = paramsId.parse(req.params)
     return enviarAvisoTeste(id)
+  })
+
+  // DESCONECTAR (logout): a sessão cai, o número fica pra reconectar
+  app.post('/numeros/:id/desconectar', async (req) => {
+    const { id } = paramsId.parse(req.params)
+    return desconectarNumero(id)
+  })
+
+  // REMOVER o número do sistema (bloqueia se tiver campanhas/missões) — a UI confirma antes
+  app.delete('/numeros/:id', async (req) => {
+    const { id } = paramsId.parse(req.params)
+    return removerNumero(id)
   })
 }
