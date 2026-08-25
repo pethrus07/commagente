@@ -11,11 +11,22 @@ import { ESTILO_PADRAO } from '../lib/estilos-conversa'
 import { MODELOS, type ModeloMissao } from '../lib/modelos-missao'
 import { TIPO_INFO, TIPOS_MISSAO, descreverDisparo, rotuloNumero } from '../lib/estados'
 import { toast } from '../lib/toast'
-import type { CampanhaResumo, EstiloConversa, Numero, RelatorioCampanha } from '../lib/types'
+import type { CampanhaResumo, EstadoMissao, EstiloConversa, Numero, RelatorioCampanha } from '../lib/types'
 import { Button, Card, EmptyState, Spinner, cn, tempoRelativo } from '../lib/ui'
 
 const campo =
   'w-full rounded-xl border border-line bg-surface2 px-4 py-2 text-sm text-content placeholder:text-subtle focus:border-indigo-500/50 focus:outline-none'
+
+// Indicadores de andamento no card (tela 03 do doc FactoryHub): agrupa os estados das missões em
+// "situações" legíveis. Clicar abre o relatório (drill-down contato a contato, sem abrir um por um).
+const INDICADORES: { chave: string; label: string; estados: EstadoMissao[]; cor: string }[] = [
+  { chave: 'conversa', label: 'em conversa', estados: ['na_fila', 'em_conversa'], cor: 'bg-indigo-400' },
+  { chave: 'escalada', label: 'escaladas', estados: ['escalada'], cor: 'bg-amber-400' },
+  { chave: 'concluida', label: 'concluídas', estados: ['concluida'], cor: 'bg-emerald-400' },
+  { chave: 'sem_resposta', label: 'sem resposta', estados: ['sem_resposta'], cor: 'bg-rose-400' },
+]
+const somarEstados = (pe: Partial<Record<EstadoMissao, number>> | undefined, estados: EstadoMissao[]) =>
+  estados.reduce((acc, e) => acc + (pe?.[e] ?? 0), 0)
 
 // Fluxo espelhado no assistente de missão: Modelo (ponto de partida) → Ajustar → Contatos.
 const PASSOS_CAMPANHA = ['Modelo', 'Ajustar', 'Contatos'] as const
@@ -623,6 +634,25 @@ export function Campanhas() {
                   <span className="text-emerald-300"><b className="tabular-nums">{c.cumpridas}</b> <span className="text-emerald-300/60">cumpridas</span></span>
                   <span className="ml-auto text-xs text-muted tabular-nums">{taxa}%</span>
                 </div>
+                {/* indicadores de andamento por situação (tela 03) — clicar abre o relatório */}
+                {(() => {
+                  const chips = INDICADORES.map((i) => ({ ...i, n: somarEstados(c.porEstado, i.estados) })).filter((i) => i.n > 0)
+                  return chips.length > 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => setRelatorio(c)}
+                      title="Ver detalhe (relatório contato a contato)"
+                      className="mt-3 flex w-full flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg bg-surface2/60 px-3 py-2 text-xs transition hover:bg-surface2"
+                    >
+                      {chips.map((i) => (
+                        <span key={i.chave} className="inline-flex items-center gap-1.5 text-muted">
+                          <span className={cn('h-2 w-2 rounded-full', i.cor)} />
+                          <b className="tabular-nums text-content">{i.n}</b> {i.label}
+                        </span>
+                      ))}
+                    </button>
+                  ) : null
+                })()}
                 {c.pendentes > 0 && (
                   <div className="mt-3 flex items-center gap-2 rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
                     <span className="flex-1"><b className="tabular-nums">{c.pendentes}</b> aguardando disparo</span>

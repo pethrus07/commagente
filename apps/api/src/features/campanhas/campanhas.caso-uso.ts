@@ -25,27 +25,30 @@ type DefCampanha = {
 
 export async function listarCampanhas() {
   const tenantId = await tenantAtual()
-  const [campanhas, concluidas, pendentes] = await Promise.all([
+  const [campanhas, porEstado] = await Promise.all([
     db.campanha.findMany({
       where: { tenantId },
       orderBy: { criadoEm: 'desc' },
       include: { _count: { select: { missoes: true } } },
     }),
+    // 1 groupBy por (campanha, estado) → breakdown completo p/ os indicadores do card (tela 03)
     db.missao.groupBy({
-      by: ['campanhaId'],
-      where: { tenantId, estado: 'concluida', campanhaId: { not: null } },
-      _count: { _all: true },
-    }),
-    // missões ainda paradas em 'configurada' (nunca disparadas) — pra oferecer "Disparar"
-    db.missao.groupBy({
-      by: ['campanhaId'],
-      where: { tenantId, estado: 'configurada', campanhaId: { not: null } },
+      by: ['campanhaId', 'estado'],
+      where: { tenantId, campanhaId: { not: null } },
       _count: { _all: true },
     }),
   ])
-  const mapaConcl = new Map(concluidas.map((g) => [g.campanhaId, g._count._all]))
-  const mapaPend = new Map(pendentes.map((g) => [g.campanhaId, g._count._all]))
-  return campanhas.map((c) => ({
+  // campanhaId → { estado: quantidade }
+  const mapaEstados = new Map<string, Record<string, number>>()
+  for (const g of porEstado) {
+    if (!g.campanhaId) continue
+    const atual = mapaEstados.get(g.campanhaId) ?? {}
+    atual[g.estado] = g._count._all
+    mapaEstados.set(g.campanhaId, atual)
+  }
+  return campanhas.map((c) => {
+    const estados = mapaEstados.get(c.id) ?? {}
+    return {
     id: c.id,
     nome: c.nome,
     tipo: c.tipo,
@@ -53,13 +56,15 @@ export async function listarCampanhas() {
     numeroId: c.numeroId,
     criadoEm: c.criadoEm,
     total: c._count.missoes,
-    cumpridas: mapaConcl.get(c.id) ?? 0,
-    pendentes: mapaPend.get(c.id) ?? 0,
+    cumpridas: estados.concluida ?? 0,
+    pendentes: estados.configurada ?? 0, // ainda paradas ('configurada') → oferece "Disparar"
+    porEstado: estados, // breakdown por estado p/ os indicadores dinâmicos do card
     pausada: c.pausada,
     // flags p/ o card refletir as camadas configuradas (#9): nº de categorias de DNA + nº de mídias
     dnaAjustes: Object.keys(lerCamadaDna(c.dna)).length,
     midias: c.midiaIds.length,
-  }))
+    }
+  })
 }
 
 // Pausa/retoma a campanha inteira: enquanto pausada, a IA não envia nem responde nas missões dela
