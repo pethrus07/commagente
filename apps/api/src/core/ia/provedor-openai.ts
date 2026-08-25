@@ -82,6 +82,17 @@ export const provedorOpenai: ProvedorIA = {
       ctx.midiasDisponiveis && ctx.midiasDisponiveis.length > 0
         ? `MÍDIAS QUE VOCÊ PODE ENVIAR (catálogo, tabela de preço, PDF etc. — envie preenchendo "enviar_midia" com o id, SÓ quando o lead demonstrar interesse claro ou pedir; nunca logo de cara e nunca repita a mesma pro mesmo contato):\n${ctx.midiasDisponiveis.map((m) => `- id ${m.id}: ${m.nome}`).join('\n')}`
         : ''
+    // MODO ROTEIRO (§FactoryHub): o sistema já escolheu o passo; a IA só o executa com a própria voz.
+    // Vai ao FIM do prompt (recência = máxima saliência) — é o comando que rege ESTE turno.
+    const roteiro = ctx.roteiro?.instrucao
+      ? [
+          '━━━ ROTEIRO GUIADO — seu COMANDO PRINCIPAL neste turno ━━━',
+          'Esta conversa segue um ROTEIRO definido pela empresa. Você NÃO escolhe a próxima pergunta: o sistema já escolheu. Sua função é conduzir SÓ o passo abaixo, com a sua voz e o seu estilo, e extrair o que for pedido.',
+          `PASSO ATUAL → ${ctx.roteiro.instrucao}`,
+          'Faça SOMENTE este passo agora — não adiante os próximos passos, não repita os anteriores e não invente perguntas fora do roteiro.',
+          'Se o cliente DESVIAR (dúvida, pergunta ou objeção), responda com naturalidade usando o conhecimento da empresa acima e, na MESMA mensagem, retome educadamente este passo. Nunca pule o passo por causa do desvio e nunca reinicie o roteiro do zero.',
+        ].join('\n')
+      : ''
     // Bloco de informações AUTORIZADAS (guardrail). Fontes autorizadas = estas + DNA + base de
     // conhecimento. Sem informações por-missão, mas COM DNA/base, elas ainda são fonte válida —
     // não negue tudo (senão a IA se recusaria a usar o DNA que o cliente preencheu).
@@ -104,8 +115,9 @@ export const provedorOpenai: ProvedorIA = {
       midias,
       informacoes,
       'REGRA CRÍTICA (anti-alucinação): só afirme informações que estejam EXPLICITAMENTE nas INFORMAÇÕES AUTORIZADAS, na BASE DE CONHECIMENTO ou no DNA DA EMPRESA acima. Para QUALQUER detalhe que não esteja lá — preço, política de quartos, tamanhos/medidas, formas de pagamento, datas específicas, disponibilidade, qualquer condição operacional — NÃO invente e NÃO improvise. O PADRÃO nesses casos é RESPONDER de forma natural que você vai confirmar esse detalhe com a equipe e já retorna, e SEGUIR conduzindo a conversa rumo ao objetivo (precisa_humano=FALSE). Use precisa_humano=true SOMENTE quando um humano realmente precisa agir/decidir — ex.: negociar preço ou condição, reclamação, pedido fora do escopo da missão — NÃO para toda pergunta cuja resposta você não tem. Nunca pause a missão só porque falta um dado informativo; apenas diga que confirma e continue.',
+      roteiro,
       'Responda SOMENTE em JSON válido, sem markdown, no formato exato:',
-      `{"resposta": "texto curto e humano no estilo pedido (WhatsApp); se o COMO ESCREVER pedir várias mensagens, coloque cada uma numa linha separada com \\n dentro deste mesmo campo", "novo_estado": "${ESTADOS_SAIDA}", "categoria": "string ou null", "fatos_novos": {objeto com o que você descobriu SOBRE ESTE LEAD, ou {}}, "precisa_humano": true|false, "motivo_escala": "string ou null", "aprendizado_sugerido": "uma lição GERAL e reutilizável p/ atendimentos futuros da empresa (NÃO dados de um lead), ou null", "enviar_midia": "id de uma MÍDIA da lista acima pra mandar AGORA (só quando fizer sentido), ou null", "resultado": "SÓ ao concluir a missão (novo_estado=concluida): resumo curto do desfecho (ex.: 'reunião agendada quinta 15h', 'pagamento confirmado'); senão null"}`,
+      `{"resposta": "texto curto e humano no estilo pedido (WhatsApp); se o COMO ESCREVER pedir várias mensagens, coloque cada uma numa linha separada com \\n dentro deste mesmo campo", "novo_estado": "${ESTADOS_SAIDA}", "categoria": "string ou null", "fatos_novos": {objeto com o que você descobriu SOBRE ESTE LEAD, ou {}}, "precisa_humano": true|false, "motivo_escala": "string ou null", "aprendizado_sugerido": "uma lição GERAL e reutilizável p/ atendimentos futuros da empresa (NÃO dados de um lead), ou null", "enviar_midia": "id de uma MÍDIA da lista acima pra mandar AGORA (só quando fizer sentido), ou null", "opcao_roteiro": "no ROTEIRO GUIADO, quando o passo atual for de MENU, o rótulo EXATO que o cliente escolheu; senão null", "resultado": "SÓ ao concluir a missão (novo_estado=concluida): resumo curto do desfecho (ex.: 'reunião agendada quinta 15h', 'pagamento confirmado'); senão null"}`,
       'Conduza a conversa rumo ao objetivo, com naturalidade. Se o lead pedir algo que você não pode resolver, use precisa_humano=true.',
       'aprendizado_sugerido: só preencha se surgiu algo claramente generalizável e útil p/ a empresa (ex.: uma objeção comum e como contorná-la); senão null. Nunca invente.',
     ]

@@ -19,6 +19,25 @@ import {
 } from './campanhas.caso-uso'
 
 const tipoMissao = z.enum(['vender', 'qualificar', 'orcar', 'cobrar', 'suporte', 'outro'])
+
+// MODO ROTEIRO (§FactoryHub): sequência guiada. v1 = passos lineares + menu de 1 nível.
+const passoPerguntaSchema = z.object({
+  tipo: z.literal('pergunta'),
+  texto: z.string().min(1),
+  campo: z.string().optional(),
+})
+const passoMenuSchema = z.object({
+  tipo: z.literal('menu'),
+  texto: z.string().min(1),
+  opcoes: z
+    .array(z.object({ rotulo: z.string().min(1), passos: z.array(passoPerguntaSchema).default([]) }))
+    .min(1),
+})
+const roteiroSchema = z.object({
+  aberturaFixa: z.string().optional(),
+  resumoFinal: z.boolean().optional(),
+  passos: z.array(z.union([passoPerguntaSchema, passoMenuSchema])).default([]),
+})
 const contatos = z
   .array(z.object({ telefone: z.string().min(8), nome: z.string().optional() }))
   .min(1)
@@ -43,6 +62,7 @@ const corpoCriar = z
     midiaIds: z.array(z.string().uuid()).optional(), // biblioteca curada (§9 Fase A)
     dna: dnaCamadaSchema.optional(), // camada de DNA da campanha (§9 Fase B)
     estilo: estiloSchema.optional(),
+    roteiro: roteiroSchema.nullish(), // sequência guiada (§FactoryHub); null/vazio = conversa livre
     ...alvo,
   })
   .refine(temAlvo, msgAlvo)
@@ -79,6 +99,7 @@ export async function campanhasRotas(app: FastifyInstance) {
         informacoes: z.string().nullish(),
         estilo: estiloSchema.optional(),
         dna: dnaCamadaSchema.optional(),
+        roteiro: roteiroSchema.nullish(),
         midiaIds: z.array(z.string().uuid()).optional(),
       })
       .parse(req.body ?? {})

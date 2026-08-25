@@ -5,6 +5,7 @@ import type { ContextoIA } from '../../core/ia/porta-ia'
 import { compilarDnaContato } from '../contatos/contato.dna'
 import { compilarDnaComCamadas } from '../tenant/tenant.dna'
 import { lerEstilo, regrasDeEstilo, type EstiloConversa } from '../tenant/tenant.estilo'
+import { lerRoteiro, lerEstado, instrucaoRoteiro } from '../roteiro/roteiro.dominio'
 
 const ULTIMAS = 8 // nº de mensagens recentes no contexto (o resto vira resumo rolante)
 
@@ -102,7 +103,9 @@ type MissaoComMsgs = {
   // identidade (voz) + estilo (fallback) + DNA (conhecimento categorizado) da IA
   tenant?: { persona: string | null; estilo?: unknown; dna?: unknown } | null
   // camada de DNA da campanha (#9 Fase B): sobrescreve categorias do tenant (Substituir/Combinar)
-  campanha?: { dna?: unknown } | null
+  // + roteiro (§FactoryHub): sequência guiada herdada AO VIVO pela missão
+  campanha?: { dna?: unknown; roteiro?: unknown } | null
+  roteiroEstado?: unknown // progresso desta missão no roteiro (null = fora de roteiro / conversa livre)
   mensagens: { direcao: Direcao; conteudo: string }[]
 }
 
@@ -142,6 +145,10 @@ export function montarFicha(
   // DNA hierárquico (#9): tenant = base; campanha e missão são camadas em ordem CRESCENTE de
   // prioridade (a missão vence a campanha, que vence o tenant). Substituir/Combinar por categoria.
   const dna = compilarDnaComCamadas(missao.tenant?.dna, missao.campanha?.dna, missao.dna)
+  // MODO ROTEIRO (§FactoryHub): se a campanha tem roteiro, resolve o passo atual desta missão e
+  // injeta a instrução no contexto. Sem roteiro → null (conversa livre, comportamento intocado).
+  const roteiro = lerRoteiro(missao.campanha?.roteiro)
+  const roteiroInstrucao = roteiro ? instrucaoRoteiro(roteiro, lerEstado(missao.roteiroEstado)) : null
   return {
     persona: montarPersona({
       tipo: missao.tipo,
@@ -175,6 +182,7 @@ export function montarFicha(
     dnaContato: compilarDnaContato(missao.contato?.dna),
     conhecimento: conhecimento ?? null,
     dnaConhecimento: dna.conhecimento,
+    roteiro: roteiroInstrucao,
     midiasDisponiveis: midiasDisponiveis ?? null,
     ultimasMensagens: missao.mensagens
       .slice(-ULTIMAS)

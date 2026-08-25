@@ -16,6 +16,14 @@ export const conversaRepo = {
     return db.missao.update({ where: { id }, data: { resumo } })
   },
 
+  // MODO ROTEIRO: persiste o progresso da missão na sequência ({ ramo, idx })
+  salvarRoteiroEstado(id: string, estado: { ramo: string | null; idx: number }) {
+    return db.missao.update({
+      where: { id },
+      data: { roteiroEstado: estado as Prisma.InputJsonValue },
+    })
+  },
+
   // co-pilot: guarda/limpa a resposta rascunhada pela IA (aguardando aprovação)
   salvarRascunho(id: string, rascunho: string) {
     return db.missao.update({ where: { id }, data: { rascunho } })

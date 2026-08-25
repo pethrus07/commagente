@@ -362,10 +362,9 @@ model Missao {
   fatos              Json? // fatos extraídos (memória)
   tokensEntrada      Int          @default(0) @map("tokens_entrada") // instrumentação de custo (acumulado; só super-admin vê)
   tokensSaida        Int          @default(0) @map("tokens_saida")
-  // FOLLOW-UP (insistência configurável): quando reengajar se o contato não responder, e quantos
-  // follow-ups já mandamos NESTA sequência de silêncio (zera quando o contato responde).
-  proximoFollowupEm  DateTime?    @map("proximo_followup_em")
-  followupsEnviados  Int          @default(0) @map("followups_enviados")
+  // MODO ROTEIRO: progresso da missão na sequência guiada da campanha (§FactoryHub). null = fora de
+  // roteiro (conversa livre). { ramo: string|null, idx: number } — ramo = opção de menu escolhida.
+  roteiroEstado      Json?        @map("roteiro_estado")
   iniciadaEm         DateTime?    @map("iniciada_em")
   concluidaEm        DateTime?    @map("concluida_em")
   criadoEm           DateTime     @default(now()) @map("criado_em")
@@ -401,6 +400,7 @@ model Campanha {
   dna               Json? // camada de DNA da campanha (#9 Fase B): {categoria: {modo, texto}} sobrescreve o tenant
   pausada           Boolean  @default(false) // pausa a campanha: a IA não envia nem responde nas missões dela (histórico preservado)
   estilo            Json? // perfil de conversa da campanha (herdado por cada missão dela)
+  roteiro           Json? // MODO ROTEIRO (§FactoryHub): sequência guiada { aberturaFixa?, resumoFinal?, passos[] }; herdado AO VIVO por cada missão (igual ao DNA/mídia). null/vazio = conversa livre
   criadoEm          DateTime @default(now()) @map("criado_em")
 
   tenant  Tenant         @relation(fields: [tenantId], references: [id])

@@ -1,6 +1,6 @@
 // ⚙️ Aplicação — campanhas: a MESMA definição de missão disparada/agrupada p/ N contatos,
 // com poder de adicionar mais contatos depois (reusa criarMissaoEmLote).
-import type { Prisma } from '@prisma/client'
+import { Prisma } from '@prisma/client' // valor+tipo: usamos Prisma.DbNull (limpar roteiro) além dos tipos
 import { conferirDono, tenantAtual } from '../../core/contexto'
 import { db } from '../../core/db'
 import { ErroHttp } from '../../core/erros'
@@ -21,6 +21,7 @@ type DefCampanha = {
   midiaIds?: string[] // biblioteca curada da campanha (herdada por cada missão dela)
   dna?: unknown // camada de DNA da campanha (#9 Fase B): {categoria:{modo,texto}}; validado na rota
   estilo?: unknown // perfil de conversa da campanha (validado na rota); herdado por cada missão
+  roteiro?: unknown // sequência guiada (§FactoryHub); validada na rota; herdada AO VIVO por cada missão
 }
 
 export async function listarCampanhas() {
@@ -135,6 +136,7 @@ export async function criarCampanha(input: DefCampanha & Alvo) {
       midiaIds: input.midiaIds ?? [],
       dna: (input.dna ?? undefined) as Prisma.InputJsonValue | undefined,
       estilo: (input.estilo ?? undefined) as Prisma.InputJsonValue | undefined,
+      roteiro: (input.roteiro ?? undefined) as Prisma.InputJsonValue | undefined,
     },
   })
   // se o disparo resolver a audiência pra vazio (ex.: tag/lista só com opt-out), não
@@ -180,6 +182,7 @@ export async function duplicarCampanha(id: string) {
       midiaIds: orig.midiaIds,
       dna: (orig.dna ?? undefined) as Prisma.InputJsonValue | undefined,
       estilo: (orig.estilo ?? undefined) as Prisma.InputJsonValue | undefined,
+      roteiro: (orig.roteiro ?? undefined) as Prisma.InputJsonValue | undefined,
     },
     select: { id: true, nome: true },
   })
@@ -202,6 +205,7 @@ export async function editarCampanha(
     informacoes?: string | null
     estilo?: unknown
     dna?: unknown
+    roteiro?: unknown
     midiaIds?: string[]
   },
 ) {
@@ -219,6 +223,9 @@ export async function editarCampanha(
   if (patch.informacoes !== undefined) data.informacoes = patch.informacoes
   if (patch.estilo !== undefined) data.estilo = (patch.estilo ?? undefined) as Prisma.InputJsonValue | undefined
   if (patch.dna !== undefined) data.dna = (patch.dna ?? undefined) as Prisma.InputJsonValue | undefined
+  // roteiro: quando o painel troca "roteiro → conversa livre", manda null → limpa a coluna (DbNull)
+  if (patch.roteiro !== undefined)
+    data.roteiro = (patch.roteiro === null ? Prisma.DbNull : patch.roteiro) as Prisma.CampanhaUpdateInput['roteiro']
   if (patch.midiaIds !== undefined) data.midiaIds = patch.midiaIds
   return db.campanha.update({ where: { id }, data, select: { id: true } })
 }

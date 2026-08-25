@@ -41,6 +41,12 @@ export interface ContextoIA {
    * As Regras de Negócio do DNA entram na `persona` como regra inviolável, não aqui.
    */
   dnaConhecimento?: string | null
+  /**
+   * MODO ROTEIRO (§FactoryHub) — o passo ATUAL da sequência guiada, já compilado em texto.
+   * `instrucao` = o que fazer neste turno; `menu` = rótulos quando o passo ramifica.
+   * null = missão fora de roteiro (conversa livre) OU roteiro concluído sem resumo.
+   */
+  roteiro?: { instrucao: string; menu?: string[] } | null
   ultimasMensagens: { direcao: 'in' | 'out'; conteudo: string }[]
 }
 
@@ -84,6 +90,8 @@ export const SaidaIASchema = z.object({
   aprendizado_sugerido: z.string().nullish(),
   /** id de uma mídia da biblioteca a enviar AGORA (catálogo/tabela) — só quando fizer sentido */
   enviar_midia: z.string().nullish(),
+  /** MODO ROTEIRO: num passo de MENU, o rótulo que o cliente escolheu (senão null) */
+  opcao_roteiro: z.string().nullish(),
   /** desfecho da missão — preencher SÓ ao concluir (novo_estado=concluida) */
   resultado: z.string().nullish(),
 })

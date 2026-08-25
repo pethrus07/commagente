@@ -158,6 +158,7 @@ export const api = {
       midiaIds?: string[] // biblioteca curada da campanha (herdada por cada missão)
       dna?: import('./dna').CamadaDna // camada de DNA da campanha (§9 Fase B)
       estilo?: EstiloConversa // perfil de conversa da campanha (herdado por cada missão)
+      roteiro?: import('./roteiro').Roteiro | null // sequência guiada (§FactoryHub); null = livre
       contatos?: { telefone: string; nome?: string }[]
       tagId?: string // dispara pra TODOS os contatos da tag (resolvido no servidor)
     }) => req<{ campanha: { id: string }; criadas: number }>('/campanhas', { method: 'POST', body: JSON.stringify(data) }),
@@ -174,6 +175,7 @@ export const api = {
         informacoes?: string | null
         estilo?: EstiloConversa
         dna?: import('./dna').CamadaDna
+        roteiro?: import('./roteiro').Roteiro | null // null limpa o roteiro (volta a conversa livre)
         midiaIds?: string[]
       },
     ) => req<{ id: string }>(`/campanhas/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
@@ -190,6 +192,7 @@ export const api = {
         informacoes: string | null
         estilo?: EstiloConversa | null
         dna?: import('./dna').CamadaDna | null
+        roteiro?: import('./roteiro').Roteiro | null // sequência guiada (§FactoryHub)
         midiaIds?: string[]
       }>(`/campanhas/${id}`),
     adicionarContatos: (

@@ -16,6 +16,7 @@ import { midiaParaEnvio, midiasDoTenant } from '../midia/midia.caso-uso'
 import { montarFicha } from '../memoria/memoria.montador'
 import { podeTransicionar } from '../missoes/missao.dominio'
 import { missoesRepo } from '../missoes/missoes.repo'
+import { lerRoteiro, lerEstado, avancar } from '../roteiro/roteiro.dominio'
 import { lerEstilo } from '../tenant/tenant.estilo'
 import { conversaRepo } from './conversa.repo'
 
@@ -263,6 +264,21 @@ async function executarTurno(missaoId: string) {
       },
     })
     return { ok: true as const, rascunho: true }
+  }
+
+  // 6a) MODO ROTEIRO (§FactoryHub): a IA executou o passo atual neste turno → avança o ponteiro
+  // da sequência (determinístico). Só no fluxo automático: escalada/copilot já retornaram acima
+  // sem avançar (o passo não foi cumprido). Nada acontece se a campanha não tem roteiro.
+  const roteiroDef = lerRoteiro(missao.campanha?.roteiro)
+  if (roteiroDef) {
+    const estadoRoteiro = lerEstado(missao.roteiroEstado)
+    const proximo = avancar(roteiroDef, estadoRoteiro, {
+      fatos: { ...(ctx.fatos ?? {}), ...(saida.fatos_novos ?? {}) },
+      opcaoRoteiro: saida.opcao_roteiro,
+    })
+    if (proximo.ramo !== estadoRoteiro.ramo || proximo.idx !== estadoRoteiro.idx) {
+      await conversaRepo.salvarRoteiroEstado(missaoId, proximo)
+    }
   }
 
   // 6) aplica o novo estado (se a transição for válida)

@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react'
 import { BarChart3, Copy, Dna, Download, FileText, Megaphone, Paperclip, Pause, Pencil, Play, Plus, Send, Sparkles, Trash2, UserPlus, X } from 'lucide-react'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { EditorDnaCamada } from '../components/EditorDnaCamada'
+import { EditorRoteiro } from '../components/EditorRoteiro'
 import { EstiloControles } from '../components/EstiloControles'
 import { SeletorContatos } from '../components/SeletorContatos'
 import { SeletorMidia } from '../components/SeletorMidia'
 import { api } from '../lib/api'
 import { limparCamadaDna, type CamadaDna } from '../lib/dna'
+import { limparRoteiro, type Roteiro } from '../lib/roteiro'
 import { ESTILO_PADRAO } from '../lib/estilos-conversa'
 import { MODELOS, type ModeloMissao } from '../lib/modelos-missao'
 import { TIPO_INFO, TIPOS_MISSAO, descreverDisparo, rotuloNumero } from '../lib/estados'
@@ -41,6 +43,7 @@ function NovaCampanhaModal({ onFechar }: { onFechar: (criou: boolean) => void })
   const [tagAlvo, setTagAlvo] = useState<string | null>(null)
   const [midiaIds, setMidiaIds] = useState<string[]>([]) // biblioteca curada da campanha (§9 Fase A)
   const [dna, setDna] = useState<CamadaDna>({}) // camada de DNA da campanha (§9 Fase B)
+  const [roteiro, setRoteiro] = useState<Roteiro | null>(null) // sequência guiada (§FactoryHub); null = livre
   const [dispararAgora, setDispararAgora] = useState(true)
   const [salvando, setSalvando] = useState(false)
 
@@ -83,6 +86,7 @@ function NovaCampanhaModal({ onFechar }: { onFechar: (criou: boolean) => void })
         midiaIds: midiaIds.length ? midiaIds : undefined, // herdada AO VIVO por cada missão da campanha
         dna: limparCamadaDna(dna), // camada de DNA da campanha (só categorias com texto)
         estilo, // perfil de conversa da campanha (herdado por cada missão)
+        roteiro: limparRoteiro(roteiro), // sequência guiada; null = conversa livre (herdada ao vivo)
         ...(tagAlvo ? { tagId: tagAlvo } : { contatos }),
       })
       if (dispararAgora) {
@@ -175,6 +179,7 @@ function NovaCampanhaModal({ onFechar }: { onFechar: (criou: boolean) => void })
                 <SeletorMidia valor={midiaIds} onChange={setMidiaIds} dica="Nada marcado → a IA pode enviar qualquer item da biblioteca. Cada missão da campanha herda isto ao vivo." />
               </div>
               <EditorDnaCamada valor={dna} onChange={setDna} nivel="campanha" heranca="empresa" />
+              <EditorRoteiro valor={roteiro} onChange={setRoteiro} />
               {/* Perfil de conversa — vem do modelo, ajustável */}
               <div className="rounded-xl border border-line bg-surface/40 p-3">
                 <div className="mb-2 flex items-center justify-between">
@@ -417,6 +422,7 @@ function EditarCampanhaModal({ campanha, onFechar }: { campanha: CampanhaResumo;
   const [form, setForm] = useState({ nome: '', tipo: 'vender', modo: 'auto' as 'auto' | 'copilot', objetivo: '', criterioConclusao: '', tom: '', informacoes: '' })
   const [estilo, setEstilo] = useState<EstiloConversa>(ESTILO_PADRAO)
   const [dna, setDna] = useState<CamadaDna>({})
+  const [roteiro, setRoteiro] = useState<Roteiro | null>(null)
   const [midiaIds, setMidiaIds] = useState<string[]>([])
   const [carregando, setCarregando] = useState(true)
   const [salvando, setSalvando] = useState(false)
@@ -428,6 +434,7 @@ function EditarCampanhaModal({ campanha, onFechar }: { campanha: CampanhaResumo;
         setForm({ nome: c.nome, tipo: c.tipo, modo: (c.modo as 'auto' | 'copilot') ?? 'auto', objetivo: c.objetivo, criterioConclusao: c.criterioConclusao ?? '', tom: c.tom ?? '', informacoes: c.informacoes ?? '' })
         setEstilo(c.estilo ?? ESTILO_PADRAO)
         setDna((c.dna as CamadaDna) ?? {})
+        setRoteiro((c.roteiro as Roteiro | null) ?? null)
         setMidiaIds(c.midiaIds ?? [])
       })
       .catch((e) => toast((e as Error).message, 'erro'))
@@ -449,6 +456,7 @@ function EditarCampanhaModal({ campanha, onFechar }: { campanha: CampanhaResumo;
         informacoes: form.informacoes.trim() || null,
         estilo,
         dna: limparCamadaDna(dna) ?? {},
+        roteiro: limparRoteiro(roteiro), // null → backend limpa a coluna (volta a conversa livre)
         midiaIds,
       })
       toast('Campanha atualizada.', 'ok')
@@ -521,6 +529,7 @@ function EditarCampanhaModal({ campanha, onFechar }: { campanha: CampanhaResumo;
               <SeletorMidia valor={midiaIds} onChange={setMidiaIds} dica="As missões desta campanha herdam isto ao vivo." />
             </div>
             <EditorDnaCamada valor={dna} onChange={setDna} nivel="campanha" heranca="empresa" />
+            <EditorRoteiro valor={roteiro} onChange={setRoteiro} />
             <div className="rounded-xl border border-line bg-surface/40 p-3">
               <div className="mb-2 flex items-center justify-between">
                 <label className="block text-xs font-medium text-muted">Perfil de conversa — como a IA escreve</label>
