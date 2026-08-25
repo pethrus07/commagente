@@ -62,9 +62,9 @@ export function EditorRoteiro({
     onChange(null)
   }
   const irRoteiro = () => {
+    // vazio → fica no estado vazio (mostra os modelos pra escolher); com passos → mantém
     setModo('roteiro')
-    if (!r.passos.length) up({ ...r, passos: [novaPergunta()] })
-    else onChange(limparRoteiro(r))
+    onChange(limparRoteiro(r))
   }
   const usarModelo = (roteiro: Roteiro) => {
     setModo('roteiro')
