@@ -92,27 +92,38 @@ export function passoAtual(roteiro: Roteiro, estado: RoteiroEstado): { passo: Pa
   return { passo: lista[estado.idx], ehUltimo: estado.idx === lista.length - 1 }
 }
 
-// casa a escolha da IA (rótulo) com uma opção do menu (exato, senão por conteúdo)
-function casarOpcao(menu: PassoMenu, escolha: string | null | undefined): OpcaoMenu | null {
+// casa a escolha com uma opção do menu. 1º pela opcao_roteiro da IA (exato → conteúdo); se a IA não
+// preencheu (ela às vezes esquece), FALLBACK: procura UM rótulo como palavra no texto do cliente.
+function casarOpcao(menu: PassoMenu, escolha: string | null | undefined, textoCliente?: string | null): OpcaoMenu | null {
   const e = str(escolha).toLowerCase()
-  if (!e) return null
-  return (
-    menu.opcoes.find((o) => o.rotulo.toLowerCase() === e) ??
-    menu.opcoes.find((o) => o.rotulo.toLowerCase().includes(e) || e.includes(o.rotulo.toLowerCase())) ??
-    null
-  )
+  if (e) {
+    const exato = menu.opcoes.find((o) => o.rotulo.toLowerCase() === e)
+    if (exato) return exato
+    const contido = menu.opcoes.find((o) => o.rotulo.toLowerCase().includes(e) || e.includes(o.rotulo.toLowerCase()))
+    if (contido) return contido
+  }
+  // fallback pelo texto do cliente: só roteia se EXATAMENTE um rótulo aparece como palavra (evita
+  // casar errado quando a frase cita as duas opções, ex.: "não sou empresa, sou profissional")
+  const t = str(textoCliente).toLowerCase()
+  if (t) {
+    const achados = menu.opcoes.filter((o) => new RegExp(`\\b${escaparRegex(o.rotulo.toLowerCase())}\\b`).test(t))
+    if (achados.length === 1) return achados[0]
+  }
+  return null
 }
+
+const escaparRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 // calcula o PRÓXIMO estado a partir da saída da IA deste turno (fatos já mesclados + escolha de menu)
 export function avancar(
   roteiro: Roteiro,
   estado: RoteiroEstado,
-  saida: { fatos?: Record<string, unknown> | null; opcaoRoteiro?: string | null },
+  saida: { fatos?: Record<string, unknown> | null; opcaoRoteiro?: string | null; textoCliente?: string | null },
 ): RoteiroEstado {
   const atual = passoAtual(roteiro, estado)
   if (!atual) return estado
   if (atual.passo.tipo === 'menu') {
-    const escolha = casarOpcao(atual.passo, saida.opcaoRoteiro)
+    const escolha = casarOpcao(atual.passo, saida.opcaoRoteiro, saida.textoCliente)
     return escolha ? { ramo: escolha.rotulo, idx: 0 } : estado // sem escolha clara → repete o menu
   }
   // pergunta com campo: só avança se o dado foi capturado (senão foi desvio/não respondeu → fica)
@@ -150,8 +161,14 @@ export function instrucaoRoteiro(
       : ''
   if (atual.passo.tipo === 'menu') {
     const rotulos = atual.passo.opcoes.map((o) => o.rotulo)
+    const lista = rotulos.map((r) => `"${r}"`).join(' ou ')
     return {
-      instrucao: `${abertura}Pergunte: "${atual.passo.texto}" e apresente as opções: ${rotulos.join(' / ')}. Quando o cliente escolher, coloque em "opcao_roteiro" EXATAMENTE um destes: ${rotulos.join(' / ')}.`,
+      instrucao:
+        `${abertura}Este passo é uma ESCOLHA (menu). Caminhos possíveis: ${lista}. ` +
+        `Se o cliente AINDA não escolheu, pergunte: "${atual.passo.texto}". ` +
+        `Se ele JÁ indicou a escolha (mesmo com outras palavras — ex.: "somos uma empresa" corresponde a "${rotulos[0]}"), ` +
+        `siga naturalmente E, OBRIGATORIAMENTE, coloque o rótulo escolhido em "opcao_roteiro" (exatamente ${lista}). ` +
+        `NÃO registre essa escolha em fatos_novos; o campo certo é opcao_roteiro. Se não der pra saber qual ele quer, deixe opcao_roteiro nulo e pergunte de novo.`,
       menu: rotulos,
     }
   }

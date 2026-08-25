@@ -91,7 +91,12 @@ export const provedorOpenai: ProvedorIA = {
           `PASSO ATUAL → ${ctx.roteiro.instrucao}`,
           'Faça SOMENTE este passo agora — não adiante os próximos passos, não repita os anteriores e não invente perguntas fora do roteiro.',
           'Se o cliente DESVIAR (dúvida, pergunta ou objeção), responda com naturalidade usando o conhecimento da empresa acima e, na MESMA mensagem, retome educadamente este passo. Nunca pule o passo por causa do desvio e nunca reinicie o roteiro do zero.',
-        ].join('\n')
+          ctx.roteiro.menu?.length
+            ? `LEMBRETE (menu): se o cliente indicou uma escolha, sua saída DEVE trazer "opcao_roteiro" com um destes rótulos: ${ctx.roteiro.menu.join(' / ')} — e essa escolha NÃO vai em fatos_novos.`
+            : '',
+        ]
+          .filter(Boolean)
+          .join('\n')
       : ''
     // Bloco de informações AUTORIZADAS (guardrail). Fontes autorizadas = estas + DNA + base de
     // conhecimento. Sem informações por-missão, mas COM DNA/base, elas ainda são fonte válida —

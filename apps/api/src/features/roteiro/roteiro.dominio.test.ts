@@ -67,6 +67,20 @@ test('avancar: menu roteia pro ramo escolhido (idx=0 do ramo)', () => {
   assert.deepEqual(avancar(comMenu, noMenu, { fatos: {}, opcaoRoteiro: null }), noMenu)
 })
 
+test('avancar: FALLBACK — a IA esqueceu opcao_roteiro, casa pelo texto do cliente', () => {
+  const noMenu = { ramo: null, idx: 1 }
+  // "quero oferecer meus serviços" → contém "Oferecer"
+  assert.deepEqual(
+    avancar(comMenu, noMenu, { fatos: {}, opcaoRoteiro: null, textoCliente: 'quero oferecer meus serviços' }),
+    { ramo: 'Oferecer', idx: 0 },
+  )
+  // frase cita AS DUAS opções → ambíguo → NÃO roteia (repete o menu)
+  assert.deepEqual(
+    avancar(comMenu, noMenu, { fatos: {}, opcaoRoteiro: null, textoCliente: 'não quero contratar, quero oferecer' }),
+    noMenu,
+  )
+})
+
 test('passoAtual: dentro do ramo escolhido lê a sub-lista da opção', () => {
   assert.equal(passoAtual(comMenu, { ramo: 'Oferecer', idx: 0 })?.passo.texto, 'Qual sua especialidade?')
   assert.equal(passoAtual(comMenu, { ramo: 'Oferecer', idx: 1 }), null) // fim do ramo
@@ -82,6 +96,7 @@ test('instrucaoRoteiro: pergunta pede captura; menu lista rótulos; fim usa resu
   const menu = instrucaoRoteiro(comMenu, { ramo: null, idx: 1 })
   assert.deepEqual(menu!.menu, ['Contratar', 'Oferecer'])
   assert.match(menu!.instrucao, /opcao_roteiro/)
+  assert.match(menu!.instrucao, /fatos_novos/) // instrui a NÃO usar fatos_novos pra escolha
 
   // fim sem resumo = null; com resumo = instrução de fechamento
   assert.equal(instrucaoRoteiro(linear, { ramo: null, idx: 3 }), null)

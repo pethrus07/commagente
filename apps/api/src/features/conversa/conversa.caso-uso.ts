@@ -272,9 +272,11 @@ async function executarTurno(missaoId: string) {
   const roteiroDef = lerRoteiro(missao.campanha?.roteiro)
   if (roteiroDef) {
     const estadoRoteiro = lerEstado(missao.roteiroEstado)
+    const ultimaEntrada = [...missao.mensagens].reverse().find((m) => m.direcao === 'in')?.conteudo ?? null
     const proximo = avancar(roteiroDef, estadoRoteiro, {
       fatos: { ...(ctx.fatos ?? {}), ...(saida.fatos_novos ?? {}) },
       opcaoRoteiro: saida.opcao_roteiro,
+      textoCliente: ultimaEntrada, // fallback: casa a opção pelo texto se a IA não preencher opcao_roteiro
     })
     if (proximo.ramo !== estadoRoteiro.ramo || proximo.idx !== estadoRoteiro.idx) {
       await conversaRepo.salvarRoteiroEstado(missaoId, proximo)
