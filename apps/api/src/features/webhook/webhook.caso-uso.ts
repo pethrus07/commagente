@@ -48,11 +48,20 @@ export async function processarWebhook(payload: unknown) {
       return
     }
 
-    // resolve contato + missão ativa (usados na decisão de direção E no fluxo abaixo)
+    // ⚠️ ANTI-POLUIÇÃO da base de contatos (pedido do parceiro, PRIORIDADE ALTA): num número de
+    // CAMPANHA (suporte reativo OFF) NÃO cadastra contato novo a partir de um inbound/mensagem
+    // qualquer — conversa particular/antiga, autoresponder, ligação, identificador @lid técnico.
+    // Só entra na base quem JÁ é contato (posto por campanha ou manualmente) OU quando o número é de
+    // ATENDIMENTO (suporte reativo ON → contato espontâneo é justamente o objetivo). Assim a base não
+    // enche com o WhatsApp pessoal do operador.
+    const existente = await webhookRepo.acharContato(numero.tenantId, evento.telefone)
+    if (!existente && !numero.suporteReativo) return
+
+    // já passou pela trava → upsert seguro (cria só no reativo; senão atualiza o existente).
+    // Atualização PROGRESSIVA: nome novo (não-@lid) preenche/atualiza; @lid mantém o que já tem.
     const contato = await webhookRepo.upsertContato(
       numero.tenantId,
       evento.telefone,
-      // @lid: o pushName vem como o NOME DO CHIP, não do cliente → ignora
       evento.ehLid ? undefined : evento.nome,
     )
     let missao = await missoesRepo.acharAtivaPorContatoNumero(numero.id, contato.id)

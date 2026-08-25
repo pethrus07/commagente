@@ -30,6 +30,11 @@ export const webhookRepo = {
     })
   },
 
+  // acha o contato SEM criar (pra trava anti-poluição: decide antes se pode cadastrar)
+  acharContato(tenantId: string, telefone: string) {
+    return db.contato.findUnique({ where: { tenantId_telefone: { tenantId, telefone } } })
+  },
+
   upsertContato(tenantId: string, telefone: string, nome?: string) {
     return db.contato.upsert({
       where: { tenantId_telefone: { tenantId, telefone } },
