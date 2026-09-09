@@ -1,3 +1,4 @@
+// E2E: o assistente de missão ponta a ponta — escolher modelo, ajustar e selecionar contatos.
 import { test, expect, irPara } from '../helpers'
 
 test.use({ storageState: '.auth/super.json' })

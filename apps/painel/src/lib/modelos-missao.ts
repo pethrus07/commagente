@@ -1,3 +1,9 @@
+/**
+ * Os MODELOS de missão do builder visual: ponto de partida pronto para quem não é técnico.
+ * Cada modelo já traz objetivo, tom, critério de conclusão, modo e um perfil de conversa —
+ * campos que o usuário edita, mas nunca precisa inventar do zero. É o que transformou "Nova
+ * missão" de um formulário cru numa escolha de intenção.
+ */
 import { PERFIS } from './estilos-conversa'
 import type { EstiloConversa, ModoMissao, TipoMissao } from './types'
 

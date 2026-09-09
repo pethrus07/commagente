@@ -1,3 +1,10 @@
+/**
+ * A casca do painel e o "roteador": um estado de rota decide qual página renderiza — não há
+ * react-router (o app é pequeno; o custo assumido é não ter URL por página). Também cuida do
+ * que é global: sessão, aceite de termos no 1º acesso, escopo de tenant do super-admin e o toaster.
+ * A `key` por tenant no <main> é de propósito: trocar de tenant REMONTA as páginas — senão elas
+ * continuariam exibindo os dados do tenant anterior.
+ */
 import { CheckCircle2, Menu, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Sidebar, type Page } from './components/Sidebar'

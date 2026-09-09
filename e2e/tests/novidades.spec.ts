@@ -1,3 +1,5 @@
+// E2E: define a identidade da IA e o estilo padrão (bolhas) e salva. Cobre a tela mais nova,
+// que é a que ainda não tem quilometragem de uso.
 import { test, expect, irPara } from '../helpers'
 
 test.use({ storageState: '.auth/super.json' })

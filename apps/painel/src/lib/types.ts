@@ -1,3 +1,8 @@
+/**
+ * ESPELHO (frontend) dos tipos que a API devolve — enums do Prisma incluídos. Não é gerado a
+ * partir do schema: mexeu no domínio da API, mexa aqui. Ter os tipos escritos à mão é o que
+ * mantém o painel sem dependência de build compartilhado entre os dois apps.
+ */
 export type EstadoMissao =
   | 'configurada'
   | 'na_fila'

@@ -1,3 +1,7 @@
+/* Folha global do painel: Tailwind v4 + os TOKENS semânticos (surface, content, line…).
+   A variante `dark` é ligada ao atributo [data-theme], NÃO ao prefers-color-scheme — quem manda
+   é o botão da sidebar, não o sistema operacional. Trocar um tema = trocar valores de token,
+   sem duplicar classe em componente nenhum. */
 @import 'tailwindcss';
 
 /* variante dark: ligada ao atributo data-theme (não ao prefers-color-scheme) */

@@ -1,3 +1,6 @@
+/* ⚠️ NÃO USADO — sobra do template do Vite (.counter, .hero, .logo). Nenhum arquivo importa
+   este CSS; o estilo real do painel está em index.css + classes Tailwind. Mantido só para não
+   mexer em arquivo fora do escopo de documentação; pode ser apagado junto com src/assets/. */
 .counter {
   font-size: 16px;
   padding: 5px 10px;

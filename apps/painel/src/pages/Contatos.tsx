@@ -1,3 +1,8 @@
+/**
+ * O CRM: a base de leads e clientes. Criar, importar (CSV colado ou a agenda do próprio
+ * WhatsApp), exportar, marcar tags e editar o DNA do contato. Mostra o selo de opt-out — quem
+ * pediu para parar continua na base, visível, mas fora de qualquer disparo.
+ */
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Download, IdCard, Plus, Search, Smartphone, Tag as TagIcon, Trash2, Upload, Users, X } from 'lucide-react'
 import { api } from '../lib/api'

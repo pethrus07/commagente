@@ -1,3 +1,5 @@
+// E2E do painel: as telas principais no TEMA CLARO (dashboard, DNA, campanhas) — o modo que
+// menos se usa no dia a dia e por isso é onde o contraste quebrado passa despercebido.
 import { test, expect } from '@playwright/test'
 import { login, navegar } from './helpers'
 

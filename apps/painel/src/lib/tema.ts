@@ -1,3 +1,7 @@
+/**
+ * Tema claro/escuro: lê a preferência do localStorage e a aplica em `data-theme` no <html>.
+ * O padrão é escuro. Importado por main.tsx antes do React montar, para não piscar.
+ */
 export type Tema = 'dark' | 'light'
 const KEY = 'zap_tema'
 

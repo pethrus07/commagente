@@ -1,3 +1,9 @@
+/**
+ * Campanhas: a mesma definição de missão disparada para N contatos. Lista com indicadores por
+ * status e drill-down, wizard de criação por modelo, adicionar contatos depois, editar DNA,
+ * mídia, estilo e roteiro, pausar/retomar, duplicar (base para teste A/B) e o relatório
+ * consolidado — inclusive a síntese narrativa escrita pela IA.
+ */
 import { useEffect, useState } from 'react'
 import { BarChart3, Copy, Dna, Download, FileText, Megaphone, Paperclip, Pause, Pencil, Play, Plus, Send, Sparkles, Trash2, UserPlus, X } from 'lucide-react'
 import { ConfirmDialog } from '../components/ConfirmDialog'

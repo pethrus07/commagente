@@ -1,3 +1,8 @@
+/**
+ * Seletor de contatos da base, reutilizado no assistente de missão e nas campanhas: busca,
+ * seleção múltipla e "selecionar todos" (que respeita a busca). Exclui quem pediu opt-out —
+ * a decisão de não incomodar é do domínio, não da tela, mas a tela também não deixa passar.
+ */
 import { useEffect, useMemo, useState } from 'react'
 import { Check } from 'lucide-react'
 import { api } from '../lib/api'

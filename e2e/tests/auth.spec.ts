@@ -1,3 +1,5 @@
+// E2E: autenticação e o que cada PAPEL enxerga — credencial errada não entra, o admin de
+// tenant não vê a aba Tenants e o super-admin vê. É o teste de isolamento visto pela UI.
 import { test, expect } from '../helpers'
 
 // Login/logout via UI (sem storageState — testa o fluxo de verdade).

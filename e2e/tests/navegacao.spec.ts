@@ -1,3 +1,5 @@
+// E2E: navegar por todas as abas sem erro de runtime no console. É o teste mais barato que
+// pega regressão de import quebrado ou página que estoura ao montar.
 import { test, expect, irPara } from '../helpers'
 
 test.use({ storageState: '.auth/super.json' })

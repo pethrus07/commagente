@@ -1,3 +1,7 @@
+/**
+ * A tela de entrada. Guarda o token e o usuário na sessão do painel; o resto do app só é
+ * montado depois disso (ver App.tsx).
+ */
 import { useState } from 'react'
 import { LogIn, Zap } from 'lucide-react'
 import { api } from '../lib/api'

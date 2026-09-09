@@ -1,3 +1,5 @@
+// E2E: o liga/desliga do suporte reativo no número — a chave que faz um chip atender sozinho
+// quem escreve. Vale testar na UI porque o efeito é grande e o controle é um toggle só.
 import { test, expect, irPara } from '../helpers'
 
 test.use({ storageState: '.auth/super.json' })

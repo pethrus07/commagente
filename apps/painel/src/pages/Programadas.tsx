@@ -1,3 +1,8 @@
+/**
+ * Missões programadas: o que dispara sozinho na data de cada cliente. Cadastro individual ou em
+ * lote por CSV, recorrência, anexo do disparo, e os três botões que a operação usa de verdade:
+ * pausar, "já pagou / pular este mês" e disparar agora.
+ */
 import { useEffect, useRef, useState } from 'react'
 import { CalendarClock, Paperclip, Pause, Pencil, Play, Plus, Trash2, Upload, Wallet, X } from 'lucide-react'
 import { SeletorMidia } from '../components/SeletorMidia'

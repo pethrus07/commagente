@@ -1,3 +1,9 @@
+/**
+ * 🔌 Configuração — o ÚNICO lugar que lê `process.env`. Toda feature importa `config`, nunca
+ * a variável crua: assim o nome de cada segredo aparece num arquivo só, os defaults de dev
+ * ficam visíveis e ninguém precisa caçar env espalhada pelo código.
+ * No fim do arquivo mora a TRAVA DE PRODUÇÃO (fail-fast) — ver comentário lá embaixo.
+ */
 import 'dotenv/config'
 
 function obrigatorio(nome: string): string {

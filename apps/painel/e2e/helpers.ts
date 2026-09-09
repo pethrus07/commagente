@@ -1,3 +1,5 @@
+// Auxiliares da suíte E2E do painel: login, navegação por aba e o abrirMenuSeMobile — que
+// existe porque no viewport de celular a sidebar vira drawer e o link some até alguém abrir.
 import { type Page, expect } from '@playwright/test'
 
 export const LOGIN = { email: 'demo@zapagente.local', senha: 'demo123' }

@@ -1,3 +1,5 @@
+// Smoke do painel em desktop e mobile: abre cada aba, confere que renderizou e guarda a
+// screenshot em e2e/__screens__. É a suíte que serve de conferência VISUAL entre versões.
 import { test, expect } from '@playwright/test'
 import { login, navegar, slug } from './helpers'
 

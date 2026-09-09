@@ -1,3 +1,10 @@
+/**
+ * O builder visual de missão, em 3 passos: (1) escolher um MODELO pronto, que pré-preenche
+ * objetivo, tom, critério, modo e perfil de conversa; (2) ajustar em linguagem simples, com o
+ * guardrail de "informações autorizadas" explicado; (3) escolher os contatos e revisar.
+ * Substituiu o formulário cru — quem cria a missão não precisa saber o que é "critério de
+ * conclusão" para começar. Cria em lote: uma conversa por contato.
+ */
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft, ArrowRight, Check, Rocket, Sparkles, X } from 'lucide-react'
 import { api } from '../lib/api'

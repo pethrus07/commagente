@@ -1,5 +1,7 @@
-// ⚙️ Aplicação — executor de envio (envio DIRETO; fila anti-bloqueio vem na Fatia 6).
-// Já entra a "digitação simulada" (presença) e a gravação em `mensagens`.
+// ⚙️ Aplicação — o EXECUTOR: a última milha até o WhatsApp. Faz a "digitação simulada"
+// (presença) antes de mandar, quebra a resposta em bolhas quando o estilo pede, envia documento
+// quando é mídia, e grava a saída em `mensagens`.
+// Quem chama é o WORKER DA FILA, nunca o harness direto: o ritmo é decidido em features/fila.
 import { conferirDono } from '../../core/contexto'
 import { ErroHttp } from '../../core/erros'
 import { whatsapp } from '../../core/evolution'

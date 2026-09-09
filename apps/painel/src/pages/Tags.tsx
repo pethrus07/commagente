@@ -1,3 +1,7 @@
+/**
+ * Tags de contato. Além de segmentar, a DESCRIÇÃO da tag é conhecimento: ela entra no prompt de
+ * toda conversa com quem a tem. Por isso a tela pede uma descrição, não só um nome e uma cor.
+ */
 import { useEffect, useState } from 'react'
 import { Pencil, Plus, Tag as TagIcon, Trash2, X } from 'lucide-react'
 import { api } from '../lib/api'

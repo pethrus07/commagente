@@ -1,3 +1,8 @@
+/**
+ * Editor de UMA camada do DNA hierárquico (campanha ou missão). Por categoria, o usuário escolhe
+ * Herdar, Substituir ou Combinar em relação à camada de cima — é a UI da regra que vive em
+ * features/tenant/tenant.dna.ts na API. Categoria não tocada simplesmente herda.
+ */
 import { useState } from 'react'
 import { ChevronDown, Dna } from 'lucide-react'
 import { CATEGORIAS_DNA, type CamadaDna, type ChaveDna, type ModoDna } from '../lib/dna'

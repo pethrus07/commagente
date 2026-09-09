@@ -1,3 +1,8 @@
+/**
+ * Os chips: cadastrar, conectar por QR (com poll do status), apelidar, desconectar e remover.
+ * Também é onde mora tudo que protege o número — selo de saúde, ajustes de anti-bloqueio,
+ * suporte reativo e o aviso de escalonamento no WhatsApp.
+ */
 import { useEffect, useState } from 'react'
 import { Plus, PowerOff, QrCode, SlidersHorizontal, Smartphone, Trash2, X } from 'lucide-react'
 import { ConfirmDialog } from '../components/ConfirmDialog'

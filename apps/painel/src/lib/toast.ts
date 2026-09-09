@@ -1,3 +1,8 @@
+/**
+ * Avisos efêmeros (sucesso/erro) num store minúsculo fora do React, com um hook para assinar.
+ * É global de propósito: qualquer página avisa sem precisar de contexto nem prop drilling, e o
+ * toaster fica montado no App — inclusive na tela de login.
+ */
 import { useEffect, useState } from 'react'
 
 export type Toast = { id: number; msg: string; tipo: 'ok' | 'erro' }

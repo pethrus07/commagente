@@ -1,3 +1,11 @@
+/**
+ * 🖥️ Entrada da API. A ORDEM aqui importa: rede de segurança de processo → segurança HTTP
+ * (helmet, CORS explícito, rate-limit) → JWT + hook global de autenticação → handler de erro
+ * que não vaza internals → /health e /ready → as features → e, só depois de escutar a porta,
+ * o seed e os TRÊS workers (fila de envio, agendador de programadas, reconciliador de chips).
+ * Os workers vivem NESTE processo, de propósito: um deploy só, e a fila fica transacional
+ * com o resto do banco (ver docs/ARQUITETURA.md §1 e §6).
+ */
 import fastifyCors from '@fastify/cors'
 import fastifyHelmet from '@fastify/helmet'
 import fastifyJwt from '@fastify/jwt'

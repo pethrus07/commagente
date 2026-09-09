@@ -1,3 +1,9 @@
+/**
+ * A tela mais densa do painel: a conversa em bolhas, a configuração da missão (objetivo, tom,
+ * informações autorizadas, DNA, mídia, estilo), a memória, o resultado, as ações de estado e o
+ * rascunho do modo copilot. Duas regras de produto aparecem aqui: com a IA pausada o painel diz
+ * "você está no controle", e o card de CUSTO só aparece para o super-admin.
+ */
 import { useEffect, useRef, useState } from 'react'
 import {
   ArrowLeft,

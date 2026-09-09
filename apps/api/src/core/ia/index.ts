@@ -1,5 +1,7 @@
-// Seleção do provedor de IA ativo (provider-agnostic).
-// Hoje só o dublê; a Fatia 4b/produção pluga o OpenAI aqui (por env), sem tocar no harness.
+// Seleção do provedor de IA ativo (provider-agnostic), por IA_PROVIDER.
+// Dois hoje: openai (produção) e duble (offline, determinístico, sem key nem custo — é assim
+// que o E2E roda e que se desenvolve sem queimar token). O harness não sabe qual está ativo.
+// Valor desconhecido cai no dublê de propósito: melhor rodar burro do que não subir.
 import type { ProvedorIA } from './porta-ia'
 import { provedorDuble } from './provedor-duble'
 import { provedorOpenai } from './provedor-openai'

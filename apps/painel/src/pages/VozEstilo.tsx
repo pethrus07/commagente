@@ -1,3 +1,8 @@
+/**
+ * Como a IA FALA — separado do que ela sabe (isso é o DNA): a persona/voz da marca e os
+ * controles de estilo que valem como padrão da casa. Uma missão pode sobrescrever o estilo;
+ * a voz do tenant entra sempre.
+ */
 import { useEffect, useState } from 'react'
 import { Bot } from 'lucide-react'
 import { EstiloControles } from '../components/EstiloControles'

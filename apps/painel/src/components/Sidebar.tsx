@@ -1,3 +1,7 @@
+/**
+ * A navegação: as abas conforme o PAPEL do usuário (o super-admin vê Tenants; o operador, não),
+ * o seletor de tenant da impersonação, o botão de tema e o sair. No celular vira drawer.
+ */
 import {
   Brain,
   Building2,

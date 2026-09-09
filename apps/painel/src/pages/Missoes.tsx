@@ -1,3 +1,7 @@
+/**
+ * O board das conversas conduzidas pela IA: lista filtrável por estado e a porta de entrada do
+ * assistente de nova missão. Abrir uma missão leva ao detalhe.
+ */
 import { type ReactNode, useEffect, useMemo, useState } from 'react'
 import { ChevronRight, LayoutGrid, List, Plus, Send, Target } from 'lucide-react'
 import { AssistenteMissao } from '../components/AssistenteMissao'

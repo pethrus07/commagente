@@ -1,3 +1,8 @@
+/**
+ * Aceite obrigatório no primeiro acesso: uso de dados (LGPD) e responsabilidade sobre o número
+ * conectado. Bloqueia o painel até aceitar e grava o carimbo no usuário — não vale para o
+ * super-admin, que é o dono da plataforma, não cliente dela.
+ */
 import { useState } from 'react'
 import { ShieldCheck } from 'lucide-react'
 import { api } from '../lib/api'
@@ -5,8 +10,6 @@ import { auth, type UsuarioSessao } from '../lib/auth'
 import { toast } from '../lib/toast'
 import { Button, Card, cn } from '../lib/ui'
 
-// Aceite obrigatório no 1º acesso (LGPD/uso de dados + responsabilidade do número).
-// Bloqueia o painel até aceitar (ou sair). Só aparece p/ usuários de tenant (não super-admin).
 export function TermosModal({
   onAceitar,
   onSair,

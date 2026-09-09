@@ -1,3 +1,7 @@
+/**
+ * O inbox das conversas que a IA entregou para um humano. É a tela de plantão: enquanto uma
+ * missão está aqui, a IA está pausada e ninguém responde no lugar do operador.
+ */
 import { useEffect, useState } from 'react'
 import { ChevronRight, LifeBuoy, MessageSquare } from 'lucide-react'
 import { api } from '../lib/api'

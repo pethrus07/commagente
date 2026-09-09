@@ -1,3 +1,5 @@
+// Testes do Montador de Contexto: o que entra — e o que NÃO entra — no prompt.
+// Regra pura, sem banco. Rode: npx tsx --test src/features/memoria/memoria.montador.test.ts
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { montarFicha } from './memoria.montador'

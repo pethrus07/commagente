@@ -1,3 +1,8 @@
+/**
+ * A primeira tela: o estado da operação em um olhar — placar das missões, pipeline por estado,
+ * mensagens por dia e os ALERTAS do vigia (chip em risco de bloqueio, número parado). O bloco
+ * "Comece por aqui" existe para a conta nova não abrir vazia e sem rumo.
+ */
 import { useEffect, useState } from 'react'
 import {
   Activity,

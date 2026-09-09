@@ -1,3 +1,8 @@
+/**
+ * O DNA do tenant: o que a IA sabe e pode afirmar sobre a empresa, organizado em categorias
+ * (empresa, produtos, preços, regras de negócio, FAQ…). Aceita texto, documento (PDF/DOCX/TXT)
+ * e link. Defaults-first: categoria vazia não vira formulário obrigatório nem entra no prompt.
+ */
 import { useEffect, useRef, useState } from 'react'
 import { Check, ChevronRight, Dna as DnaIcon, FileText, FileUp, Link as LinkIcon, Plus, ShieldAlert, Sparkles, X } from 'lucide-react'
 import { api } from '../lib/api'

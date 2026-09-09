@@ -6,6 +6,8 @@ Assistente autônomo de IA que opera **várias conversas de WhatsApp em paralelo
 
 > Parceria **Pedro (Pethrus) × parceiro (Celiware)**. Plataforma **multi-tenant** (super-admin + tenants, white-label). Painel React + API Fastify; memória (individual + coletiva), anti-bloqueio, transcrição de áudio, campanhas e suporte reativo já construídos.
 
+> **Para entender o código sozinho, comece por [docs/ARQUITETURA.md](docs/ARQUITETURA.md).**
+
 ## Stack
 
 | Camada | Escolha |
@@ -22,8 +24,9 @@ Assistente autônomo de IA que opera **várias conversas de WhatsApp em paralelo
 
 - **[docs/SETUP.md](docs/SETUP.md)** — ambiente de desenvolvimento do zero (o que instalar + rodar). **Máquina nova começa aqui.**
 - **[docs/ROADMAP.md](docs/ROADMAP.md)** — divisão de funcionalidades e ordem de construção (comece por aqui).
-- **[docs/ARQUITETURA.md](docs/ARQUITETURA.md)** — o que usamos, por quê e as alternativas descartadas (decisões) + modelo em camadas + o harness do agente.
-- **[docs/MODELO-DADOS.md](docs/MODELO-DADOS.md)** — tabelas (11 models no schema atual), ERD visual e o schema Prisma (fonte da verdade).
+- **[docs/ARQUITETURA.md](docs/ARQUITETURA.md)** — **o manual**: como o sistema funciona hoje, do mapa do repositório ao caminho de uma mensagem ponta a ponta, o motor anti-bloqueio, as receitas, o status medido no código e as armadilhas. As decisões de stack e as alternativas descartadas estão na §16.
+- **[docs/DEPLOY.md](docs/DEPLOY.md)** — subir e manter a VPS (always-on, backup, segredos, HTTPS).
+- **[docs/MODELO-DADOS.md](docs/MODELO-DADOS.md)** — ERD visual das **16 tabelas** e as convenções do schema Prisma (fonte da verdade em `apps/api/prisma/schema.prisma`).
 - **[docs/estudos/](docs/estudos/)** — pesquisa e decisões que fundamentam o projeto (arquitetura, memória/custo, anti-bloqueio, proposta).
 
 ## Rodar em desenvolvimento
@@ -36,11 +39,14 @@ docker compose -f infra/docker-compose.yml up -d db
 cd apps/api
 npm install
 
-# 3. criar as tabelas (1ª migration)
-npx prisma migrate dev --name init
+# 3. aplicar as migrations (42 hoje) num banco vazio ou já existente
+npx prisma migrate deploy
 
-# 4. subir a API
+# 4. subir a API (+ os 3 workers: fila, agendador, reconciliador)
 npm run dev        # http://localhost:3000/health  e  /ready
+
+# 5. subir o painel (noutro terminal)
+cd ../painel && npm install && npm run dev   # http://localhost:5173
 ```
 
 - `GET /health` — a API está de pé (não depende do banco).
@@ -51,4 +57,13 @@ npm run dev        # http://localhost:3000/health  e  /ready
 
 ## Status
 
-Em estruturação (jul/2026). Construção parte a parte, mirando o MVP (Fase 0).
+**Em produção** desde 25/07/2026 (VPS com Docker Compose + pm2 + Caddy), com clientes reais.
+Construídos e no ar: conversa com IA (harness com contrato validado e guardrail anti-invenção),
+motor anti-bloqueio, memória individual e coletiva com RAG, CRM, campanhas, missões programadas,
+tags, DNA hierárquico, biblioteca de mídia, modo Roteiro, transcrição de áudio, suporte reativo e
+o painel multi-tenant. Testes de unidade do domínio: **61/61 passando**.
+
+Não existe ainda a **camada comercial** (planos, quotas por tenant, billing, teto de custo por
+tenant, hard-delete LGPD). O estado completo, medido no código, está em
+[docs/ARQUITETURA.md §14](docs/ARQUITETURA.md); o que vem a seguir, em
+[docs/ROADMAP.md](docs/ROADMAP.md).

@@ -1,6 +1,9 @@
-// ⚙️ Aplicação — processa o evento normalizado do webhook.
-// Fatia 3: inbound vira Mensagem (ligada à missão ativa, se houver) e destrava
-// a conversa (na_fila → em_conversa). Status de entrega atualiza a msg de saída.
+// ⚙️ Aplicação — o INGESTOR: o que fazer com o evento já normalizado do webhook.
+// A ORDEM das guardas abaixo é o miolo desta feature, e quase toda nasceu de um defeito real em
+// produção: idempotência (reentrega da Evolution) → anti-poluição da base → correção do @lid →
+// fromMe do operador → suporte reativo → transcrição de áudio → opt-in/opt-out → agendar o turno.
+// Nada aqui responde ao cliente: no fim, só AGENDA o turno (debounce) — quem fala é o harness.
+// Evento de status de entrega segue por outro ramo, atualizando a mensagem de saída.
 import { db } from '../../core/db'
 import { whatsapp } from '../../core/evolution'
 import { transcritor } from '../../core/transcricao'

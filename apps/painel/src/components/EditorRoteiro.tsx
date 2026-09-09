@@ -1,3 +1,8 @@
+/**
+ * Editor do MODO ROTEIRO da campanha: a sequência guiada de perguntas, com menu de um nível e
+ * ramos por opção. Monta o mesmo JSON que features/roteiro/roteiro.dominio.ts lê na API — por
+ * isso o preview aqui vale como conferência antes de disparar para gente de verdade.
+ */
 import { useMemo, useState } from 'react'
 import {
   ChevronDown,

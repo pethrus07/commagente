@@ -1,3 +1,8 @@
+/**
+ * Os controles de COMO A IA ESCREVE (formalidade, emoji, abreviações, travessão, bolhas), com
+ * preview vivo. Compartilhado entre o assistente de missão e a configuração do tenant, porque a
+ * mesma decisão existe em dois níveis: padrão da casa e perfil desta missão.
+ */
 import { MessagesSquare } from 'lucide-react'
 import type { EstiloConversa } from '../lib/types'
 import { cn } from '../lib/ui'

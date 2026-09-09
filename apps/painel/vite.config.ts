@@ -1,3 +1,5 @@
+// Build e dev-server do painel. O proxy /api → localhost:3000 é o que evita CORS em
+// desenvolvimento sem afrouxar nada na API: para o navegador, tudo vem da mesma origem.
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'

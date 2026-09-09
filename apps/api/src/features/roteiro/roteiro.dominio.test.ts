@@ -1,3 +1,5 @@
+// Testes do MODO ROTEIRO (domínio puro): leitura tolerante do JSON vindo do banco, avanço do
+// ponteiro e escolha de ramo no menu. Rode: npx tsx --test src/features/roteiro/roteiro.dominio.test.ts
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {

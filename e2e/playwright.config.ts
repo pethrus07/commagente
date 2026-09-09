@@ -1,3 +1,6 @@
+// Configuração da suíte E2E de fluxo. Roda em SÉRIE e com 1 worker de propósito: os testes
+// compartilham o banco de desenvolvimento e a mesma sessão, então paralelismo geraria
+// interferência entre eles, não velocidade.
 import { defineConfig, devices } from '@playwright/test'
 
 // QA E2E do Commagente — dirige o painel (:5173), que fala com a API (:3000) via proxy do Vite.

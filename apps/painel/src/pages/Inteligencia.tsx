@@ -1,3 +1,8 @@
+/**
+ * A Central de Inteligência: perguntar em português sobre os dados da própria conta. A API
+ * responde só com base num retrato agregado (grounded) — as perguntas-semente estão aqui para
+ * tirar o usuário do zero, porque campo de texto vazio não convida ninguém.
+ */
 import { useEffect, useRef, useState } from 'react'
 import { Brain, Send, Sparkles } from 'lucide-react'
 import { api } from '../lib/api'

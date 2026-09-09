@@ -1,3 +1,9 @@
+/**
+ * O cliente HTTP do painel — a ÚNICA porta de saída para a API. Três responsabilidades que não
+ * podem ficar espalhadas pelas páginas: prefixo `/api` (o Vite faz proxy para a :3000, por isso
+ * não há CORS em dev), injeção do token e do `x-tenant-id` (impersonação do super-admin), e o
+ * tratamento de 401 — token expirado dispara o logout global em vez de deixar a tela em branco.
+ */
 import { auth, type UsuarioSessao } from './auth'
 import type {
   Agendamento,

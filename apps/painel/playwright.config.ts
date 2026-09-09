@@ -1,3 +1,6 @@
+// Configuração da suíte E2E do painel. Dois projects (desktop e mobile) porque são as duas
+// formas de uso que importam pro produto, e o mobile tem uma UI diferente (a sidebar vira
+// drawer). Serial, 1 worker: os testes compartilham o banco de desenvolvimento.
 import { defineConfig, devices } from '@playwright/test'
 
 // E2E do painel — roda contra o app já servido (dev :5173 com proxy /api → API :3000).

@@ -1,3 +1,8 @@
+/**
+ * Rótulos e emojis dos ENUMS do domínio para uso na tela (tipo de missão, nome amigável de
+ * número). Fica separado de ui.tsx porque é vocabulário do produto, não componente: quando o
+ * domínio da API ganha um tipo novo, é aqui que o painel aprende como chamá-lo.
+ */
 import type { EstadoMissao, TipoMissao } from './types'
 
 // tipos de missão (o "objetivo variável") — rótulos p/ o painel

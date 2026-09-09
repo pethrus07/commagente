@@ -1,7 +1,10 @@
+// Tenant PADRÃO — a ponte do super-admin, não o modo de operação.
+// O multi-tenant real existe e está em core/contexto.ts (token + header x-tenant-id). Este
+// arquivo cobre o único buraco que sobrou: quem chega SEM tenant no token e SEM tenant
+// selecionado (o super-admin recém-logado) precisa cair em algum lugar em vez de estourar.
+// Também é o tenant que o seed garante no boot. Ver docs/ARQUITETURA.md §16.9.
 import { db } from './db'
 
-// Dev single-tenant: garante um tenant padrão e devolve o id.
-// (Multi-tenant real com UI chega na F3; até lá tudo roda sob este tenant.)
 const NOME_PADRAO = 'PEDRO'
 
 export async function garantirTenantPadrao(): Promise<string> {

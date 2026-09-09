@@ -1,3 +1,6 @@
+// Testes da normalização do evento cru da Evolution — inclui o @lid (o identificador novo do
+// WhatsApp que travava a conversa) e o descarte de grupo.
+// Rode: npx tsx --test src/features/webhook/webhook.dominio.test.ts
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { normalizarEvento } from './webhook.dominio'

@@ -1,9 +1,12 @@
+/**
+ * Diálogo de confirmação das ações destrutivas (excluir campanha, remover número, apagar tag).
+ * Segura o estado de "processando" enquanto o onConfirmar roda e só fecha quando termina — sem
+ * isso o usuário clicava duas vezes achando que não tinha funcionado.
+ */
 import { useState, type ReactNode } from 'react'
 import { AlertTriangle } from 'lucide-react'
 import { Button, Card } from '../lib/ui'
 
-// Diálogo de confirmação reutilizável para ações destrutivas (excluir campanha, remover número…).
-// Mostra um estado de "processando" enquanto o onConfirmar roda e só fecha quando termina.
 export function ConfirmDialog({
   titulo,
   mensagem,

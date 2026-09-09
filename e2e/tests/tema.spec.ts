@@ -1,3 +1,4 @@
+// E2E: alterna claro/escuro e navega nos dois sem erro de runtime.
 import { test, expect, irPara } from '../helpers'
 
 test.use({ storageState: '.auth/super.json' })

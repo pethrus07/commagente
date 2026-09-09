@@ -1,3 +1,8 @@
+/**
+ * ESPELHO (frontend) do estilo de conversa da API (features/tenant/tenant.estilo.ts): o padrão
+ * da casa e os PERFIS por papel (Vendedor, Suporte, Cobrança…) que vêm embutidos nos modelos de
+ * missão. Não é gerado — mexeu no domínio da API, mexa aqui também.
+ */
 import type { EstiloConversa } from './types'
 
 // Estilo padrão (espelha o ESTILO_PADRAO da API): mata o travessão de cara (ganho universal),

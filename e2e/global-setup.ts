@@ -1,3 +1,6 @@
+// Setup global da suíte E2E: faz login pela API e grava um storageState com o token e o tenant
+// já selecionado, para nenhum teste precisar passar pela tela de login. O arquivo gerado fica
+// fora do git (.gitignore) porque carrega um token real.
 import { request } from '@playwright/test'
 import { mkdirSync, writeFileSync } from 'node:fs'
 

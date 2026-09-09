@@ -1,3 +1,4 @@
+// E2E do painel: as interações que o smoke não cobre — wizards, editores e o drawer do celular.
 import { test, expect } from '@playwright/test'
 import { login, navegar } from './helpers'
 

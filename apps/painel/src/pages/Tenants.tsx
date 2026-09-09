@@ -1,3 +1,8 @@
+/**
+ * Só para o super-admin: os clientes da plataforma. Lista com monitoramento ao vivo (chips
+ * conectados, mensagens hoje, missões ativas, última atividade, custo de IA acumulado) e a
+ * criação de um tenant já com o usuário admin dele.
+ */
 import { useEffect, useState } from 'react'
 import { Building2, LogIn, Plus, Users, Wallet, X } from 'lucide-react'
 import { api } from '../lib/api'

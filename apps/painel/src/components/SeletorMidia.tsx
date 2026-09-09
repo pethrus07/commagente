@@ -1,3 +1,8 @@
+/**
+ * Seletor dos arquivos da biblioteca que a IA pode enviar nesta missão ou campanha. Curar nada
+ * é uma escolha válida e significa "toda a biblioteca do tenant fica à disposição" — a herança
+ * é resolvida ao vivo no harness, não congelada aqui.
+ */
 import { useEffect, useState } from 'react'
 import { FileText, Image as ImageIcon, Music, Paperclip, Video } from 'lucide-react'
 import { api } from '../lib/api'

@@ -1,3 +1,8 @@
+/**
+ * A biblioteca de mídia: catálogo, tabela de preços, cardápio, áudio, apresentação — os arquivos
+ * que a IA pode ENVIAR ao contato no momento certo. O que a IA vê aqui é o nome, então o nome
+ * precisa dizer o que o arquivo é.
+ */
 import { useEffect, useRef, useState } from 'react'
 import { FileUp, Paperclip, Trash2 } from 'lucide-react'
 import { IconeMidia } from '../components/SeletorMidia'

@@ -1,3 +1,6 @@
+// Auxiliares dos testes E2E de fluxo: o fixture de test (que reaproveita a sessão do
+// global-setup) e a navegação por aba. Mantém os specs legíveis — cada teste conta o CASO,
+// não a mecânica de chegar na tela.
 import { test as base, expect, type Page } from '@playwright/test'
 
 // Fixture que coleta exceções de runtime (pageerror) durante o teste — sinal forte de QA.

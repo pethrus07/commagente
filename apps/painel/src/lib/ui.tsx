@@ -1,3 +1,8 @@
+/**
+ * As primitivas visuais do painel (botão, cartão, selo, vazio, spinner) e os TOKENS por estado
+ * de missão e de conexão. Um lugar só para cor e rótulo de estado: se "escalada" mudar de cor,
+ * muda aqui e reflete no board, no detalhe e no inbox de uma vez.
+ */
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import { Loader2 } from 'lucide-react'
 import type { EstadoMissao, StatusConexao } from './types'

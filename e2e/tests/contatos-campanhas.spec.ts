@@ -1,3 +1,4 @@
+// E2E: a base de contatos alimentando uma campanha (o caminho que o cliente mais usa).
 import { test, expect, irPara } from '../helpers'
 
 test.use({ storageState: '.auth/super.json' })
