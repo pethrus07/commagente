@@ -8,10 +8,58 @@ import { db } from '../../core/db'
 import { whatsapp } from '../../core/evolution'
 import { transcritor } from '../../core/transcricao'
 import { agendarTurno } from '../conversa/conversa.caso-uso'
+import { filaRepo } from '../fila/fila.repo'
+import { podeTransicionar } from '../missoes/missao.dominio'
 import { missoesRepo } from '../missoes/missoes.repo'
 import type { AudioRecebido } from './webhook.dominio'
 import { ehPedidoOptOut, mapearStatusEnvio, normalizarEvento } from './webhook.dominio'
 import { webhookRepo } from './webhook.repo'
+
+// REENTREGA (cura da "mensagem que não sai"): a Evolution ACEITA a mensagem (status 'enviando' +
+// providerMsgId) mas depois um webhook de entrega volta ERROR/FAILED — típico do não-oficial quando
+// o chip oscila. Sem isto, a resposta ao cliente sumia em silêncio. Reenfileira a MESMA resposta
+// (o chip costuma estabilizar em segundos); se insistir em falhar, ESCALA pro humano.
+const REENTREGA_MS = 60_000 // espera o chip estabilizar antes de reenviar
+const REENTREGAS_MAX = 2 // no máx. 2 reenvios; depois escala (nunca perde o cliente em silêncio)
+const ESTADOS_ENCERRADOS = ['concluida', 'descartada', 'arquivada']
+
+async function tratarFalhaEntrega(providerMsgId: string) {
+  const saida = await webhookRepo.acharSaidaPorProviderMsgId(providerMsgId)
+  const m = saida?.missao
+  if (!saida || !m || !m.contato || !saida.conteudo) return
+  // respeita pausa/fim: humano assumiu, campanha pausada, missão encerrada ou opt-out → não re-tenta
+  if (m.iaPausada || m.campanha?.pausada || m.contato.optOut) return
+  if (ESTADOS_ENCERRADOS.includes(m.estado)) return
+
+  const desde = new Date(Date.now() - 15 * 60_000)
+  const falhas = await webhookRepo.contarFalhasRecentes(saida.contatoId, saida.conteudo, desde)
+
+  if (falhas <= REENTREGAS_MAX) {
+    // transitório → reenfileira a MESMA resposta pra reenviar quando o chip voltar. O dedup do
+    // enfileirar (pendente/enviando com o mesmo texto) evita duplicar se o webhook vier repetido.
+    await filaRepo.enfileirar({
+      tenantId: saida.tenantId,
+      missaoId: m.id,
+      contatoId: saida.contatoId,
+      payload: { numeroId: m.numeroId, telefone: m.contato.telefone, texto: saida.conteudo, tipo: 'conversa' },
+      agendadoPara: new Date(Date.now() + REENTREGA_MS),
+    })
+    await db.evento.create({
+      data: { tenantId: saida.tenantId, missaoId: m.id, tipo: 'reentrega', dados: { tentativa: falhas } },
+    })
+  } else {
+    // esgotou as reentregas → NÃO some em silêncio: escala pro humano (aparece nos Escalados).
+    const pausa = {
+      iaPausada: true,
+      motivoEscala: 'Falha ao ENTREGAR a resposta ao cliente (chip/instabilidade) — verifique o número e responda manualmente',
+    }
+    if (podeTransicionar(m.estado, 'escalada')) await missoesRepo.atualizarEstado(m.id, 'escalada', pausa)
+    else await missoesRepo.atualizar(m.id, pausa)
+    await db.evento.create({
+      data: { tenantId: saida.tenantId, missaoId: m.id, tipo: 'entrega_falhou', dados: {} },
+    })
+  }
+}
 
 // Tier 3: obtém o base64 do áudio (do próprio webhook ou baixando na Evolution) e transcreve.
 // Nunca lança: falha vira '' e o chamador registra a nota de voz pro operador.
@@ -185,6 +233,8 @@ export async function processarWebhook(payload: unknown) {
     // (inclusive de outros tenants) — corrompendo status em massa.
     if (status && evento.providerMsgId) {
       await webhookRepo.atualizarStatusSaida(evento.providerMsgId, status)
+      // entrega FALHOU (aceita mas não entregue) → reenvia/escala em vez de perder o cliente
+      if (status === 'erro') await tratarFalhaEntrega(evento.providerMsgId)
     }
   }
 }

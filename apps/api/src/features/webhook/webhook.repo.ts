@@ -94,4 +94,35 @@ export const webhookRepo = {
       data: { statusEnvio },
     })
   },
+
+  // acha a mensagem de SAÍDA por providerMsgId + o contexto pra decidir reentrega/escala.
+  // Usado quando o status de entrega volta 'erro' (aceita pela Evolution mas NÃO entregue).
+  acharSaidaPorProviderMsgId(providerMsgId: string) {
+    return db.mensagem.findFirst({
+      where: { providerMsgId, direcao: 'out' },
+      select: {
+        conteudo: true,
+        contatoId: true,
+        tenantId: true,
+        missao: {
+          select: {
+            id: true,
+            numeroId: true,
+            estado: true,
+            iaPausada: true,
+            campanha: { select: { pausada: true } },
+            contato: { select: { telefone: true, optOut: true } },
+          },
+        },
+      },
+    })
+  },
+
+  // quantas saídas com ESTE texto pra ESTE contato já falharam na entrega desde `desde`.
+  // Limita as reentregas (evita loop quando o destino realmente não recebe).
+  contarFalhasRecentes(contatoId: string, conteudo: string, desde: Date) {
+    return db.mensagem.count({
+      where: { contatoId, direcao: 'out', statusEnvio: 'erro', conteudo, criadaEm: { gte: desde } },
+    })
+  },
 }
