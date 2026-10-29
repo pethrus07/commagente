@@ -11,7 +11,17 @@ cada uma numa notação padrão:
 
 Plataforma multi-tenant white-label do Pedro com o parceiro: cada conversa no WhatsApp é uma missão (vender, qualificar, orçar, cobrar, suporte), a IA conduz no ritmo anti-bloqueio e escala para um humano quando precisa.
 
-![Commagente · agentes de IA no WhatsApp](./assistente-ia-whatsapp.svg)
+### Quem usa e para quê (UML)
+
+![Casos de uso · Commagente · agentes de IA no WhatsApp](./assistente-ia-whatsapp-1-casos-de-uso.svg)
+
+### Da mensagem recebida à resposta no ritmo (BPMN 2.0)
+
+![Processo · Commagente · agentes de IA no WhatsApp](./assistente-ia-whatsapp-2-processo.svg)
+
+### Arquitetura (C4, containers)
+
+![Arquitetura · Commagente · agentes de IA no WhatsApp](./assistente-ia-whatsapp-3-arquitetura.svg)
 
 Editável: [`assistente-ia-whatsapp.excalidraw`](./assistente-ia-whatsapp.excalidraw), abre em [excalidraw.com](https://excalidraw.com) ou no VS Code com a extensão Excalidraw.
 
