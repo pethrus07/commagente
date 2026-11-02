@@ -11,7 +11,8 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: zapagente
-      POSTGRES_PASSWORD: zapagente
+      # Senha vem do ambiente (infra/.env ou export). O default só serve para dev local.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-zapagente}
       POSTGRES_DB: zapagente
     ports:
       # bind só no localhost do host: nem o Postgres nem a Evolution ficam expostos
@@ -49,7 +50,7 @@ services:
       # Banco próprio da Evolution
       DATABASE_ENABLED: "true"
       DATABASE_PROVIDER: postgresql
-      DATABASE_CONNECTION_URI: postgresql://evolution:evolution@evolution_db:5432/evolution?schema=public
+      DATABASE_CONNECTION_URI: postgresql://evolution:${EVOLUTION_DB_PASSWORD:-evolution}@evolution_db:5432/evolution?schema=public
       DATABASE_CONNECTION_CLIENT_NAME: zapagente
       DATABASE_SAVE_DATA_INSTANCE: "true"
       DATABASE_SAVE_DATA_NEW_MESSAGE: "true"
@@ -70,7 +71,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: evolution
-      POSTGRES_PASSWORD: evolution
+      POSTGRES_PASSWORD: ${EVOLUTION_DB_PASSWORD:-evolution}
       POSTGRES_DB: evolution
     volumes:
       - evolution_pgdata:/var/lib/postgresql/data
