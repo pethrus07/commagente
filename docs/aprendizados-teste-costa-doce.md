@@ -1,6 +1,6 @@
 # Aprendizados do teste ao vivo — Expedição Costa Doce (testador)
 
-> Teste real 2026-07-22: agente de IA (tenant **PEDRO**, chip 5583900000001, modo **auto**)
+> Teste real 2026-07-22: agente de IA (tenant **PEDRO**, chip <número de teste>, modo **auto**)
 > conduzindo um lead (contato de teste) para a **Expedição Costa Doce · Dezembro**:
 > apresentar infos + enviar o PDF (fonte da verdade = docs do Mini Drive) + coletar documentos
 > (nome, CPF, telefone, tipo, camiseta) + tirar dúvidas. ~56 mensagens trocadas.
