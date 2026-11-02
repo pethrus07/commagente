@@ -538,11 +538,12 @@ super-admin de produção já rodou com a senha default.
 | Evolution | `127.0.0.1:8080` | `127.0.0.1:8080` — **nunca** exposta |
 | Postgres | `127.0.0.1:5432` | idem, mais `pg_dump` em cron às 03:00 com rotação de 14 dias |
 | IA | `IA_PROVIDER=duble` (sem custo) | `openai` |
-| Processo | `tsx watch src/server.ts` | `npx tsx src/server.ts` sob pm2 (`commagente-api`) |
+| Processo | `tsx watch src/server.ts` | `node dist/server.js` (depois de `npm run build`) sob pm2 (`commagente-api`) |
 
-Detalhe que já custou um dia: em produção a API roda **`npx tsx src/server.ts`, não `node dist`** —
-os imports ESM não têm extensão `.js`, então o build compilado quebra em runtime. Os scripts
-`build` e `start` do `package.json` existem mas **não** são o caminho usado.
+Até 01/11/2026 a produção rodava `npx tsx src/server.ts`, porque os imports ESM não tinham
+extensão `.js` e o build compilado quebrava. Desde o branch `revisao-2026-11`, todo import relativo
+termina em `.js`, o `tsconfig` usa `NodeNext` (o compilador recusa import sem extensão) e o caminho
+é `npm run build` + `node dist/server.js`. Os testes continuam rodando direto no TS (`npm test`).
 
 Herança de nome: o produto se chama Commagente desde 28/07/2026, mas a infra viva ainda usa
 `zapagente` (containers `zapagente-*`, banco, logins no domínio `zapagente.local`, pasta
