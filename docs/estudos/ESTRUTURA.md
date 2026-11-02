@@ -3,7 +3,7 @@
 > **Nome:** provisório / a definir (white-label). Candidatos: "Assistente", "Super-Secretária IA", nome comercial da Celiware.
 > **Origem:** conversa Pedro (Pethrus) × parceiro (Celiware) em **17/07/2026** (12 prints + 19 áudios de voz do parceiro).
 > **Status:** ideia em consolidação. Pedro fecha **base técnica + valor amanhã (18/07)**.
-> **Fontes:** `docs/transcricoes-audios-parceiro-2026-07-17.md` + prints do WhatsApp.
+> **Fontes:** conversas com o parceiro (material interno, fora do repositório).
 
 ---
 

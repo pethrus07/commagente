@@ -88,4 +88,4 @@ Comece por [docs/ARQUITETURA.md](docs/ARQUITETURA.md): mapa do repositório, o c
 
 ## Licença
 
-Todos os direitos reservados.
+Todos os direitos reservados. Publicado como portfólio; sem licença de reuso. Veja [LICENSE](LICENSE).
