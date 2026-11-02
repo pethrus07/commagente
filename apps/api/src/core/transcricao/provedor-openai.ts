@@ -1,7 +1,7 @@
 // 🔌 Transcrição real — OpenAI (endpoint /v1/audio/transcriptions, Whisper).
 // Usa a mesma OPENAI_API_KEY da IA; troca via TRANSCRITOR_PROVIDER=openai.
-import { config } from '../config'
-import type { AudioEntrada, TranscritorAudio } from './porta-transcricao'
+import { config } from '../config.js'
+import type { AudioEntrada, TranscritorAudio } from './porta-transcricao.js'
 
 // mapeia o mimetype num nome de arquivo com extensão que o Whisper reconhece.
 // notas de voz do WhatsApp chegam como audio/ogg; codecs=opus.

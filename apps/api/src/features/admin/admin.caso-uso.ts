@@ -1,8 +1,8 @@
 // ⚙️ Aplicação — administração da plataforma (só super-admin).
-import { custoBrl, TETO_CUSTO_BRL } from '../../core/custo'
-import { db } from '../../core/db'
-import { ErroHttp } from '../../core/erros'
-import { senha as senhaUtil } from '../../core/senha'
+import { custoBrl, TETO_CUSTO_BRL } from '../../core/custo.js'
+import { db } from '../../core/db.js'
+import { ErroHttp } from '../../core/erros.js'
+import { senha as senhaUtil } from '../../core/senha.js'
 
 export async function listarTenants() {
   const inicioHoje = new Date()

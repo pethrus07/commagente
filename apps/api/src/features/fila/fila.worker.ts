@@ -1,8 +1,8 @@
 // ⚙️/🔌 O worker do motor anti-bloqueio: tira da fila e envia no ritmo humano.
-import { config } from '../../core/config'
-import { enviarDocumento, enviarTexto } from '../envio/envio.caso-uso'
-import { dentroDaJanela, intervaloEnvioMs, temBudget, tetoDiarioPorEstagio } from './fila.dominio'
-import { filaRepo } from './fila.repo'
+import { config } from '../../core/config.js'
+import { enviarDocumento, enviarTexto } from '../envio/envio.caso-uso.js'
+import { dentroDaJanela, intervaloEnvioMs, temBudget, tetoDiarioPorEstagio } from './fila.dominio.js'
+import { filaRepo } from './fila.repo.js'
 
 type Payload = {
   numeroId: string

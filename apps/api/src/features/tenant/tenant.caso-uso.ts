@@ -3,10 +3,10 @@
 // Ambos entram SEMPRE no prompt de toda missão (o `tom` da missão dá nuance pontual).
 // Escopo = tenant efetivo da requisição (admin edita o seu; super-admin impersonando edita o alvo).
 import { Prisma } from '@prisma/client'
-import { tenantAtual } from '../../core/contexto'
-import { db } from '../../core/db'
-import { type Dna, dnaSchema, lerDna } from './tenant.dna'
-import { ESTILO_PADRAO, estiloSchema, lerEstilo, type EstiloConversa } from './tenant.estilo'
+import { tenantAtual } from '../../core/contexto.js'
+import { db } from '../../core/db.js'
+import { type Dna, dnaSchema, lerDna } from './tenant.dna.js'
+import { ESTILO_PADRAO, estiloSchema, lerEstilo, type EstiloConversa } from './tenant.estilo.js'
 
 const selecao = { id: true, nome: true, persona: true, estilo: true, dna: true } as const
 type LinhaTenant = { id: string; nome: string; persona: string | null; estilo: unknown; dna: unknown }

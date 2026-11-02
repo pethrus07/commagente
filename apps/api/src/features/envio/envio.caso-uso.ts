@@ -2,11 +2,11 @@
 // (presença) antes de mandar, quebra a resposta em bolhas quando o estilo pede, envia documento
 // quando é mídia, e grava a saída em `mensagens`.
 // Quem chama é o WORKER DA FILA, nunca o harness direto: o ritmo é decidido em features/fila.
-import { conferirDono } from '../../core/contexto'
-import { ErroHttp } from '../../core/erros'
-import { whatsapp } from '../../core/evolution'
-import type { PortaWhatsApp } from '../../core/evolution/porta-whatsapp'
-import { envioRepo } from './envio.repo'
+import { conferirDono } from '../../core/contexto.js'
+import { ErroHttp } from '../../core/erros.js'
+import { whatsapp } from '../../core/evolution/index.js'
+import type { PortaWhatsApp } from '../../core/evolution/porta-whatsapp.js'
+import { envioRepo } from './envio.repo.js'
 
 const wa: PortaWhatsApp = whatsapp
 

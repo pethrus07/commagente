@@ -1,7 +1,7 @@
 // 🔐 Autenticação — payload do JWT + hook global que protege as rotas.
 import type { Papel } from '@prisma/client'
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import { contexto } from './contexto'
+import { contexto } from './contexto.js'
 
 export interface TokenUsuario {
   sub: string // id do usuário

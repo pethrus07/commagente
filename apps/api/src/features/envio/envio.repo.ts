@@ -1,6 +1,6 @@
 // 🔌 Infraestrutura — persistência do executor (Prisma).
 import type { StatusEnvio } from '@prisma/client'
-import { db } from '../../core/db'
+import { db } from '../../core/db.js'
 
 export const envioRepo = {
   buscarNumero(id: string) {

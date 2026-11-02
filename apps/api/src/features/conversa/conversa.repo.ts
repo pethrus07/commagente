@@ -1,6 +1,6 @@
 // 🔌 Infraestrutura — persistência específica do harness da conversa.
 import type { Prisma } from '@prisma/client'
-import { db } from '../../core/db'
+import { db } from '../../core/db.js'
 
 export const conversaRepo = {
   // mescla/atualiza os fatos (memória) da missão

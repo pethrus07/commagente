@@ -3,9 +3,9 @@
 // `evolution` (Baileys, não-oficial, permite abrir conversa fria) e `cloud` (Meta oficial,
 // degrau 1 — escrito e compilando, mas nunca rodado em produção). Trocar é mudar a env: as
 // features importam { whatsapp }, nunca o cliente concreto.
-import { cloudApiClient } from './cloud-api.client'
-import { evolutionClient } from './evolution.client'
-import type { PortaWhatsApp } from './porta-whatsapp'
+import { cloudApiClient } from './cloud-api.client.js'
+import { evolutionClient } from './evolution.client.js'
+import type { PortaWhatsApp } from './porta-whatsapp.js'
 
 const PROVEDORES: Record<string, PortaWhatsApp> = {
   evolution: evolutionClient,

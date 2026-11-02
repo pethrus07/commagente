@@ -1,6 +1,6 @@
 // 🔌 Infraestrutura — persistência dos agendamentos (Prisma).
 import type { Prisma } from '@prisma/client'
-import { db } from '../../core/db'
+import { db } from '../../core/db.js'
 
 export const agendamentosRepo = {
   listar(tenantId: string) {

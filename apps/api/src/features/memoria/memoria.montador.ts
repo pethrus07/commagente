@@ -1,11 +1,11 @@
 // 💛 Domínio — o Montador de Contexto (a "ficha" do lead).
 // Regra pura: dado o estado da missão + histórico, decide o que entra no prompt.
 import type { Direcao, EstadoMissao } from '@prisma/client'
-import type { ContextoIA } from '../../core/ia/porta-ia'
-import { compilarDnaContato } from '../contatos/contato.dna'
-import { compilarDnaComCamadas } from '../tenant/tenant.dna'
-import { lerEstilo, regrasDeEstilo, type EstiloConversa } from '../tenant/tenant.estilo'
-import { lerRoteiro, lerEstado, instrucaoRoteiro } from '../roteiro/roteiro.dominio'
+import type { ContextoIA } from '../../core/ia/porta-ia.js'
+import { compilarDnaContato } from '../contatos/contato.dna.js'
+import { compilarDnaComCamadas } from '../tenant/tenant.dna.js'
+import { lerEstilo, regrasDeEstilo, type EstiloConversa } from '../tenant/tenant.estilo.js'
+import { lerRoteiro, lerEstado, instrucaoRoteiro } from '../roteiro/roteiro.dominio.js'
 
 const ULTIMAS = 8 // nº de mensagens recentes no contexto (o resto vira resumo rolante)
 

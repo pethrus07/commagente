@@ -4,16 +4,16 @@
 // fromMe do operador → suporte reativo → transcrição de áudio → opt-in/opt-out → agendar o turno.
 // Nada aqui responde ao cliente: no fim, só AGENDA o turno (debounce) — quem fala é o harness.
 // Evento de status de entrega segue por outro ramo, atualizando a mensagem de saída.
-import { db } from '../../core/db'
-import { whatsapp } from '../../core/evolution'
-import { transcritor } from '../../core/transcricao'
-import { agendarTurno } from '../conversa/conversa.caso-uso'
-import { filaRepo } from '../fila/fila.repo'
-import { podeTransicionar } from '../missoes/missao.dominio'
-import { missoesRepo } from '../missoes/missoes.repo'
-import type { AudioRecebido } from './webhook.dominio'
-import { ehPedidoOptOut, mapearStatusEnvio, normalizarEvento } from './webhook.dominio'
-import { webhookRepo } from './webhook.repo'
+import { db } from '../../core/db.js'
+import { whatsapp } from '../../core/evolution/index.js'
+import { transcritor } from '../../core/transcricao/index.js'
+import { agendarTurno } from '../conversa/conversa.caso-uso.js'
+import { filaRepo } from '../fila/fila.repo.js'
+import { podeTransicionar } from '../missoes/missao.dominio.js'
+import { missoesRepo } from '../missoes/missoes.repo.js'
+import type { AudioRecebido } from './webhook.dominio.js'
+import { ehPedidoOptOut, mapearStatusEnvio, normalizarEvento } from './webhook.dominio.js'
+import { webhookRepo } from './webhook.repo.js'
 
 // REENTREGA (cura da "mensagem que não sai"): a Evolution ACEITA a mensagem (status 'enviando' +
 // providerMsgId) mas depois um webhook de entrega volta ERROR/FAILED — típico do não-oficial quando

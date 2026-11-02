@@ -1,6 +1,6 @@
 // 💛 Domínio — normaliza o evento cru da Evolution num modelo interno (regra pura, sem I/O).
 import type { StatusEnvio } from '@prisma/client'
-import type { ChaveMensagem } from '../../core/evolution/porta-whatsapp'
+import type { ChaveMensagem } from '../../core/evolution/porta-whatsapp.js'
 
 /** dados p/ obter o áudio de uma nota de voz (Tier 3) */
 export interface AudioRecebido {

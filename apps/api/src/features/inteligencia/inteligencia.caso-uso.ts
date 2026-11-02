@@ -1,11 +1,11 @@
 // ⚙️ Aplicação — Central de Inteligência (#7): "pergunte qualquer coisa sobre os dados da conta".
 // Junta um RETRATO estruturado do tenant e deixa a IA responder SÓ com base nele (grounded,
 // anti-invenção). Não é RAG mágico sobre tudo — é agregado pré-computado + guardrail.
-import { contexto, tenantAtual } from '../../core/contexto'
-import { db } from '../../core/db'
-import { ErroHttp } from '../../core/erros'
-import { ia } from '../../core/ia'
-import { listarCampanhas } from '../campanhas/campanhas.caso-uso'
+import { contexto, tenantAtual } from '../../core/contexto.js'
+import { db } from '../../core/db.js'
+import { ErroHttp } from '../../core/erros.js'
+import { ia } from '../../core/ia/index.js'
+import { listarCampanhas } from '../campanhas/campanhas.caso-uso.js'
 
 function inicioDoDia(): Date {
   const d = new Date()

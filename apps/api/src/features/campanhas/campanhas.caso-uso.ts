@@ -1,12 +1,12 @@
 // ⚙️ Aplicação — campanhas: a MESMA definição de missão disparada/agrupada p/ N contatos,
 // com poder de adicionar mais contatos depois (reusa criarMissaoEmLote).
 import { Prisma } from '@prisma/client' // valor+tipo: usamos Prisma.DbNull (limpar roteiro) além dos tipos
-import { conferirDono, tenantAtual } from '../../core/contexto'
-import { db } from '../../core/db'
-import { ErroHttp } from '../../core/erros'
-import { ia } from '../../core/ia'
-import { lerCamadaDna } from '../tenant/tenant.dna'
-import { criarMissaoEmLote, iniciarMissoesConfiguradas } from '../missoes/missoes.caso-uso'
+import { conferirDono, tenantAtual } from '../../core/contexto.js'
+import { db } from '../../core/db.js'
+import { ErroHttp } from '../../core/erros.js'
+import { ia } from '../../core/ia/index.js'
+import { lerCamadaDna } from '../tenant/tenant.dna.js'
+import { criarMissaoEmLote, iniciarMissoesConfiguradas } from '../missoes/missoes.caso-uso.js'
 
 type DefCampanha = {
   nome: string

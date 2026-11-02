@@ -2,8 +2,8 @@
 // via AsyncLocalStorage, para os casos-de-uso lerem o tenant sem receber por parâmetro.
 import { AsyncLocalStorage } from 'node:async_hooks'
 import type { Papel } from '@prisma/client'
-import { ErroHttp } from './erros'
-import { garantirTenantPadrao } from './tenant'
+import { ErroHttp } from './erros.js'
+import { garantirTenantPadrao } from './tenant.js'
 
 export interface CtxRequisicao {
   usuarioId: string

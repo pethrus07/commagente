@@ -1,6 +1,6 @@
 // ⚙️ O agendador: verifica periodicamente quais missões programadas "vencem hoje"
 // e dispara. Roda a cada 5 min (o disparo em si é idempotente por ciclo).
-import { processarDevidos } from './agendamentos.caso-uso'
+import { processarDevidos } from './agendamentos.caso-uso.js'
 
 let rodando = false
 

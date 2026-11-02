@@ -1,12 +1,12 @@
 // ⚙️ Aplicação — curadoria da base de conhecimento (memória coletiva do tenant).
 import type { Prisma } from '@prisma/client'
-import { conferirDono, tenantAtual } from '../../core/contexto'
-import { extrairTexto } from '../../core/documentos/extrair-texto'
-import { embeddings } from '../../core/embeddings'
-import { similaridadeCosseno } from '../../core/embeddings/porta-embeddings'
-import { ErroHttp } from '../../core/erros'
-import { dividirEmChunks } from './conhecimento.dominio'
-import { conhecimentoRepo } from './conhecimento.repo'
+import { conferirDono, tenantAtual } from '../../core/contexto.js'
+import { extrairTexto } from '../../core/documentos/extrair-texto.js'
+import { embeddings } from '../../core/embeddings/index.js'
+import { similaridadeCosseno } from '../../core/embeddings/porta-embeddings.js'
+import { ErroHttp } from '../../core/erros.js'
+import { dividirEmChunks } from './conhecimento.dominio.js'
+import { conhecimentoRepo } from './conhecimento.repo.js'
 
 // (RE)INDEXAÇÃO p/ RAG: fatia o conteúdo aprovado e vetoriza cada trecho.
 // Best-effort — nunca derruba a criação/edição do conhecimento (se a OpenAI falhar,

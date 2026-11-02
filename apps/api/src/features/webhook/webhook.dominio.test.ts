@@ -3,7 +3,7 @@
 // Rode: npx tsx --test src/features/webhook/webhook.dominio.test.ts
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { normalizarEvento } from './webhook.dominio'
+import { normalizarEvento } from './webhook.dominio.js'
 
 function upsert(key: Record<string, unknown>, message: Record<string, unknown>, pushName?: string) {
   return normalizarEvento({ event: 'messages.upsert', instance: 'zap-1', data: { key, message, pushName } })

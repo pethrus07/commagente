@@ -1,7 +1,7 @@
 // 🔌 Embeddings reais — OpenAI (endpoint /v1/embeddings).
 // Usa a mesma OPENAI_API_KEY da IA; troca via EMBEDDINGS_PROVIDER=openai.
-import { config } from '../config'
-import type { ProvedorEmbeddings } from './porta-embeddings'
+import { config } from '../config.js'
+import type { ProvedorEmbeddings } from './porta-embeddings.js'
 
 export const embeddingsOpenai: ProvedorEmbeddings = {
   nome: 'openai',

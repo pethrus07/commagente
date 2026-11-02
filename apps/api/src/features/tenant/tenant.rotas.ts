@@ -1,9 +1,9 @@
 // 🖥️ Apresentação — configuração do tenant atual (DNA + persona/voz + estilo de conversa da IA).
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { definirDna, definirEstilo, definirPersona, obterConfigTenant } from './tenant.caso-uso'
-import { dnaSchema } from './tenant.dna'
-import { estiloSchema } from './tenant.estilo'
+import { definirDna, definirEstilo, definirPersona, obterConfigTenant } from './tenant.caso-uso.js'
+import { dnaSchema } from './tenant.dna.js'
+import { estiloSchema } from './tenant.estilo.js'
 
 export async function tenantRotas(app: FastifyInstance) {
   app.get('/tenant', async () => obterConfigTenant())

@@ -9,7 +9,7 @@ import {
   listarTags,
   removerTag,
   removerTagDoContato,
-} from './tags.caso-uso'
+} from './tags.caso-uso.js'
 
 const corpoCriar = z.object({
   nome: z.string().min(1),

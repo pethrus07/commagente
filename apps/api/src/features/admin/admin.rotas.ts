@@ -1,8 +1,8 @@
 // 🖥️ Apresentação — rotas de administração da plataforma (super-admin).
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { exigirPapel } from '../../core/auth'
-import { criarTenant, listarTenants } from './admin.caso-uso'
+import { exigirPapel } from '../../core/auth.js'
+import { criarTenant, listarTenants } from './admin.caso-uso.js'
 
 const corpoTenant = z.object({
   nome: z.string().min(1),

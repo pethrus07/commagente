@@ -2,9 +2,9 @@
 import { EstadoMissao } from '@prisma/client'
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { dnaCamadaSchema } from '../tenant/tenant.dna'
-import { estiloSchema } from '../tenant/tenant.estilo'
-import { aprovarRascunho, descartarRascunho } from '../conversa/conversa.caso-uso'
+import { dnaCamadaSchema } from '../tenant/tenant.dna.js'
+import { estiloSchema } from '../tenant/tenant.estilo.js'
+import { aprovarRascunho, descartarRascunho } from '../conversa/conversa.caso-uso.js'
 import {
   assumirConversa,
   criarMissao,
@@ -17,7 +17,7 @@ import {
   listarMissoes,
   mudarEstado,
   obterMissao,
-} from './missoes.caso-uso'
+} from './missoes.caso-uso.js'
 
 const tipoMissao = z.enum(['vender', 'qualificar', 'orcar', 'cobrar', 'suporte', 'outro'])
 const modoMissao = z.enum(['auto', 'copilot'])

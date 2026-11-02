@@ -1,8 +1,8 @@
 // ⚙️ Aplicação — biblioteca de mídia do tenant: arquivos "bonitos" (catálogo, tabela de preço,
 // PDF) que a IA pode ENVIAR ao contato quando fizer sentido (ação enviar_midia). [parceiro §8.15]
-import { conferirDono, tenantAtual } from '../../core/contexto'
-import { db } from '../../core/db'
-import { ErroHttp } from '../../core/erros'
+import { conferirDono, tenantAtual } from '../../core/contexto.js'
+import { db } from '../../core/db.js'
+import { ErroHttp } from '../../core/erros.js'
 
 const MAX_BYTES = 12 * 1024 * 1024 // 12MB por arquivo
 

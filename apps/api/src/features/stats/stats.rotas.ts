@@ -1,7 +1,7 @@
 // 🖥️ Apresentação — métricas do dashboard.
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { obterHistorico, obterStats } from './stats.caso-uso'
+import { obterHistorico, obterStats } from './stats.caso-uso.js'
 
 const queryHist = z.object({ dias: z.coerce.number().int().min(1).max(90).optional() })
 

@@ -1,13 +1,13 @@
 // 🔌 Infraestrutura — adapter HTTP que implementa a PortaWhatsApp via Evolution API v2.
 // Referência de endpoints: Evolution API v2 (Baileys).
-import { config } from '../config'
+import { config } from '../config.js'
 import type {
   ChaveMensagem,
   PortaWhatsApp,
   Presenca,
   QrCode,
   StatusConexaoWa,
-} from './porta-whatsapp'
+} from './porta-whatsapp.js'
 
 // Eventos que queremos receber no webhook.
 const EVENTOS_WEBHOOK = [

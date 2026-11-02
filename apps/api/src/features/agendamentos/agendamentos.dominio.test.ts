@@ -1,7 +1,7 @@
 // Testes do domínio de recorrência (regra pura). Rode: npx tsx --test src/features/agendamentos/agendamentos.dominio.test.ts
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { cicloRef, ehDiaDeDisparo, horarioJaChegou, type AgDatas } from './agendamentos.dominio'
+import { cicloRef, ehDiaDeDisparo, horarioJaChegou, type AgDatas } from './agendamentos.dominio.js'
 
 // data BR estável (meio-dia -03:00) a partir de "YYYY-MM-DD"
 const d = (ymd: string) => new Date(`${ymd}T12:00:00-03:00`)

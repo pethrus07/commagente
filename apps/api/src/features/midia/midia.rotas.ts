@@ -1,7 +1,7 @@
 // 🖥️ Apresentação — biblioteca de mídia (upload/listar/apagar). [§8.15]
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { excluirMidia, listarMidias, subirMidia } from './midia.caso-uso'
+import { excluirMidia, listarMidias, subirMidia } from './midia.caso-uso.js'
 
 const corpo = z.object({
   nome: z.string().min(1),

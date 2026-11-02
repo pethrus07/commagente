@@ -9,8 +9,8 @@ import {
   importarDoWhatsApp,
   listarContatos,
   obterContato,
-} from './contatos.caso-uso'
-import { dnaContatoSchema } from './contato.dna'
+} from './contatos.caso-uso.js'
+import { dnaContatoSchema } from './contato.dna.js'
 
 const corpoCriar = z.object({
   nome: z.string().optional(),

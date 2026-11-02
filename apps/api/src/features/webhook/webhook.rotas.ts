@@ -1,7 +1,7 @@
 // 🖥️ Apresentação — recebe os eventos da Evolution (mensagens, status).
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
-import { config } from '../../core/config'
-import { processarWebhook } from './webhook.caso-uso'
+import { config } from '../../core/config.js'
+import { processarWebhook } from './webhook.caso-uso.js'
 
 export async function webhookRotas(app: FastifyInstance) {
   const handler = async (req: FastifyRequest, reply: FastifyReply) => {

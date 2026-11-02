@@ -10,7 +10,7 @@ import {
   listarNumeros,
   removerNumero,
   statusNumero,
-} from './numeros.caso-uso'
+} from './numeros.caso-uso.js'
 
 const corpoCadastro = z.object({
   telefone: z.string().min(8),

@@ -1,8 +1,8 @@
 // 🌱 Seed inicial — garante o tenant padrão e o super-admin (login do painel).
-import { config } from './config'
-import { db } from './db'
-import { senha } from './senha'
-import { garantirTenantPadrao } from './tenant'
+import { config } from './config.js'
+import { db } from './db.js'
+import { senha } from './senha.js'
+import { garantirTenantPadrao } from './tenant.js'
 
 export async function seedInicial() {
   await garantirTenantPadrao() // tenant padrão "PEDRO" (fallback dos casos-de-uso)

@@ -3,7 +3,7 @@
 // isso valida o dono do número antes de enviar.
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { enviarTextoManual } from './envio.caso-uso'
+import { enviarTextoManual } from './envio.caso-uso.js'
 
 const corpo = z.object({
   numeroId: z.string().uuid(),

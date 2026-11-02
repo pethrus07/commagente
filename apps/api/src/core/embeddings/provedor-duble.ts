@@ -1,7 +1,7 @@
 // 🎭 Embeddings DUBLÊ (offline, determinístico) — bag-of-words com hash em dim fixa.
 // NÃO é semântico (semantico=false) → a recuperação por relevância cai no fallback
 // "todo o conhecimento aprovado". Serve só p/ o código não quebrar sem OpenAI.
-import type { ProvedorEmbeddings } from './porta-embeddings'
+import type { ProvedorEmbeddings } from './porta-embeddings.js'
 
 const DIM = 64
 
