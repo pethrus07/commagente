@@ -1,8 +1,8 @@
 // 🖥️ Apresentação — rotas de autenticação.
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { db } from '../../core/db'
-import { autenticarUsuario } from './auth.caso-uso'
+import { db } from '../../core/db.js'
+import { autenticarUsuario } from './auth.caso-uso.js'
 
 const corpoLogin = z.object({
   email: z.string().email(),

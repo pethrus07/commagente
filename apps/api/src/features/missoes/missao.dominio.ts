@@ -1,7 +1,7 @@
 // 💛 Domínio (puro) — a máquina de estados da missão.
 // Referência: docs/estudos/ARQUITETURA-TECNICA.md §3.
 import type { EstadoMissao } from '@prisma/client'
-import { ErroHttp } from '../../core/erros'
+import { ErroHttp } from '../../core/erros.js'
 
 // De cada estado, para quais estados é permitido ir.
 export const TRANSICOES: Record<EstadoMissao, EstadoMissao[]> = {

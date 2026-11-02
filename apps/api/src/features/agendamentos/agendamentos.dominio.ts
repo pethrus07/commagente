@@ -1,5 +1,5 @@
 // 💛 Domínio (puro) — regras de data das missões programadas. Sem I/O.
-import { config } from '../../core/config'
+import { config } from '../../core/config.js'
 
 // data "YYYY-MM-DD" no fuso configurado (America/Sao_Paulo) para uma dada instante.
 export function ymd(d: Date): string {

@@ -1,6 +1,6 @@
 // 🔌 Infraestrutura — persistência de Missão (Prisma).
 import type { EstadoMissao, Prisma } from '@prisma/client'
-import { db } from '../../core/db'
+import { db } from '../../core/db.js'
 
 export const missoesRepo = {
   criar(data: {

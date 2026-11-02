@@ -1,10 +1,10 @@
 // ⚙️ Aplicação — contatos (o "C" do CRM): listar, criar, importar (CSV/WhatsApp), exportar, DNA.
 import { Prisma } from '@prisma/client'
-import { conferirDono, tenantAtual } from '../../core/contexto'
-import { db } from '../../core/db'
-import { ErroHttp } from '../../core/erros'
-import { whatsapp } from '../../core/evolution'
-import { type DnaContato, dnaContatoSchema, lerDnaContato } from './contato.dna'
+import { conferirDono, tenantAtual } from '../../core/contexto.js'
+import { db } from '../../core/db.js'
+import { ErroHttp } from '../../core/erros.js'
+import { whatsapp } from '../../core/evolution/index.js'
+import { type DnaContato, dnaContatoSchema, lerDnaContato } from './contato.dna.js'
 
 function normalizarTelefone(t: string): string {
   return (t ?? '').replace(/\D/g, '')

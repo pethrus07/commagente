@@ -1,14 +1,14 @@
 // ⚙️ Aplicação — casos de uso de missão.
 import type { EstadoMissao, Prisma } from '@prisma/client'
-import { db } from '../../core/db'
-import { ErroHttp } from '../../core/erros'
-import { conferirDono, contexto, tenantAtual } from '../../core/contexto'
-import { processarTurno } from '../conversa/conversa.caso-uso'
-import { classificarSaude } from '../numeros/numeros.dominio'
-import { numerosRepo } from '../numeros/numeros.repo'
-import { resolverContatosDaTag } from '../tags/tags.caso-uso'
-import { validarTransicao } from './missao.dominio'
-import { missoesRepo } from './missoes.repo'
+import { db } from '../../core/db.js'
+import { ErroHttp } from '../../core/erros.js'
+import { conferirDono, contexto, tenantAtual } from '../../core/contexto.js'
+import { processarTurno } from '../conversa/conversa.caso-uso.js'
+import { classificarSaude } from '../numeros/numeros.dominio.js'
+import { numerosRepo } from '../numeros/numeros.repo.js'
+import { resolverContatosDaTag } from '../tags/tags.caso-uso.js'
+import { validarTransicao } from './missao.dominio.js'
+import { missoesRepo } from './missoes.repo.js'
 
 type DadosMissao = {
   numeroId: string

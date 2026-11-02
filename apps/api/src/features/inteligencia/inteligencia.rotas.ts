@@ -1,7 +1,7 @@
 // 🖥️ Apresentação — Central de Inteligência (#7): perguntar sobre os dados da conta.
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { perguntarSobreDados } from './inteligencia.caso-uso'
+import { perguntarSobreDados } from './inteligencia.caso-uso.js'
 
 export async function inteligenciaRotas(app: FastifyInstance) {
   app.post('/inteligencia/perguntar', async (req) => {

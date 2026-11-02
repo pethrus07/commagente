@@ -1,7 +1,7 @@
 // Testes do domínio do DNA do contato — defaults-first + orçamento + só personalização.
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { compilarDnaContato, lerDnaContato } from './contato.dna'
+import { compilarDnaContato, lerDnaContato } from './contato.dna.js'
 
 test('DNA de contato vazio → null (defaults-first)', () => {
   assert.equal(compilarDnaContato(null), null)

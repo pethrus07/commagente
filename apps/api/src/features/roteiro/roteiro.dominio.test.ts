@@ -9,7 +9,7 @@ import {
   instrucaoRoteiro,
   ROTEIRO_INICIO,
   type Roteiro,
-} from './roteiro.dominio'
+} from './roteiro.dominio.js'
 
 const linear: Roteiro = {
   passos: [

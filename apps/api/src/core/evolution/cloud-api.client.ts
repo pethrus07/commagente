@@ -10,14 +10,14 @@
 //  - OPENER frio fora da janela exige TEMPLATE aprovado (enviarTemplate) — degrau 1+ (TODO).
 //  - Degrau 1 usa credenciais GLOBAIS (config.cloud); por-número (híbrido, degrau 2) vem depois.
 //    Convenção: o `NumeroWhatsapp.instanciaEvolution` do número oficial = o phone_number_id.
-import { config } from '../config'
+import { config } from '../config.js'
 import type {
   ChaveMensagem,
   PortaWhatsApp,
   Presenca,
   QrCode,
   StatusConexaoWa,
-} from './porta-whatsapp'
+} from './porta-whatsapp.js'
 
 const graphBase = () => `https://graph.facebook.com/${config.cloud.graphVersion}`
 const soDigitos = (t: string) => t.replace(/\D/g, '') // Cloud API quer o número em dígitos (E.164 sem +)

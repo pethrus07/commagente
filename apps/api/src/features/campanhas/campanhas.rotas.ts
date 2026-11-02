@@ -1,8 +1,8 @@
 // 🖥️ Apresentação — rotas de campanhas.
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { dnaCamadaSchema } from '../tenant/tenant.dna'
-import { estiloSchema } from '../tenant/tenant.estilo'
+import { dnaCamadaSchema } from '../tenant/tenant.dna.js'
+import { estiloSchema } from '../tenant/tenant.estilo.js'
 import {
   adicionarContatosCampanha,
   criarCampanha,
@@ -16,7 +16,7 @@ import {
   obterRelatorioCampanha,
   relatorioCampanhaCsv,
   sintetizarRelatorioCampanha,
-} from './campanhas.caso-uso'
+} from './campanhas.caso-uso.js'
 
 const tipoMissao = z.enum(['vender', 'qualificar', 'orcar', 'cobrar', 'suporte', 'outro'])
 

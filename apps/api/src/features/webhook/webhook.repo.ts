@@ -1,6 +1,6 @@
 // 🔌 Infraestrutura — persistência do ingestor (Prisma).
 import type { StatusEnvio } from '@prisma/client'
-import { db } from '../../core/db'
+import { db } from '../../core/db.js'
 
 export const webhookRepo = {
   acharNumeroPorInstancia(instancia: string) {

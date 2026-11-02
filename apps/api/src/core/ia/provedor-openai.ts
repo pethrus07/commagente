@@ -1,8 +1,8 @@
 // 🔌 Provedor de IA real — OpenAI (chat completions + JSON mode).
 // Implementa a mesma PortaIA do dublê; troca via IA_PROVIDER=openai.
-import { config } from '../config'
-import type { ContextoIA, DadosAnalise, ProvedorIA, SaidaIA, UsoIA } from './porta-ia'
-import { SaidaIASchema } from './porta-ia'
+import { config } from '../config.js'
+import type { ContextoIA, DadosAnalise, ProvedorIA, SaidaIA, UsoIA } from './porta-ia.js'
+import { SaidaIASchema } from './porta-ia.js'
 
 type Msg = { role: 'system' | 'user' | 'assistant'; content: string }
 

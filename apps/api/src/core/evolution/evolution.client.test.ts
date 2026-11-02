@@ -1,7 +1,7 @@
 // Regressão do bug "importar do WhatsApp volta 0": v2.3.1 tem id=CUID e o JID em remoteJid.
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { mapearContatosEvolution } from './evolution.client'
+import { mapearContatosEvolution } from './evolution.client.js'
 
 test('v2.3.1: usa remoteJid (id é CUID interno) — NÃO descarta o contato', () => {
   const r = mapearContatosEvolution([

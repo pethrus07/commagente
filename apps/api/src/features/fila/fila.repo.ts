@@ -1,6 +1,6 @@
 // 🔌 Infraestrutura — a fila de envio (tabela fila_envio) e os contadores do número.
 import type { Prisma, StatusEnvio } from '@prisma/client'
-import { db } from '../../core/db'
+import { db } from '../../core/db.js'
 
 export const filaRepo = {
   async enfileirar(p: {

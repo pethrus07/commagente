@@ -2,9 +2,9 @@
 // O evento connection.update chega pelo MESMO webhook que pode ser bloqueado (ufw) ou perdido;
 // sem um backstop, um chip que cai fica "conectado" pra sempre no painel (invisível) e o worker
 // segue tentando enviar. Aqui, a cada N min, consultamos o estado REAL na Evolution e persistimos.
-import { db } from '../../core/db'
-import { whatsapp } from '../../core/evolution'
-import { numerosRepo } from './numeros.repo'
+import { db } from '../../core/db.js'
+import { whatsapp } from '../../core/evolution/index.js'
+import { numerosRepo } from './numeros.repo.js'
 
 async function reconciliar() {
   const numeros = await db.numeroWhatsapp.findMany({

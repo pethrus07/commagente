@@ -1,14 +1,14 @@
 // ⚙️ Aplicação — casos de uso de conexão de número.
 // Orquestra a PortaWhatsApp (adapter Evolution) + persistência; sem regra de negócio pesada.
-import { config } from '../../core/config'
-import { ErroHttp } from '../../core/erros'
-import { telefoneBR } from '../../core/telefone'
-import { whatsapp } from '../../core/evolution'
-import type { PortaWhatsApp, QrCode } from '../../core/evolution/porta-whatsapp'
-import { conferirDono, tenantAtual } from '../../core/contexto'
-import { tetoDiarioPorEstagio } from '../fila/fila.dominio'
-import { classificarSaude } from './numeros.dominio'
-import { numerosRepo } from './numeros.repo'
+import { config } from '../../core/config.js'
+import { ErroHttp } from '../../core/erros.js'
+import { telefoneBR } from '../../core/telefone.js'
+import { whatsapp } from '../../core/evolution/index.js'
+import type { PortaWhatsApp, QrCode } from '../../core/evolution/porta-whatsapp.js'
+import { conferirDono, tenantAtual } from '../../core/contexto.js'
+import { tetoDiarioPorEstagio } from '../fila/fila.dominio.js'
+import { classificarSaude } from './numeros.dominio.js'
+import { numerosRepo } from './numeros.repo.js'
 
 // injeta a porta (aqui, o adapter Evolution)
 const wa: PortaWhatsApp = whatsapp

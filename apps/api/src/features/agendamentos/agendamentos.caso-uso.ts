@@ -1,15 +1,15 @@
 // ⚙️ Aplicação — missões programadas: cadastro, agendador e disparo.
 import type { Prisma } from '@prisma/client'
-import { conferirDono, tenantAtual } from '../../core/contexto'
-import { db } from '../../core/db'
-import { ErroHttp } from '../../core/erros'
-import { processarTurno } from '../conversa/conversa.caso-uso'
-import { jitterMs } from '../fila/fila.dominio'
-import { filaRepo } from '../fila/fila.repo'
-import { midiaParaEnvio } from '../midia/midia.caso-uso'
-import { missoesRepo } from '../missoes/missoes.repo'
-import { agendamentosRepo } from './agendamentos.repo'
-import { cicloRef, ehDiaDeDisparo, horarioJaChegou, ymd } from './agendamentos.dominio'
+import { conferirDono, tenantAtual } from '../../core/contexto.js'
+import { db } from '../../core/db.js'
+import { ErroHttp } from '../../core/erros.js'
+import { processarTurno } from '../conversa/conversa.caso-uso.js'
+import { jitterMs } from '../fila/fila.dominio.js'
+import { filaRepo } from '../fila/fila.repo.js'
+import { midiaParaEnvio } from '../midia/midia.caso-uso.js'
+import { missoesRepo } from '../missoes/missoes.repo.js'
+import { agendamentosRepo } from './agendamentos.repo.js'
+import { cicloRef, ehDiaDeDisparo, horarioJaChegou, ymd } from './agendamentos.dominio.js'
 
 // tipos de recorrência suportados. [parceiro Item 3]
 const RECORRENCIAS = [

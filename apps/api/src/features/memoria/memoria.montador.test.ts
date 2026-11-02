@@ -2,7 +2,7 @@
 // Regra pura, sem banco. Rode: npx tsx --test src/features/memoria/memoria.montador.test.ts
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { montarFicha } from './memoria.montador'
+import { montarFicha } from './memoria.montador.js'
 
 // missão mínima só com o que o montador lê
 const base = {

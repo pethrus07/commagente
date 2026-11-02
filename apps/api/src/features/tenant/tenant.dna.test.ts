@@ -1,7 +1,7 @@
 // Testes do domínio do DNA — defaults-first, orçamento de contexto e Regras de Negócio à parte.
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { compilarDna, compilarDnaComCamadas, lerCamadaDna, lerDna, resolverDna } from './tenant.dna'
+import { compilarDna, compilarDnaComCamadas, lerCamadaDna, lerDna, resolverDna } from './tenant.dna.js'
 
 test('DNA vazio → nada entra no prompt (defaults-first)', () => {
   assert.deepEqual(compilarDna(null), { regras: null, conhecimento: null })

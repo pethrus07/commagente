@@ -1,10 +1,10 @@
 // ⚙️ Aplicação — métricas agregadas para o dashboard do painel.
-import { config } from '../../core/config'
-import { tenantAtual } from '../../core/contexto'
-import { db } from '../../core/db'
-import { tetoDiarioPorEstagio } from '../fila/fila.dominio'
-import { classificarSaude } from '../numeros/numeros.dominio'
-import { numerosRepo } from '../numeros/numeros.repo'
+import { config } from '../../core/config.js'
+import { tenantAtual } from '../../core/contexto.js'
+import { db } from '../../core/db.js'
+import { tetoDiarioPorEstagio } from '../fila/fila.dominio.js'
+import { classificarSaude } from '../numeros/numeros.dominio.js'
+import { numerosRepo } from '../numeros/numeros.repo.js'
 
 // VIGIA (enxuto, sem canal externo): calcula na leitura os alertas operacionais que o
 // dashboard mostra — número em risco de bloqueio e número parado (silêncio). É o "vigia

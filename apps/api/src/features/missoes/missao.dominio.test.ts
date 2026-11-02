@@ -1,7 +1,7 @@
 // Blindagem: transições que ATIVAM a missão são só do sistema (Iniciar/resposta), não da mão.
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { ehTransicaoSoSistema, podeTransicionar, validarTransicao } from './missao.dominio'
+import { ehTransicaoSoSistema, podeTransicionar, validarTransicao } from './missao.dominio.js'
 
 test('validarTransicao (MANUAL) bloqueia configurada → na_fila com dica do Iniciar', () => {
   assert.throws(() => validarTransicao('configurada', 'na_fila'), /Iniciar/)

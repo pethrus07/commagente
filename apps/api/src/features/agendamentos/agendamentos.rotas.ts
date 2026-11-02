@@ -9,7 +9,7 @@ import {
   listarAgendamentos,
   pularCiclo,
   removerAgendamento,
-} from './agendamentos.caso-uso'
+} from './agendamentos.caso-uso.js'
 
 const recorrencia = z.enum([
   'uma_vez',

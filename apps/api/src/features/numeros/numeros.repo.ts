@@ -1,6 +1,6 @@
 // 🔌 Infraestrutura — persistência do NumeroWhatsapp (Prisma).
 import type { StatusConexao } from '@prisma/client'
-import { db } from '../../core/db'
+import { db } from '../../core/db.js'
 
 export const numerosRepo = {
   criar(tenantId: string, telefone: string, instanciaEvolution: string, apelido?: string | null) {

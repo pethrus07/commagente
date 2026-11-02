@@ -1,6 +1,6 @@
 // 🔌 Infraestrutura — persistência da base de conhecimento (memória coletiva).
 import type { Prisma, StatusConhecimento } from '@prisma/client'
-import { db } from '../../core/db'
+import { db } from '../../core/db.js'
 
 export const conhecimentoRepo = {
   listar(tenantId: string) {

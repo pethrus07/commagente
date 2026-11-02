@@ -1,8 +1,8 @@
 // ⚙️ Aplicação — tags de contato (segmentação do CRM). Permite marcar contatos e
 // depois disparar missão/campanha para "todos da tag X".
-import { conferirDono, tenantAtual } from '../../core/contexto'
-import { db } from '../../core/db'
-import { ErroHttp } from '../../core/erros'
+import { conferirDono, tenantAtual } from '../../core/contexto.js'
+import { db } from '../../core/db.js'
+import { ErroHttp } from '../../core/erros.js'
 
 export async function listarTags() {
   const tenantId = await tenantAtual()

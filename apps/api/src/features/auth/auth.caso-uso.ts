@@ -1,7 +1,7 @@
 // ⚙️ Aplicação — login (verifica credenciais).
-import { db } from '../../core/db'
-import { ErroHttp } from '../../core/erros'
-import { senha } from '../../core/senha'
+import { db } from '../../core/db.js'
+import { ErroHttp } from '../../core/erros.js'
+import { senha } from '../../core/senha.js'
 
 export async function autenticarUsuario(email: string, senhaTexto: string) {
   const usuario = await db.usuario.findUnique({ where: { email: email.toLowerCase() } })

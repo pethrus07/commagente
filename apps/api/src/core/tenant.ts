@@ -3,7 +3,7 @@
 // arquivo cobre o único buraco que sobrou: quem chega SEM tenant no token e SEM tenant
 // selecionado (o super-admin recém-logado) precisa cair em algum lugar em vez de estourar.
 // Também é o tenant que o seed garante no boot. Ver docs/ARQUITETURA.md §16.9.
-import { db } from './db'
+import { db } from './db.js'
 
 const NOME_PADRAO = 'PEDRO'
 

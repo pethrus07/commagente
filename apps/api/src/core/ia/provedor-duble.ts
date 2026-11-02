@@ -1,7 +1,7 @@
 // 🔌 Provedor de IA DUBLÊ (offline, determinístico).
 // Permite construir e testar o harness inteiro sem LLM real (sem key, sem custo).
 // Troca-se pelo provedor OpenAI só adicionando o adapter — a porta é a mesma.
-import type { ContextoIA, ProvedorIA, SaidaIA } from './porta-ia'
+import type { ContextoIA, ProvedorIA, SaidaIA } from './porta-ia.js'
 
 function ultimaEntrada(ctx: ContextoIA): string {
   return (
