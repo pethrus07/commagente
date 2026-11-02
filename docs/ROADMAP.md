@@ -3,6 +3,27 @@
 > Consolida os estudos em [docs/estudos/](estudos/) numa visão única: **o que** o produto faz, **como** as funcionalidades se agrupam e em **que ordem** construir.
 > Base: [ESTRUTURA](estudos/ESTRUTURA.md) · [DECISÕES](estudos/DECISOES-stack-arquitetura-roadmap.md) · [ARQUITETURA-TÉCNICA](estudos/ARQUITETURA-TECNICA.md) · [ESTUDO-memória-e-custo](estudos/ESTUDO-memoria-e-custo.md).
 
+## Fila curta (01/11/2026)
+
+**Agora**
+1. Servidor de produção de volta ao ar antes de 20/11 (caiu em 22/10).
+2. No retorno: revisar e mergear o branch `revisao-2026-11` (build com `tsc` + `node dist`) e trocar o comando do pm2.
+3. Backup do Postgres fora da VPS (hoje só local) e teto de gasto na conta da OpenAI (§8.4).
+
+**Depois**
+- Alerta de chip caído e de budget de outreach estourado (hoje silencioso).
+- Race do suporte reativo (missão dupla em 2 inbounds simultâneos) e `SELECT FOR UPDATE SKIP LOCKED` se houver 2º worker.
+- Camada comercial mínima: `Tenant.ativo`, cota e teto de custo por tenant, usuários por tenant (§8.5).
+
+**Talvez**
+- Degrau 1 da escada para a Cloud API oficial ([escada-api-oficial.md](escada-api-oficial.md)).
+- pgvector quando a base de conhecimento crescer.
+- Itens de backlog §8.14 a §8.16 (aprendizado por link, documentos por missão, segmentação).
+
+O restante deste arquivo é o mapa de funcionalidades e o histórico de decisões de fase.
+
+---
+
 **Legenda de fase:** `F0` MVP/Piloto · `F1` Produto usável · `F2` Escala de uso · `F3` Produto vendável (white-label).
 
 ---
