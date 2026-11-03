@@ -1,6 +1,6 @@
-[Português](README.pt-BR.md)
-
 # Commagente
+
+English · [Português](README.pt-BR.md)
 
 An AI assistant that runs many WhatsApp conversations at the same time. Each conversation has a "mission" (sell, qualify, ask for a quote, collect a payment, give support). The AI talks at a human pace so the number does not get blocked, and hands the conversation to a person when it should.
 

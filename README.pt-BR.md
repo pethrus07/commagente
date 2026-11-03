@@ -1,6 +1,6 @@
-[English](README.md)
-
 # Commagente
+
+[English](README.md) · Português
 
 Assistente de IA que conduz várias conversas de WhatsApp ao mesmo tempo. Cada conversa tem uma "missão" (vender, qualificar, pedir orçamento, cobrar, dar suporte). A IA escreve no ritmo de uma pessoa para o número não ser bloqueado e passa a conversa para um humano quando deve.
 
